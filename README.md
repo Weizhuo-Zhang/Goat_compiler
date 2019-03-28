@@ -2,7 +2,7 @@
 This repository is for 'COMP90045 - Programming Language Implementation'
 # Stage 1
 
-## Members of the team
+## Members of the team MaRKeD
 - Martin
 - Kevin
 - Ray
@@ -13,5 +13,5 @@ This repository is for 'COMP90045 - Programming Language Implementation'
 Monday 15 April at 23:00
 
 ## Project Specification
-[Project Specification](./asg1(4).pdf)
+[Project Specification](./Assignment_1.pdf)
 
