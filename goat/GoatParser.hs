@@ -18,6 +18,7 @@ lexer
     { Q.commentLine    = "#"
     , Q.nestedComments = True
     , Q.identStart     = letter
+    , Q.identLetter    = alphaNum <|> char '_'
     , Q.opStart         = oneOf "+-*:"
     , Q.opLetter        = oneOf "+-*:"
     , Q.reservedNames   = myReserved
@@ -36,6 +37,8 @@ squares    = Q.squares lexer
 reserved   = Q.reserved lexer
 reservedOp = Q.reservedOp lexer
 
+myReserved, myOpnames :: [String]
+
 myReserved
   = ["begin", "bool", "do", "else", "end",
   "false", "fi", "float", "if", "int", "od",
@@ -52,10 +55,10 @@ myOpnames
 pProg :: Parser GoatProgram
 pProg
   = do
-      (header,body) <- many1 pProcedure
-      return (Program header body)
+      procedures <- many1 pProcedure
+      return (Program procedures)
 
-pProcedure :: Parser (Header,Body)
+pProcedure :: Parser Procedure
 pProcedure
   = do
     reserved "proc"
@@ -63,24 +66,25 @@ pProcedure
     reserved "begin"
     body      <- pProgBody
     reserved "end"
-    return (header,body)
+    return (Procedure header body)
 
-pProgHeader :: Parser (Ident,Parameter)
+pProgHeader :: Parser Header
 pProgHeader
   = do
     ident     <- identifier
-    char "("
-    params    <- sepby pParameter comma
-    char ")"
-    return (ident,params)
+    char '('
+    params    <- sepBy pParameter comma
+    char ')'
+    newline
+    return (Header ident params)
 
-pParameter :: Parser (Pindicator,Ptype,Ident)
+pParameter :: Parser Parameter
 pParameter
   = do
     pidcat    <-  pPindicator
     ptype     <-  pPtype
     ident     <-  identifier
-    return (pidcat,ptype,ident)
+    return (Parameter pidcat ptype ident)
 
 pPindicator :: Parser Pindicator
 pPindicator
@@ -88,7 +92,7 @@ pPindicator
     <|>
     do { reserved "ref"; return RefType }
 
-pPtype :: Parser Ptype
+pPtype :: Parser PType
 pPtype
   = do { reserved "bool"; return BoolType }
     <|>
@@ -96,12 +100,12 @@ pPtype
     <|>
     do { reserved "float"; return FloatType }
 
-pProgBody :: Parser (VDecl,Stmt)
+pProgBody :: Parser Body
 pProgBody
   = do
     vdecls <- many   pVDecl
     stmts  <- many1  pStmt
-    return (vdecls,stmts)
+    return (Body vdecls stmts)
 
 pVDecl :: Parser VDecl
 pVDecl
@@ -110,20 +114,20 @@ pVDecl
     ident   <-   identifier
     sidcat  <- optional pSindicator
     semi
-    return (ptype,ident,sidcat)
+    return (VDecl ptype ident sidcat)
 
 pSindicator :: Parser Sindicator
 pSindicator
-  = do { char "["
-          n <- pNum
-          comma
-          m <- pNum
-         char "]" ; return (Matrix (n,m))}
+  = do { char '[';
+          n <- pNum;
+          comma;
+          m <- pNum;
+         char ']' ; return (Matrix (n,m))}
     <|>
     do {
-        char "["
-        n <- pNum
-        char "]" ; return (Array n)
+        char '[';
+        n <- pNum;
+        char ']' ; return (Array n)
       }
 
 pStmt, pAsg, pRead, pWrite, pCall, pIf, pIfElse, pWhile :: Parser Stmt
@@ -157,7 +161,7 @@ pAsg
 pCall
   = do
       lvalue <- pLvalue
-      explist <- sepby pExp comma <|> return ()
+      explist <- optional (sepBy pExp comma)
       return (Call lvalue explist)
 
 pIf
@@ -193,20 +197,20 @@ pWhile
     reserved "od"
     return (While exp stmts)
 
-pExp, pTerm, pFactor, pNum, pIdent, pString :: Parser Expr
+pExp, pTerm, pFactor, pNum, pIdent, pString, pUneg, pUnot :: Parser Expr
 
 pExp
-  = pString <|> (chainl1 pTerm pAddOp)
+  = pString <|> (chainl1 pTerm pOp_add)
     <?>
     "expression"
 
 pTerm
-  = chainl1 pFactor pMulOp
+  = chainl1 pFactor pOp_mul
     <?>
     "\"term\""
 
 pFactor
-  = choice [pUneg, pUnot, parsens pExp, pNum, pIdent]
+  = choice [pUneg, pUnot, parens pExp, pNum, pIdent]
     <?>
     "\"factor\""
 
@@ -233,16 +237,115 @@ pString
       <?>
       "string"
 
-pUneg, pUnot :: Parsec Unaryop
-
 pUneg
   = do
       reservedOp "-"
       exp <- pFactor
-      return (Op_neg exp)
+      return (UnegOp exp)
 
 pUnot
   = do
       reservedOp "!"
       exp <- pFactor
-      return (Op_not exp)
+      return (UnotOp exp)
+
+
+pLvalue :: Parser Lvalue
+pLvalue
+  = do
+      ident <- identifier
+      return (LId ident)
+      <?>
+      "lvalue"
+
+pOp_add, pOp_mul, pOp_min, pOp_div, pOp_or, pOp_and, pOp_eq, pOp_neq, pOp_les, pOp_leseq, pOp_grt, pOp_grteq :: Parser (Expr -> Expr -> Expr)
+
+pOp_add
+  = do
+    reservedOp "+"
+    return Add
+
+pOp_mul
+  = do
+    reservedOp "*"
+    return Mul
+
+pOp_min
+  = do
+    reservedOp "-"
+    return Min
+
+pOp_div
+  = do
+    reservedOp "/"
+    return Div
+
+pOp_or
+  = do
+    reservedOp "||"
+    return Or
+
+pOp_and
+  = do
+    reservedOp "&&"
+    return And
+
+pOp_eq
+  = do
+    reservedOp "="
+    return Eq
+
+pOp_neq
+  = do
+    reservedOp "!="
+    return Neq
+
+pOp_les
+  = do
+    reservedOp "<"
+    return Les
+
+pOp_leseq
+  = do
+    reservedOp "<="
+    return Leseq
+
+pOp_grt
+  = do
+    reservedOp ">"
+    return Grt
+
+pOp_grteq
+  = do
+    reservedOp ">="
+    return Grteq
+
+pMain :: Parser GoatProgram
+pMain
+  = do
+    whiteSpace
+    p <- pProg
+    eof
+    return p
+
+main :: IO ()
+main
+  = do { progname <- getProgName
+        ; args <- getArgs
+        ; checkArgs progname args
+        ; input <- readFile (head args)
+        ; let output = runParser pMain 0 "" input
+        ; case output of
+            Right ast -> print ast
+            Left  err -> do { putStr "Parse error at "
+                            ; print err
+                            }
+        }
+
+checkArgs :: String -> [String] -> IO ()
+checkArgs _ [filename]
+  = return ()
+checkArgs progname _
+  = do { putStrLn ("Usage: " ++ progname ++ " filename\n\n")
+      ; exitWith (ExitFailure 1)
+      }
