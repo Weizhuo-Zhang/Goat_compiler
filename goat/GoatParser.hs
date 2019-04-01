@@ -20,7 +20,7 @@ lexer
     , Q.identStart     = letter
     , Q.identLetter    = alphaNum <|> char '_'
     , Q.opStart         = oneOf "+-*:"
-    , Q.opLetter        = oneOf "+-*:"
+    , Q.opLetter        = oneOf "+-*:=<>!|&"
     , Q.reservedNames   = myReserved
     , Q.reservedOpNames = myOpnames
     })
@@ -46,8 +46,8 @@ myReserved
      "while", "write"]
 
 myOpnames
-  = ["+", "-", "*", ":=", "<", ">", "<=", ">=", "=", "!=",
-    "||", "&&", "!", "/"]
+  = ["+", "-", "*", "<", ">", "<=", ">=", "=", "!=",
+    "||", "&&", "!", "/", ":="]
 
 
 
@@ -162,6 +162,7 @@ pCall
   = do
       lvalue <- pLvalue
       explist <- optional (sepBy pExp comma)
+      semi
       return (Call lvalue explist)
 
 pIf
@@ -170,8 +171,8 @@ pIf
       exp <- pExp
       reserved "then"
       stmts <- many1 pStmt
-      semi
       reserved "fi"
+      semi
       return (If exp stmts)
 
 pIfElse
@@ -180,11 +181,10 @@ pIfElse
       exp <- pExp
       reserved "then"
       stmts1 <- many1 pStmt
-      semi
       reserved "else"
       stmts2 <- many1 pStmt
+      reserved "fi"
       semi
-      reserved "if"
       return (IfElse exp stmts1 stmts2)
 
 pWhile
@@ -193,14 +193,18 @@ pWhile
     exp <- pExp
     reserved "do"
     stmts <- many1 pStmt
-    semi
     reserved "od"
+    semi
     return (While exp stmts)
 
 pExp, pTerm, pFactor, pNum, pIdent, pString, pUneg, pUnot :: Parser Expr
 
 pExp
-  = pString <|> (chainl1 pTerm pOp_add)
+  = pString
+    <|>
+    pBool
+    <|>
+    (chainl1 pTerm pOp_add)
     <?>
     "expression"
 
@@ -236,6 +240,14 @@ pString
       return (StrConst str)
       <?>
       "string"
+
+pBool :: Parser Expr
+pBool
+  = do {reserved "true"; return (BoolConst True)}
+    <|>
+    do {reserved "false"; return (BoolConst False)}
+    <?>
+    "bool"
 
 pUneg
   = do
