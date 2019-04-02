@@ -50,7 +50,7 @@ data Stmt
     deriving (Show, Eq)
 
 data Body
-  = Body [VDecl] [Stmt]
+  = Body [Stmt]
       deriving (Show, Eq)
 
 data Pindicator
@@ -67,7 +67,7 @@ data Parameter
       deriving (Show, Eq)
 
 data Header
-  = Header Ident [Parameter]
+  = Header Ident [Parameter] [VDecl]
       deriving (Show, Eq)
 
 data Procedure

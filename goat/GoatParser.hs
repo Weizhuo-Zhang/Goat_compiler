@@ -8,6 +8,9 @@ import qualified Text.Parsec.Token as Q
 import System.Environment
 import System.Exit
 
+-----------------------------------------------------------------
+-- define lexer, reserved words and reserved operator
+-----------------------------------------------------------------
 type Parser a
     = Parsec String Int a
 
@@ -28,10 +31,13 @@ lexer
 whiteSpace = Q.whiteSpace lexer
 lexeme     = Q.lexeme lexer
 natural    = Q.natural lexer
+float      = Q.float lexer
+decimal    = Q.decimal lexer
 identifier = Q.identifier lexer
 colon      = Q.colon lexer
 semi       = Q.semi lexer
 comma      = Q.comma lexer
+dot        = Q.dot lexer
 parens     = Q.parens lexer
 squares    = Q.squares lexer
 reserved   = Q.reserved lexer
@@ -43,20 +49,27 @@ myReserved
   = ["begin", "bool", "do", "else", "end",
   "false", "fi", "float", "if", "int", "od",
      "proc", "read", "ref", "then", "true", "val",
-     "while", "write"]
+     "while", "write", "call"]
 
 myOpnames
   = ["+", "-", "*", "<", ">", "<=", ">=", "=", "!=",
     "||", "&&", "!", "/", ":="]
 
-
-
+-----------------------------------------------------------------
+-- pProg is the topmost parsing function. It looks for a program
+-- which contains one or more procedures
+-----------------------------------------------------------------
 
 pProg :: Parser GoatProgram
 pProg
   = do
       procedures <- many1 pProcedure
       return (Program procedures)
+
+-----------------------------------------------------------------
+-- pProcedure looks for a procedure, which contains "proc"
+-- + header + "begin" + body + "end"
+-----------------------------------------------------------------
 
 pProcedure :: Parser Procedure
 pProcedure
@@ -68,6 +81,12 @@ pProcedure
     reserved "end"
     return (Procedure header body)
 
+-----------------------------------------------------------------
+-- pProgHeader looks for the program header, which contains a
+-- function name followed by serveral parameters and variable
+-- declarations
+-----------------------------------------------------------------
+
 pProgHeader :: Parser Header
 pProgHeader
   = do
@@ -76,8 +95,13 @@ pProgHeader
     params    <- sepBy pParameter comma
     char ')'
     newline
-    return (Header ident params)
+    whiteSpace
+    vdecls    <- many pVDecl
+    return (Header ident params vdecls)
 
+-----------------------------------------------------------------
+-- parameters := (var|ref) (int|float|bool) identifier
+-----------------------------------------------------------------
 pParameter :: Parser Parameter
 pParameter
   = do
@@ -100,12 +124,19 @@ pPtype
     <|>
     do { reserved "float"; return FloatType }
 
+-----------------------------------------------------------------
+-- pProgBody looks for body, which contains one or more statements
+-----------------------------------------------------------------
+
 pProgBody :: Parser Body
 pProgBody
   = do
-    vdecls <- many   pVDecl
-    stmts  <- many1  pStmt
-    return (Body vdecls stmts)
+    stmts  <- many1 pStmt
+    return (Body stmts)
+
+-----------------------------------------------------------------
+-- cdecl := (int|float|bool) identifier (shape indicator)
+-----------------------------------------------------------------
 
 pVDecl :: Parser VDecl
 pVDecl
@@ -119,16 +150,20 @@ pVDecl
 pSindicator :: Parser Sindicator
 pSindicator
   = do { char '[';
-          n <- pNum;
+          n <- pInt;
           comma;
-          m <- pNum;
+          m <- pInt;
          char ']' ; return (Matrix (n,m))}
     <|>
     do {
         char '[';
-        n <- pNum;
+        n <- pInt;
         char ']' ; return (Array n)
       }
+
+-----------------------------------------------------------------
+-- define statements
+-----------------------------------------------------------------
 
 pStmt, pAsg, pRead, pWrite, pCall, pIf, pIfElse, pWhile :: Parser Stmt
 
@@ -149,7 +184,6 @@ pWrite
       semi
       return (Write exp)
 
--- the assig operation, need to modify
 pAsg
   = do
       lvalue <- pLvalue
@@ -160,6 +194,7 @@ pAsg
 
 pCall
   = do
+      reserved "call"
       lvalue <- pLvalue
       explist <- optional (sepBy pExp comma)
       semi
@@ -197,33 +232,46 @@ pWhile
     semi
     return (While exp stmts)
 
-pExp, pTerm, pFactor, pNum, pIdent, pString, pUneg, pUnot :: Parser Expr
+-----------------------------------------------------------------
+-- define expressions
+-- Unfinished: 6 relevant operators (<,>,<=,>=,=,!=)
+--             and (&&) | or (||)
+-----------------------------------------------------------------
+pExp, pTerm, pFactor, pInt, pFloat, pIdent, pString, pUneg, pUnot, pBool :: Parser Expr
 
 pExp
   = pString
     <|>
     pBool
+    -- <|>
+    -- pOp_or
+    -- <|>
+    -- pOp_and
     <|>
-    (chainl1 pTerm pOp_add)
+    (chainl1 pTerm (choice [pOp_add, pOp_min]))
     <?>
     "expression"
 
 pTerm
-  = chainl1 pFactor pOp_mul
+  = chainl1 pFactor (choice [pOp_mul, pOp_div])
     <?>
     "\"term\""
 
 pFactor
-  = choice [pUneg, pUnot, parens pExp, pNum, pIdent]
+  = choice [pUneg, pUnot, parens pExp, pInt, pFloat, pIdent]
     <?>
     "\"factor\""
 
-pNum
+pInt
   = do
-      n <- natural <?> ""
-      return (IntConst (fromInteger n :: Int))
-      <?>
-      "number"
+    n <- natural <?> "integer"
+    return (IntConst (fromInteger n :: Int))
+
+-- float needs debug
+pFloat
+  = do
+    n <- decimal <?> "float"
+    return (FloatConst (fromInteger n :: Float))
 
 pIdent
   = do
@@ -241,7 +289,6 @@ pString
       <?>
       "string"
 
-pBool :: Parser Expr
 pBool
   = do {reserved "true"; return (BoolConst True)}
     <|>
