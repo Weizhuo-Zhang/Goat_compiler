@@ -15,3 +15,7 @@ Monday 15 April at 23:00
 ## Project Specification
 [Project Specification](./asg1(4).pdf)
 
+## Running Instruction
+enter goat directory
+>ghc GoatParser.hs
+>./GoatParser testCase/test.gt
