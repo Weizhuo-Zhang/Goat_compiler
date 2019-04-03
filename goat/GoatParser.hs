@@ -3,6 +3,7 @@ module Main where
 import GoatAST
 import Data.Char
 import Text.Parsec
+import Text.Parsec.Expr
 import Text.Parsec.Language (emptyDef)
 import qualified Text.Parsec.Token as Q
 import System.Environment
@@ -150,14 +151,14 @@ pVDecl
 pSindicator :: Parser Sindicator
 pSindicator
   = do { char '[';
-          n <- pInt;
+          n <- pNum;
           comma;
-          m <- pInt;
+          m <- pNum;
          char ']' ; return (Matrix (n,m))}
     <|>
     do {
         char '[';
-        n <- pInt;
+        n <- pNum;
         char ']' ; return (Array n)
       }
 
@@ -237,41 +238,66 @@ pWhile
 -- Unfinished: 6 relevant operators (<,>,<=,>=,=,!=)
 --             and (&&) | or (||)
 -----------------------------------------------------------------
-pExp, pTerm, pFactor, pInt, pFloat, pIdent, pString, pUneg, pUnot, pBool :: Parser Expr
+pExp, pNum, pIdent, pString, pBool :: Parser Expr
+-- pUneg, pUnot, pTerm, pFactor :: Parser Expr
+-- pExp
+--   = pString
+--     <|>
+--     pBool
+--     -- <|>
+--     -- pOp_or
+--     -- <|>
+--     -- pOp_and
+--     <|>
+--     (chainl1 pTerm (choice [pOp_add, pOp_min]))
+--     <?>
+--     "expression"
+--
+-- pTerm
+--   = chainl1 pFactor (choice [pOp_mul, pOp_div])
+--     <?>
+--     "\"term\""
+--
+-- pFactor
+--   = choice [pUneg, pUnot, parens pExp, pNum, pIdent]
+--     <?>
+--     "\"factor\""
 
 pExp
-  = pString
+ = buildExpressionParser table pFac
+
+pFac :: Parser Expr
+pFac = choice [parens pExp, pNum, pIdent, pBool]
+
+table = [[prefix "-" UnaryMinus]
+        ,[binary "*" Mul, binary "/" Div]
+        ,[binary "+" Add, binary "-" Sub]
+        ,[relation "=" Eq, relation "!=" NotEq
+        , relation "<" Les, relation "<=" LesEq
+        , relation ">" Grt, relation ">=" GrtEq]
+        ,[prefix "!" UnaryNot]
+        ,[binary "&&" And]
+        ,[binary "||" Or]]
+
+prefix name func
+  = Prefix (do {reservedOp name; return func})
+
+binary name op
+ = Infix (do {reservedOp name; return op}) AssocLeft
+
+relation name rel
+ = Infix (do {reservedOp name; return rel}) AssocNone
+
+pNum
+  = try (do { n <- natural <?> "integer";
+         return (IntConst (fromInteger n :: Int))
+       }
     <|>
-    pBool
-    -- <|>
-    -- pOp_or
-    -- <|>
-    -- pOp_and
-    <|>
-    (chainl1 pTerm (choice [pOp_add, pOp_min]))
-    <?>
-    "expression"
-
-pTerm
-  = chainl1 pFactor (choice [pOp_mul, pOp_div])
-    <?>
-    "\"term\""
-
-pFactor
-  = choice [pUneg, pUnot, parens pExp, pInt, pFloat, pIdent]
-    <?>
-    "\"factor\""
-
-pInt
-  = do
-    n <- natural <?> "integer"
-    return (IntConst (fromInteger n :: Int))
-
--- float needs debug
-pFloat
-  = do
-    n <- decimal <?> "float"
-    return (FloatConst (fromInteger n :: Float))
+    do { n <- many1 digit;
+         char '.' <?> "float";
+         m <- many1 digit;
+         return (FloatConst (read (n ++ "." ++m) :: Float))
+       })
 
 pIdent
   = do
@@ -296,17 +322,17 @@ pBool
     <?>
     "bool"
 
-pUneg
-  = do
-      reservedOp "-"
-      exp <- pFactor
-      return (UnegOp exp)
-
-pUnot
-  = do
-      reservedOp "!"
-      exp <- pFactor
-      return (UnotOp exp)
+-- pUneg
+--   = do
+--       reservedOp "-"
+--       exp <- pFactor
+--       return (UnegOp exp)
+--
+-- pUnot
+--   = do
+--       reservedOp "!"
+--       exp <- pFactor
+--       return (UnotOp exp)
 
 
 pLvalue :: Parser Lvalue
@@ -317,67 +343,67 @@ pLvalue
       <?>
       "lvalue"
 
-pOp_add, pOp_mul, pOp_min, pOp_div, pOp_or, pOp_and, pOp_eq, pOp_neq, pOp_les, pOp_leseq, pOp_grt, pOp_grteq :: Parser (Expr -> Expr -> Expr)
+-- pOp_add, pOp_mul, pOp_min, pOp_div, pOp_or, pOp_and, pOp_eq, pOp_neq, pOp_les, pOp_leseq, pOp_grt, pOp_grteq :: Parser (Expr -> Expr -> Expr)
 
-pOp_add
-  = do
-    reservedOp "+"
-    return Add
-
-pOp_mul
-  = do
-    reservedOp "*"
-    return Mul
-
-pOp_min
-  = do
-    reservedOp "-"
-    return Min
-
-pOp_div
-  = do
-    reservedOp "/"
-    return Div
-
-pOp_or
-  = do
-    reservedOp "||"
-    return Or
-
-pOp_and
-  = do
-    reservedOp "&&"
-    return And
-
-pOp_eq
-  = do
-    reservedOp "="
-    return Eq
-
-pOp_neq
-  = do
-    reservedOp "!="
-    return Neq
-
-pOp_les
-  = do
-    reservedOp "<"
-    return Les
-
-pOp_leseq
-  = do
-    reservedOp "<="
-    return Leseq
-
-pOp_grt
-  = do
-    reservedOp ">"
-    return Grt
-
-pOp_grteq
-  = do
-    reservedOp ">="
-    return Grteq
+-- pOp_add
+--   = do
+--     reservedOp "+"
+--     return Add
+--
+-- pOp_mul
+--   = do
+--     reservedOp "*"
+--     return Mul
+--
+-- pOp_min
+--   = do
+--     reservedOp "-"
+--     return Min
+--
+-- pOp_div
+--   = do
+--     reservedOp "/"
+--     return Div
+--
+-- pOp_or
+--   = do
+--     reservedOp "||"
+--     return Or
+--
+-- pOp_and
+--   = do
+--     reservedOp "&&"
+--     return And
+--
+-- pOp_eq
+--   = do
+--     reservedOp "="
+--     return Eq
+--
+-- pOp_neq
+--   = do
+--     reservedOp "!="
+--     return Neq
+--
+-- pOp_les
+--   = do
+--     reservedOp "<"
+--     return Les
+--
+-- pOp_leseq
+--   = do
+--     reservedOp "<="
+--     return Leseq
+--
+-- pOp_grt
+--   = do
+--     reservedOp ">"
+--     return Grt
+--
+-- pOp_grteq
+--   = do
+--     reservedOp ">="
+--     return Grteq
 
 pMain :: Parser GoatProgram
 pMain

@@ -21,18 +21,18 @@ data Expr
   | Expr Expr
   | Add Expr Expr
   | Mul Expr Expr
-  | Min Expr Expr
+  | Sub Expr Expr
   | Div Expr Expr
   | Or Expr Expr
   | And Expr Expr
   | Eq Expr Expr
-  | Neq Expr Expr
+  | NotEq Expr Expr
   | Les Expr Expr
-  | Leseq Expr Expr
+  | LesEq Expr Expr
   | Grt Expr Expr
-  | Grteq Expr Expr
-  | UnegOp Expr
-  | UnotOp Expr
+  | GrtEq Expr Expr
+  | UnaryMinus Expr
+  | UnaryNot Expr
     deriving (Show, Eq)
 
 data VDecl

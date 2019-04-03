@@ -2,7 +2,7 @@ proc main()
     int a;
     int b;
 begin
-    a := 2.2 * (1 + 10) + 2 + 2 * 2 + 14;
+    a := 2 * (1 + 10) + 2 + 2 * 2 + 14;
     write a;
     write "\n";
     b := -a + a;

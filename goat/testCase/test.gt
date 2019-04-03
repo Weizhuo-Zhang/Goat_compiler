@@ -4,7 +4,8 @@ proc test(var bool ident1, ref float ident2)
 begin
     ident3 := ident1;
     ident4 := - 1 + 3 * 4;
-    if ident3 + 1 
+    if ident3 = true 
     then ident3 := false;
     fi;
+    ident3 := !ident1;
 end
