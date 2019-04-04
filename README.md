@@ -13,9 +13,9 @@ This repository is for 'COMP90045 - Programming Language Implementation'
 Monday 15 April at 23:00
 
 ## Project Specification
-[Project Specification](./asg1(4).pdf)
+[Project Specification](./asg1_corrected.pdf)
 
 ## Running Instruction
 enter goat directory
->ghc GoatParser.hs
+>ghc GoatParser.hs \n
 >./GoatParser testCase/test.gt

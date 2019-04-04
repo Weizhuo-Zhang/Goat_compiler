@@ -77,7 +77,6 @@ pProcedure
   = do
     reserved "proc"
     header    <- pProgHeader
-    reserved "begin"
     body      <- pProgBody
     reserved "end"
     return (Procedure header body)
@@ -97,8 +96,7 @@ pProgHeader
     char ')'
     newline
     whiteSpace
-    vdecls    <- many pVDecl
-    return (Header ident params vdecls)
+    return (Header ident params)
 
 -----------------------------------------------------------------
 -- parameters := (var|ref) (int|float|bool) identifier
@@ -132,8 +130,10 @@ pPtype
 pProgBody :: Parser Body
 pProgBody
   = do
+    vdecls <- many pVDecl
+    reserved "begin"
     stmts  <- many1 pStmt
-    return (Body stmts)
+    return (Body vdecls stmts)
 
 -----------------------------------------------------------------
 -- cdecl := (int|float|bool) identifier (shape indicator)
