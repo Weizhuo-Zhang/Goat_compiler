@@ -7,8 +7,8 @@ This repository is for 'COMP90045 - Programming Language Implementation'
 ## Members of the team MaRKeD
 
 - Martin
-- Kevin
 - Ray
+- Kevin
 - Delsin
 
 ## Due Date
