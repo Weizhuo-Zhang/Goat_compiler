@@ -17,7 +17,7 @@ Monday 15 April at 23:00
 
 ## Project Specification
 
-[Project Specification](./Assignment 1.pdf)
+[Project Specification](./Assignment_1.pdf)
 
 ## Running Instruction
 
