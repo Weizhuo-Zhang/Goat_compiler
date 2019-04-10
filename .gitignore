@@ -22,5 +22,6 @@ cabal.project.local~
 .ghc.environment.*
 .DS_Store
 goat/GoatLexer.hs
+goat/Goat
 *.out
 *.swp

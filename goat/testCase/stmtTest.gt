@@ -3,7 +3,7 @@ proc main()
 begin
     n:=2;
     n[3]:=2101;
-    n[3,7]:=222;
+    n[3,7]:=2.22;
     read n;
     read n[5];
     read n[3,7];
