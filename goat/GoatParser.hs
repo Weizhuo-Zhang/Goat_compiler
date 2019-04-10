@@ -48,14 +48,14 @@ reservedOp = Q.reservedOp lexer
 myReserved, myOpnames :: [String]
 
 myReserved
-  = ["begin", "bool", "do", "else", "end",
-  "false", "fi", "float", "if", "int", "od",
-     "proc", "read", "ref", "then", "true", "val",
-     "while", "write", "call"]
+  = ["begin", "bool", "call" , "do"  , "else", "end",
+     "false", "fi"  , "float", "if"  , "int" , "od",
+     "proc" , "read", "ref"  , "then", "true", "val",
+     "while", "write"]
 
 myOpnames
-  = ["+", "-", "*", "<", ">", "<=", ">=", "=", "!=",
-    "||", "&&", "!", "/", ":="]
+  = ["+" , "-" , "*", "<", ">", "<=", ">=", "=", "!=",
+     "||", "&&", "!", "/", ":="]
 
 -----------------------------------------------------------------
 -- pProg is the topmost parsing function. It looks for a program
@@ -63,10 +63,9 @@ myOpnames
 -----------------------------------------------------------------
 
 pProg :: Parser GoatProgram
-pProg
-  = do
-      procedures <- many1 pProcedure
-      return (GoatProgram procedures)
+pProg = do
+    procedures <- many1 pProcedure
+    return (GoatProgram procedures)
 
 -----------------------------------------------------------------
 -- pProcedure looks for a procedure, which contains "proc"
@@ -74,8 +73,7 @@ pProg
 -----------------------------------------------------------------
 
 pProcedure :: Parser Procedure
-pProcedure
-  = do
+pProcedure = do
     reserved "proc"
     header    <- pProgHeader
     body      <- pProgBody
@@ -88,8 +86,7 @@ pProcedure
 -----------------------------------------------------------------
 
 pProgHeader :: Parser Header
-pProgHeader
-  = do
+pProgHeader = do
     ident     <- identifier
     char '('
     params    <- sepBy pParameter comma
@@ -102,8 +99,7 @@ pProgHeader
 -- parameters := (var|ref) (int|float|bool) identifier
 -----------------------------------------------------------------
 pParameter :: Parser Parameter
-pParameter
-  = do
+pParameter = do
     pidcat    <-  pPIndicator
     ptype     <-  pPtype
     ident     <-  identifier
@@ -128,8 +124,7 @@ pPtype
 -----------------------------------------------------------------
 
 pProgBody :: Parser Body
-pProgBody
-  = do
+pProgBody = do
     vdecls <- many pVDecl
     reserved "begin"
     stmts  <- many1 pStmt
@@ -141,8 +136,7 @@ pProgBody
 -----------------------------------------------------------------
 
 pVDecl :: Parser VDecl
-pVDecl
-  = do
+pVDecl = do
     ptype  <- pPtype
     ident  <- identifier
     sidcat <- pSIndicator
@@ -176,54 +170,54 @@ pStmt, pAsg, pRead, pWrite, pCall, pIf, pWhile :: Parser Stmt
 pStmt
   = choice [pAsg, pRead, pWrite, pCall, pIf, pWhile]
 
-pRead
-  = do
-      reserved "read"
-      ident <- identifier
-      semi
-      return (Read ident)
+pRead = do
+    reserved "read"
+    ident <- identifier
+    semi
+    return (Read ident)
 
-pWrite
-  = do
-      reserved "write"
-      exp <- (pString <|> pExp)
-      semi
-      return (Write exp)
+pWrite = do
+    reserved "write"
+    exp <- (pString <|> pExp)
+    semi
+    return (Write exp)
 
-pAsg
-  = do
-      ident <- identifier
-      reservedOp ":="
-      rvalue <- pExp
-      semi
-      return (Assign ident rvalue)
+pAsg = do
+    ident  <- identifier
+    reservedOp ":="
+    rvalue <- pExp
+    semi
+    return (Assign ident rvalue)
 
-pCall
-  = do
-      reserved "call"
-      ident <- identifier
-      explist <- optional (sepBy pExp comma)
-      semi
-      return (Call ident explist)
+pCall = do
+    reserved "call"
+    ident   <- identifier
+    char '('
+    expList <- sepBy pExp comma
+--    explist <- optional (sepBy pExp comma)
+    char ')'
+    semi
+    return (Call ident expList)
 
-pIf = try( do
-    { reserved "if"
-    ; exp <- pExp
-    ; reserved "then"
-    ; stmts <- many1 pStmt
-    ; reserved "fi"
-    ; return (If exp stmts)
-    })
+pIf =
+    try( do
+        { reserved "if"
+        ; exp   <- pExp
+        ; reserved "then"
+        ; stmts <- many1 pStmt
+        ; reserved "fi"
+        ; return (If exp stmts)
+        })
     <|> do
-    { reserved "if"
-    ; exp <- pExp
-    ; reserved "then"
-    ; stmts1 <- many1 pStmt
-    ; reserved "else"
-    ; stmts2 <- many1 pStmt
-    ; reserved "fi"
-    ; return (IfElse exp stmts1 stmts2)
-    }
+        { reserved "if"
+        ; exp    <- pExp
+        ; reserved "then"
+        ; stmts1 <- many1 pStmt
+        ; reserved "else"
+        ; stmts2 <- many1 pStmt
+        ; reserved "fi"
+        ; return (IfElse exp stmts1 stmts2)
+        }
 
 -- pIfElse
 --   = do
@@ -236,10 +230,9 @@ pIf = try( do
 --       reserved "fi"
 --       return (IfElse exp stmts1 stmts2)
 
-pWhile
-  = do
+pWhile = do
     reserved "while"
-    exp <- pExp
+    exp   <- pExp
     reserved "do"
     stmts <- many1 pStmt
     reserved "od"
@@ -281,24 +274,24 @@ pExp
 pFac :: Parser Expr
 pFac = choice [parens pExp, pNum, pIdent, pBool]
 
-table = [[prefix "-" UnaryMinus]
-        ,[binary "*" Mul, binary "/" Div]
-        ,[binary "+" Add, binary "-" Sub]
-        ,[relation "=" Eq, relation "!=" NotEq
+table = [[prefix   "-" UnaryMinus]
+        ,[binary   "*" Mul, binary   "/"  Div]
+        ,[binary   "+" Add, binary   "-"  Sub]
+        ,[relation "=" Eq,  relation "!=" NotEq
         , relation "<" Les, relation "<=" LesEq
         , relation ">" Grt, relation ">=" GrtEq]
-        ,[prefix "!" UnaryNot]
-        ,[binary "&&" And]
-        ,[binary "||" Or]]
+        ,[prefix   "!" UnaryNot]
+        ,[binary   "&&" And]
+        ,[binary   "||" Or]]
 
 prefix name func
-  = Prefix (do {reservedOp name; return func})
+    = Prefix (do {reservedOp name; return func})
 
 binary name op
- = Infix (do {reservedOp name; return op}) AssocLeft
+    = Infix (do {reservedOp name; return op}) AssocLeft
 
 relation name rel
- = Infix (do {reservedOp name; return rel}) AssocNone
+    = Infix (do {reservedOp name; return rel}) AssocNone
 
 pNum
   = try (do { n <- natural <?> "integer";

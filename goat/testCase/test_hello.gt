@@ -15,6 +15,9 @@ begin
         ident4 := 1;
     od
     ident3 := !ident1;
+    call ident3();
+    call ident4(ident1);
+    call ident4(ident1 + ident2);
 end
 proc main()
 begin
