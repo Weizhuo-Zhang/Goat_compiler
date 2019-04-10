@@ -150,18 +150,20 @@ pVDecl
     return (VDecl ptype ident sidcat)
 
 pSindicator :: Parser Sindicator
-pSindicator
-  = do { char '[';
-          n <- pNum;
-          comma;
-          m <- pNum;
-         char ']' ; return (Matrix (n,m))}
-    <|>
-    do {
-        char '[';
-        n <- pNum;
-        char ']' ; return (Array n)
-      }
+pSindicator =
+    try (do { char '['
+            ; n <- pNum
+            ; char ']'
+            ; return (Array n)
+            }
+        )
+    <|>  do { char '['
+            ; n <- pNum
+            ; comma
+            ; m <- pNum
+            ; char ']'
+            ; return (Matrix (n,m))
+            }
 
 -----------------------------------------------------------------
 -- define statements
