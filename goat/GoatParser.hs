@@ -141,7 +141,7 @@ pVDecl = do
     ident  <- identifier
     sidcat <- pSIndicator
     semi
-    return (VDecl ptype ident sidcat)
+    return (VDecl ptype (Variable ident sidcat))
 
 pSIndicator :: Parser SIndicator
 pSIndicator =
@@ -172,9 +172,10 @@ pStmt
 
 pRead = do
     reserved "read"
-    ident <- identifier
+    ident  <- identifier
+    sidcat <- pExprSIndicator
     semi
-    return (Read ident)
+    return (Read (Variable ident sidcat))
 
 pWrite = do
     reserved "write"
@@ -184,10 +185,11 @@ pWrite = do
 
 pAsg = do
     ident  <- identifier
+    sidcat <- pExprSIndicator
     reservedOp ":="
     rvalue <- pExp
     semi
-    return (Assign ident rvalue)
+    return (Assign (Variable ident sidcat) rvalue)
 
 pCall = do
     reserved "call"
@@ -304,10 +306,29 @@ pNum
          return (FloatConst (read (n ++ "." ++m) :: Float))
        })
 
+pExprSIndicator :: Parser SIndicator
+pExprSIndicator =
+    try (do { char '['
+            ; exp   <- pExp
+            ; char ']'
+            ; return (Array exp)
+            }
+        )
+    <|>
+    try (do { char '['
+            ; expM   <- pExp
+            ; comma
+            ; expN   <- pExp
+            ; char ']'
+            ; return (Matrix expM expN)
+            })
+    <|>  do { return (NoIndicator) }
+
 pIdent
   = do
       ident <- identifier
-      return (Id ident)
+      sidcat <- pExprSIndicator
+      return (ExprVar (Variable ident sidcat))
       <?>
       "identifier"
 

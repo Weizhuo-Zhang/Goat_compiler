@@ -28,14 +28,28 @@ printPassIndicator pIndicator = do
         VarType   -> putStr "var"
         RefType   -> putStr "ref"
 
--- TODO Should be a white space after ,??
-printSIndicator :: SIndicator -> IO ()
-printSIndicator sIndicator = do
+--printSIndicator :: SIndicator -> IO ()
+--printSIndicator sIndicator = do
+--    case sIndicator of
+--        NoIndicator -> return ()
+--        Array  n    -> putStr $ "[" ++ (printExpr n) ++ "]"
+--        Matrix m n  -> putStr $ "[" ++ (printExpr m) ++ ", " ++ (printExpr n) ++ "]"
+
+--printVariable :: Variable -> IO ()
+--printVariable var = do
+--    { putStr $ varId var
+--    ; printSIndicator $ varSIndicator var
+--    }
+
+getSIndicator :: SIndicator -> String
+getSIndicator sIndicator =
     case sIndicator of
-        NoIndicator -> return ()
-        Array  n   -> putStr $ "[" ++ (show $ intConstVal n) ++ "]"
-        Matrix m n -> putStr $ "[" ++ (show $ intConstVal m) ++ ", " ++
-                               (show $ intConstVal n) ++ "]"
+        NoIndicator -> ""
+        Array  n    -> "[" ++ (getTopExpr n) ++ "]"
+        Matrix m n  -> "[" ++ (getTopExpr m) ++ ", " ++ (getTopExpr n) ++ "]"
+
+getVariable :: Variable -> String
+getVariable var = (varId var) ++ (getSIndicator $ varSIndicator var)
 
 printParameters :: [Parameter] -> String -> IO ()
 printParameters [] _                     = return ()
@@ -61,34 +75,122 @@ printHeader header = do
 
 printVdecl :: [VDecl] -> IO ()
 printVdecl []           = return ()
-printVdecl (vdel:vdels) = do
+printVdecl (vdecl:vdels) = do
     { printIndent 4
-    ; printBaseType $ vdelType vdel
+    ; printBaseType $ vdeclType vdecl
     ; putStr " "
-    ; putStr $ vdelIdent vdel
-    ; printSIndicator $ vdelSIndicator vdel
+    ; putStr $ getVariable $ vdeclVar vdecl
+--    ; printVariable $ vdeclVar vdecl
     ; putStr   ";"
     ; putStrLn ""
     ; printVdecl vdels
     }
 
+printAssignStmt :: Variable -> Expr -> Int -> IO ()
+printAssignStmt var expr indent = do
+    { printIndent indent
+    ; putStr $ getVariable var
+    ; putStrLn " := "
+    ; putStr $ getTopExpr expr
+    ; putStrLn ""
+    }
+
 printStatements :: [Stmt] -> Int -> IO ()
-printStatements [] _ = return ()
--- printStatements (stmt:stmts) = do
---     case stmt of
---         Assign Lvalue Expr
---         Read Lvalue
---         Write Expr
---         Call Lvalue ()
---         If Expr [Stmt]
---         IfElse Expr [Stmt] [Stmt]
---         While Expr [Stmt]
+printStatements [] _                = return ()
+printStatements (stmt:stmts) indent = do
+    case stmt of
+        Assign var expr -> printAssignStmt var expr indent
+--        Read Lvalue
+--        Write Expr
+--        Call Lvalue ()
+--        If Expr [Stmt]
+--        IfElse Expr [Stmt] [Stmt]
+--        While Expr [Stmt]
+
+getTopExpr :: Expr -> String
+getTopExpr expr =
+    case expr of
+        ExprVar     var   -> getVariable var
+        BoolConst   val   -> show val
+        IntConst    val   -> show val
+        FloatConst  val   -> show val
+        StrConst    val   -> show val
+        Add   lExpr rExpr -> (getExpr lExpr) ++ " + "  ++ (getExpr lExpr)
+
+
+getExpr :: Expr -> String
+getExpr expr =
+    case expr of
+--        Add   lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " + "  ++ (printExpr lExpr) ++ ")")
+--        Mul   lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " * " ++ (printExpr lExpr) ++ ")")
+--        Sub   lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " - "  ++ (printExpr lExpr) ++ ")")
+--        Div   lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " / "  ++ (printExpr lExpr) ++ ")")
+--        Or    lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " || " ++ (printExpr lExpr) ++ ")")
+--        And   lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " && " ++ (printExpr lExpr) ++ ")")
+--        Eq    lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " = "  ++ (printExpr lExpr) ++ ")")
+--        NotEq lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " != " ++ (printExpr lExpr) ++ ")")
+--        Les   lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " < "  ++ (printExpr lExpr) ++ ")")
+--        LesEq lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " <= " ++ (printExpr lExpr) ++ ")")
+--        Grt   lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " > "  ++ (printExpr lExpr) ++ ")")
+--        GrtEq lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " >= " ++ (printExpr lExpr) ++ ")")
+--        UnaryMinus  expr  -> putStr ("-" ++ (printExpr expr))
+--        UnaryNot    expr  -> putStr ("!" ++ (printExpr expr))
+
+
+--printExpr :: Expr -> IO ()
+--printExpr expr = do
+--    case expr of
+--        ExprVar     var   -> printVariable var
+--        BoolConst   val   -> show val
+--        IntConst    val   -> show val
+--        FloatConst  val   -> show val
+--        StrConst    val   -> show val
+--        Add   lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " + "  ++ (printExpr lExpr) ++ ")")
+--        Mul   lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " * " ++ (printExpr lExpr) ++ ")")
+--        Sub   lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " - "  ++ (printExpr lExpr) ++ ")")
+--        Div   lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " / "  ++ (printExpr lExpr) ++ ")")
+--        Or    lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " || " ++ (printExpr lExpr) ++ ")")
+--        And   lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " && " ++ (printExpr lExpr) ++ ")")
+--        Eq    lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " = "  ++ (printExpr lExpr) ++ ")")
+--        NotEq lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " != " ++ (printExpr lExpr) ++ ")")
+--        Les   lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " < "  ++ (printExpr lExpr) ++ ")")
+--        LesEq lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " <= " ++ (printExpr lExpr) ++ ")")
+--        Grt   lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " > "  ++ (printExpr lExpr) ++ ")")
+--        GrtEq lExpr rExpr ->
+--            putStr ("(" ++ (printExpr lExpr) ++ " >= " ++ (printExpr lExpr) ++ ")")
+--        UnaryMinus  expr  -> putStr ("-" ++ (printExpr expr))
+--        UnaryNot    expr  -> putStr ("!" ++ (printExpr expr))
+
+
 
 printBody :: Body -> IO ()
 printBody body = do
     { printVdecl $ bodyVarDeclarations body
     ; putStrLn "begin"
---    ; printStatements (bodyStatements body) 4
+    ; printStatements (bodyStatements body) 4
     ; putStrLn "end"
     ; putStrLn ""
     }

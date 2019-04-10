@@ -1,7 +1,5 @@
 module GoatAST where
 
-
-
 type Ident = String
 
 data PType
@@ -10,66 +8,116 @@ data PType
     | FloatType
     deriving (Show, Eq)
 
+data Variable
+    = Variable
+    { varId                :: Ident
+    , varSIndicator        :: SIndicator
+    } deriving (Show, Eq)
+
+
 data Expr
-    = Id Ident
-    | BoolConst Bool
+    = ExprVar
+        { exprVar          :: Variable }
+    | BoolConst
+        { boolConstVal     :: Bool }
     | IntConst
-      { intConstVal :: Int }
-    | FloatConst Float
-    | StrConst String
-    | Expr Expr
-    | Add Expr Expr
-    | Mul Expr Expr
-    | Sub Expr Expr
-    | Div Expr Expr
-    | Or Expr Expr
-    | And Expr Expr
-    | Eq Expr Expr
-    | NotEq Expr Expr
-    | Les Expr Expr
-    | LesEq Expr Expr
-    | Grt Expr Expr
-    | GrtEq Expr Expr
-    | UnaryMinus Expr
-    | UnaryNot Expr
+        { intConstVal      :: Int }
+    | FloatConst
+        { floatConstVal    :: Float }
+    | StrConst
+        { strConstVal      :: String }
+    | Add
+        { addLeftExpr      :: Expr
+        , addRightExpr     :: Expr
+        }
+    | Mul
+        { mulLeftExpr      :: Expr
+        , mulRightExpr     :: Expr
+        }
+    | Sub
+        { subLeftExpr      :: Expr
+        , subRightExpr     :: Expr
+        }
+    | Div
+        { divLeftExpr      :: Expr
+        , divRightExpr     :: Expr
+        }
+    | Or
+        { orLeftExpr       :: Expr
+        , orRightExpr      :: Expr
+        }
+    | And
+        { andLeftExpr      :: Expr
+        , andRightExpr     :: Expr
+        }
+    | Eq
+        { eqLeftExpr       :: Expr
+        , eqRightExpr      :: Expr
+        }
+    | NotEq
+        { notEqLeftExpr    :: Expr
+        , notEqRightExpr   :: Expr
+        }
+    | Les
+        { lesLeftExpr      :: Expr
+        , lesRightExpr     :: Expr
+        }
+    | LesEq
+        { lesEqLeftExpr    :: Expr
+        , lesEqRightExpr   :: Expr
+        }
+    | Grt
+        { grtLeftExpr      :: Expr
+        , grtRightExpr     :: Expr
+        }
+    | GrtEq
+        { grtEqLeftExpr    :: Expr
+        , grtEqRightExpr   :: Expr
+        }
+    | UnaryMinus
+        { unaryMinusExpr   :: Expr }
+    | UnaryNot
+        { unaryNotExpr     :: Expr }
     deriving (Show, Eq)
 
 data VDecl
     = VDecl
-    { vdelType       :: PType
-    , vdelIdent      :: Ident
-    , vdelSIndicator :: SIndicator
+    { vdeclType            :: PType
+    , vdeclVar             :: Variable
     } deriving (Show, Eq)
 
 data Stmt
     = Assign
-        { assignIdent :: Ident
-        , assignExpr  :: Expr
+        { assignVal        :: Variable
+        , assignExpr       :: Expr
         }
     | Read
-        { readIdent   :: Ident }
+        { readVal          :: Variable }
     | Write
-        { writeExpr   :: Expr }
+        { writeExpr        :: Expr }
     | Call
-        { callIdent   :: Ident
-        , callExprs   :: [Expr]
+        { callIdent        :: Ident
+        , callExprs        :: [Expr]
         }
     | If
-        { ifExpr      :: Expr
-        , ifStmts     :: [Stmt]
+        { ifExpr           :: Expr
+        , ifStmts          :: [Stmt]
         }
     | IfElse
-        { ifElseExpr      :: Expr
-        , ifElseStmts1    :: [Stmt]
-        , ifElseStmts2    :: [Stmt]
+        { ifElseExpr       :: Expr
+        , ifElseStmts1     :: [Stmt]
+        , ifElseStmts2     :: [Stmt]
         }
-    | While Expr [Stmt]
+    | While
+        { whileExpr        :: Expr
+        , whileStmts       :: [Stmt]
+        }
     deriving (Show, Eq)
 
 data Body
     = Body
-    { bodyVarDeclarations :: [VDecl]
-    , bodyStatements      :: [Stmt]
+    { bodyVarDeclarations  :: [VDecl]
+    , bodyStatements       :: [Stmt]
     } deriving (Show, Eq)
 
 data PIndicator
@@ -79,34 +127,34 @@ data PIndicator
 
 data SIndicator
     = Array
-      { arrayExpr :: Expr }
+      { arrayExpr          :: Expr }
     | Matrix
-      { matrixMExpr :: Expr
-      , matrixNExpr :: Expr
+      { matrixMExpr        :: Expr
+      , matrixNExpr        :: Expr
       }
     | NoIndicator
     deriving (Show, Eq)
 
 data Parameter
     = Parameter
-    { passingIndicator :: PIndicator
-    , passingType      :: PType
-    , passingIdent     :: Ident
+    { passingIndicator     :: PIndicator
+    , passingType          :: PType
+    , passingIdent         :: Ident
     } deriving (Show, Eq)
 
 data Header
     = Header
-    { headerIdent :: Ident
-    , parameters :: [Parameter]
+    { headerIdent          :: Ident
+    , parameters           :: [Parameter]
     } deriving (Show, Eq)
 
 data Procedure
     = Procedure
-    { header :: Header
-    , body  :: Body
+    { header               :: Header
+    , body                 :: Body
     } deriving (Show, Eq)
 
 data GoatProgram
     = GoatProgram
-    { procedures :: [Procedure]
+    { procedures           :: [Procedure]
     } deriving (Show, Eq)

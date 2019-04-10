@@ -1,0 +1,5 @@
+proc main()
+    int n;
+begin
+    n := 2;
+end
