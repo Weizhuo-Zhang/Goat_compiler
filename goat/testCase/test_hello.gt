@@ -1,6 +1,7 @@
 proc test(var bool ident1, ref float ident2)
     bool ident3[6,9];
     int ident4[5];
+    float ident5;
 begin
     ident3 := ident1;
     ident4 := - 1 + 3 * 4;

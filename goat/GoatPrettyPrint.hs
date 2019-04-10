@@ -30,6 +30,7 @@ printPassIndicator pIndicator = do
 
 printSIndicator :: () -> IO ()
 printSIndicator () = return ()
+-- printSIndicator
 
 printParameters :: [Parameter] -> String -> IO ()
 printParameters [] _                     = return ()
@@ -107,6 +108,7 @@ prettyPrint program = do
     ; checkMainNum $ length $ mainList
     ; checkMainParam $ parameters $ header $ head mainList
     ; printProc (procedures program)
+    ; print $ procedures program
     ; print "finish"
     }
 -- prettyPrint program = processProcedure (procedures program)

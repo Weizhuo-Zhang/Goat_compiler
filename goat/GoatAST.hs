@@ -38,7 +38,7 @@ data Expr
 data VDecl = VDecl
     { vdelType       :: PType
     , vdelIdent      :: Ident
-    , vdelSIndicator :: ()
+    , vdelSIndicator :: Sindicator
     } deriving (Show, Eq)
 
 data Stmt
@@ -63,6 +63,7 @@ data Pindicator
 data Sindicator
   = Array Expr
   | Matrix (Expr,Expr)
+  | NoIndicator
       deriving (Show, Eq)
 
 data Parameter = Parameter

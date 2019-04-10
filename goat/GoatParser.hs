@@ -143,9 +143,9 @@ pProgBody
 pVDecl :: Parser VDecl
 pVDecl
   = do
-    ptype   <-   pPtype
-    ident   <-   identifier
-    sidcat  <- optional pSindicator
+    ptype  <- pPtype
+    ident  <- identifier
+    sidcat <- pSindicator
     semi
     return (VDecl ptype ident sidcat)
 
@@ -157,13 +157,15 @@ pSindicator =
             ; return (Array n)
             }
         )
-    <|>  do { char '['
+    <|>
+    try (do { char '['
             ; n <- pNum
             ; comma
             ; m <- pNum
             ; char ']'
             ; return (Matrix (n,m))
-            }
+            })
+    <|>  do { return (NoIndicator) }
 
 -----------------------------------------------------------------
 -- define statements
