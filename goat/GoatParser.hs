@@ -1,6 +1,7 @@
 module Main where
 
 import GoatAST
+import GoatPrettyPrint
 import Data.Char
 import Text.Parsec
 import Text.Parsec.Expr
@@ -65,7 +66,7 @@ pProg :: Parser GoatProgram
 pProg
   = do
       procedures <- many1 pProcedure
-      return (Program procedures)
+      return (GoatProgram procedures)
 
 -----------------------------------------------------------------
 -- pProcedure looks for a procedure, which contains "proc"
@@ -421,7 +422,7 @@ main
         ; input <- readFile (head args)
         ; let output = runParser pMain 0 "" input
         ; case output of
-            Right ast -> print ast
+            Right ast -> prettyPrint ast -- print ast
             Left  err -> do { putStr "Parse error at "
                             ; print err
                             }
