@@ -456,12 +456,26 @@ pMain
     eof
     return p
 
+checkArgs :: String -> [String] -> IO ()
+checkArgs progName []
+  = exitWithError ("Usage: " ++ progName ++ " [-p] fileName\n\n")
+checkArgs progName (x:xs)
+  = if "-p" == x then
+        return ()
+    else
+        exitWithError ("Sorry, we have not impletement the compiler yet.\n" ++
+                "[ERROR] Usage: " ++ progName ++ " [-p] fileName\n\n")
+--        ProgramParameters { doPrettyPrint = True
+--                          , fileName      = head xs }
+-- checkArgs progName _
+--  = exitWithError "Sorry, we have not impletement the compiler yet."
+
 main :: IO ()
 main
-  = do { progname <- getProgName
+  = do { progName <- getProgName
         ; args <- getArgs
-        ; checkArgs progname args
-        ; input <- readFile (head args)
+        ; checkArgs progName args
+        ; input <- readFile (args !! 1)
         ; let output = runParser pMain 0 "" input
         ; case output of
             Right ast -> prettyPrint ast -- print ast
@@ -469,11 +483,3 @@ main
                             ; print err
                             }
         }
-
-checkArgs :: String -> [String] -> IO ()
-checkArgs _ [filename]
-  = return ()
-checkArgs progname _
-  = do { putStrLn ("Usage: " ++ progname ++ " filename\n\n")
-      ; exitWith (ExitFailure 1)
-      }
