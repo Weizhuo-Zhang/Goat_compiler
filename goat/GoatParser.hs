@@ -105,13 +105,13 @@ pProgHeader
 pParameter :: Parser Parameter
 pParameter
   = do
-    pidcat    <-  pPindicator
+    pidcat    <-  pPIndicator
     ptype     <-  pPtype
     ident     <-  identifier
     return (Parameter pidcat ptype ident)
 
-pPindicator :: Parser Pindicator
-pPindicator
+pPIndicator :: Parser PIndicator
+pPIndicator
   = do { reserved "var"; return VarType }
     <|>
     do { reserved "ref"; return RefType }
@@ -145,12 +145,12 @@ pVDecl
   = do
     ptype  <- pPtype
     ident  <- identifier
-    sidcat <- pSindicator
+    sidcat <- pSIndicator
     semi
     return (VDecl ptype ident sidcat)
 
-pSindicator :: Parser Sindicator
-pSindicator =
+pSIndicator :: Parser SIndicator
+pSIndicator =
     try (do { char '['
             ; n <- pNum
             ; char ']'
@@ -159,11 +159,11 @@ pSindicator =
         )
     <|>
     try (do { char '['
-            ; n <- pNum
-            ; comma
             ; m <- pNum
+            ; comma
+            ; n <- pNum
             ; char ']'
-            ; return (Matrix (n,m))
+            ; return (Matrix m n)
             })
     <|>  do { return (NoIndicator) }
 

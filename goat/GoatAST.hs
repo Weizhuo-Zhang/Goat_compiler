@@ -15,7 +15,8 @@ data Lvalue
 data Expr
   = Id Ident
   | BoolConst Bool
-  | IntConst Int
+  | IntConst
+    { intConstVal :: Int }
   | FloatConst Float
   | StrConst String
   | Expr Expr
@@ -38,7 +39,7 @@ data Expr
 data VDecl = VDecl
     { vdelType       :: PType
     , vdelIdent      :: Ident
-    , vdelSIndicator :: Sindicator
+    , vdelSIndicator :: SIndicator
     } deriving (Show, Eq)
 
 data Stmt
@@ -56,18 +57,22 @@ data Body = Body
     , bodyStatements      :: [Stmt]
     } deriving (Show, Eq)
 
-data Pindicator
+data PIndicator
   = VarType | RefType
       deriving (Show, Eq)
 
-data Sindicator
-  = Array Expr
-  | Matrix (Expr,Expr)
+data SIndicator =
+    Array
+        { arrayExpr :: Expr }
+  | Matrix
+        { matrixMExpr :: Expr
+        , matrixNExpr :: Expr
+        }
   | NoIndicator
       deriving (Show, Eq)
 
 data Parameter = Parameter
-    { passingIndicator :: Pindicator
+    { passingIndicator :: PIndicator
     , passingType      :: PType
     , passingIdent     :: Ident
     } deriving (Show, Eq)

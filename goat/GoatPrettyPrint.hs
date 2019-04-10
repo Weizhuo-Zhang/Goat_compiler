@@ -22,15 +22,20 @@ printBaseType baseType = do
         IntType   -> putStr "int"
         FloatType -> putStr "float"
 
-printPassIndicator :: Pindicator -> IO ()
+printPassIndicator :: PIndicator -> IO ()
 printPassIndicator pIndicator = do
     case pIndicator of
         VarType   -> putStr "var"
         RefType   -> putStr "ref"
 
-printSIndicator :: () -> IO ()
-printSIndicator () = return ()
--- printSIndicator
+-- TODO Should be a white space after ,??
+printSIndicator :: SIndicator -> IO ()
+printSIndicator sIndicator = do
+    case sIndicator of
+        NoIndicator -> return ()
+        Array  n   -> putStr $ "[" ++ (show $ intConstVal n) ++ "]"
+        Matrix m n -> putStr $ "[" ++ (show $ intConstVal m) ++ ", " ++
+                               (show $ intConstVal n) ++ "]"
 
 printParameters :: [Parameter] -> String -> IO ()
 printParameters [] _                     = return ()
@@ -67,12 +72,14 @@ printVdecl (vdel:vdels) = do
     ; printVdecl vdels
     }
 
+printStatements :: [Stmt] -> IO ()
+printStatements [] = return ()
 
 printBody :: Body -> IO ()
 printBody body = do
     { printVdecl $ bodyVarDeclarations body
     ; putStrLn "begin"
---    ; printStatements
+    ; printStatements $ bodyStatements body
     ; putStrLn "end"
     ; putStrLn ""
     }
