@@ -79,7 +79,6 @@ pProcedure
     reserved "proc"
     header    <- pProgHeader
     body      <- pProgBody
-    reserved "end"
     return (Procedure header body)
 
 -----------------------------------------------------------------
@@ -134,6 +133,7 @@ pProgBody
     vdecls <- many pVDecl
     reserved "begin"
     stmts  <- many1 pStmt
+    reserved "end"
     return (Body vdecls stmts)
 
 -----------------------------------------------------------------
