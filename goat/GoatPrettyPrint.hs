@@ -88,7 +88,7 @@ printBody :: Body -> IO ()
 printBody body = do
     { printVdecl $ bodyVarDeclarations body
     ; putStrLn "begin"
-    ; printStatements (bodyStatements body) 4
+--    ; printStatements (bodyStatements body) 4
     ; putStrLn "end"
     ; putStrLn ""
     }

@@ -20,10 +20,10 @@ lexer :: Q.TokenParser Int
 lexer
   = Q.makeTokenParser
     (emptyDef
-    { Q.commentLine    = "#"
-    , Q.nestedComments = True
-    , Q.identStart     = letter
-    , Q.identLetter    = alphaNum <|> char '_'
+    { Q.commentLine     = "#"
+    , Q.nestedComments  = True
+    , Q.identStart      = letter
+    , Q.identLetter     = alphaNum <|> char '_' <|> char '\''
     , Q.opStart         = oneOf "+-*:"
     , Q.opLetter        = oneOf "+-*:=<>!|&"
     , Q.reservedNames   = myReserved
