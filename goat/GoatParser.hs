@@ -66,6 +66,7 @@ pProg :: Parser GoatProgram
 pProg = do
     procedures <- many1 pProcedure
     return (GoatProgram procedures)
+    <?> "program procedure"
 
 -----------------------------------------------------------------
 -- pProcedure looks for a procedure, which contains "proc"
@@ -78,6 +79,7 @@ pProcedure = do
     header    <- pProgHeader
     body      <- pProgBody
     return (Procedure header body)
+    <?> "procedure"
 
 -----------------------------------------------------------------
 -- pProgHeader looks for the program header, which contains a
@@ -94,6 +96,7 @@ pProgHeader = do
     newline
     whiteSpace
     return (Header ident params)
+    <?> "procedure header"
 
 -----------------------------------------------------------------
 -- parameters := (var|ref) (int|float|bool) identifier
@@ -104,12 +107,14 @@ pParameter = do
     ptype     <-  pPtype
     ident     <-  identifier
     return (Parameter pidcat ptype ident)
+    <?> "parameters"
 
 pPIndicator :: Parser PIndicator
 pPIndicator
   = do { reserved "var"; return VarType }
     <|>
     do { reserved "ref"; return RefType }
+    <?> "passing indicator type"
 
 pPtype :: Parser PType
 pPtype
@@ -118,6 +123,7 @@ pPtype
     do { reserved "int"; return IntType }
     <|>
     do { reserved "float"; return FloatType }
+    <?> "base type indicator"
 
 -----------------------------------------------------------------
 -- pProgBody looks for body, which contains one or more statements
@@ -130,6 +136,7 @@ pProgBody = do
     stmts  <- many1 pStmt
     reserved "end"
     return (Body vdecls stmts)
+    <?> "procedure body"
 
 -----------------------------------------------------------------
 -- cdecl := (int|float|bool) identifier (shape indicator)
@@ -142,6 +149,7 @@ pVDecl = do
     sidcat <- pSIndicator
     semi
     return (VDecl ptype (Variable ident sidcat))
+    <?> "procedure variable declaration"
 
 pSIndicator :: Parser SIndicator
 pSIndicator =
@@ -160,6 +168,7 @@ pSIndicator =
             ; return (Matrix m n)
             })
     <|>  do { return (NoIndicator) }
+    <?> "shape indicator"
 
 -----------------------------------------------------------------
 -- define statements
@@ -169,6 +178,7 @@ pStmt, pAsg, pRead, pWrite, pCall, pIf, pWhile :: Parser Stmt
 
 pStmt
   = choice [pAsg, pRead, pWrite, pCall, pIf, pWhile]
+    <?> "statement"
 
 pRead = do
     reserved "read"
@@ -176,12 +186,14 @@ pRead = do
     sidcat <- pExprSIndicator
     semi
     return (Read (Variable ident sidcat))
+    <?> "read statement"
 
 pWrite = do
     reserved "write"
     exp <- (pString <|> pExp)
     semi
     return (Write exp)
+    <?> "write statement"
 
 pAsg = do
     ident  <- identifier
@@ -191,6 +203,7 @@ pAsg = do
     rvalue <- pExp
     semi
     return (Assign (Variable ident sidcat) rvalue)
+    <?> "Assign statement"
 
 pCall = do
     reserved "call"
@@ -201,6 +214,7 @@ pCall = do
     char ')'
     semi
     return (Call ident expList)
+    <?> "Call statement"
 
 pIf =
     try( do
@@ -221,6 +235,7 @@ pIf =
         ; reserved "fi"
         ; return (IfElse exp stmts1 stmts2)
         }
+    <?> "If statement"
 
 -- pIfElse
 --   = do
@@ -240,6 +255,7 @@ pWhile = do
     stmts <- many1 pStmt
     reserved "od"
     return (While exp stmts)
+    <?> "While statement"
 
 -----------------------------------------------------------------
 -- define expressions
@@ -296,16 +312,17 @@ binary name op
 relation name rel
     = Infix (do {reservedOp name; return rel}) AssocNone
 
-pNum
-  = try (do { n <- natural <?> "integer";
-         return (IntConst (fromInteger n :: Int))
-       }
+pNum =
+     try ( do { n <- many1 digit
+           ; char '.' <?> "float"
+           ; m <- many1 digit
+           ; return (FloatConst (read (n ++ "." ++m) :: Float))
+           }
+         )
     <|>
-    do { n <- many1 digit;
-         char '.' <?> "float";
-         m <- many1 digit;
-         return (FloatConst (read (n ++ "." ++m) :: Float))
-       })
+           do { n <- natural <?> "integer"
+           ; return (IntConst (fromInteger n :: Int))
+           }
 
 pExprSIndicator :: Parser SIndicator
 pExprSIndicator =
