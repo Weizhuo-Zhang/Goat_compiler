@@ -1,1 +1,1 @@
-ghc GoatParser.hs -o GoatParser.out
+ghc GoatParser.hs -o Goat

@@ -186,6 +186,7 @@ pWrite = do
 pAsg = do
     ident  <- identifier
     sidcat <- pExprSIndicator
+    whiteSpace
     reservedOp ":="
     rvalue <- pExp
     semi
