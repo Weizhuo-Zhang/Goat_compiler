@@ -72,14 +72,23 @@ printVdecl (vdel:vdels) = do
     ; printVdecl vdels
     }
 
-printStatements :: [Stmt] -> IO ()
-printStatements [] = return ()
+printStatements :: [Stmt] -> Int -> IO ()
+printStatements [] _ = return ()
+-- printStatements (stmt:stmts) = do
+--     case stmt of
+--         Assign Lvalue Expr
+--         Read Lvalue
+--         Write Expr
+--         Call Lvalue ()
+--         If Expr [Stmt]
+--         IfElse Expr [Stmt] [Stmt]
+--         While Expr [Stmt]
 
 printBody :: Body -> IO ()
 printBody body = do
     { printVdecl $ bodyVarDeclarations body
     ; putStrLn "begin"
-    ; printStatements $ bodyStatements body
+    ; printStatements (bodyStatements body) 4
     ; putStrLn "end"
     ; putStrLn ""
     }
