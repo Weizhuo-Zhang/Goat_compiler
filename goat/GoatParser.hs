@@ -171,10 +171,10 @@ pSIndicator =
 -- define statements
 -----------------------------------------------------------------
 
-pStmt, pAsg, pRead, pWrite, pCall, pIf, pIfElse, pWhile :: Parser Stmt
+pStmt, pAsg, pRead, pWrite, pCall, pIf, pWhile :: Parser Stmt
 
 pStmt
-  = choice [pAsg, pRead, pWrite, pCall, pIf, pIfElse, pWhile]
+  = choice [pAsg, pRead, pWrite, pCall, pIf, pWhile]
 
 pRead
   = do
@@ -206,25 +206,35 @@ pCall
       semi
       return (Call lvalue explist)
 
-pIf
-  = do
-      reserved "if"
-      exp <- pExp
-      reserved "then"
-      stmts <- many1 pStmt
-      reserved "fi"
-      return (If exp stmts)
+pIf = try( do
+    { reserved "if"
+    ; exp <- pExp
+    ; reserved "then"
+    ; stmts <- many1 pStmt
+    ; reserved "fi"
+    ; return (If exp stmts)
+    })
+    <|> do
+    { reserved "if"
+    ; exp <- pExp
+    ; reserved "then"
+    ; stmts1 <- many1 pStmt
+    ; reserved "else"
+    ; stmts2 <- many1 pStmt
+    ; reserved "fi"
+    ; return (IfElse exp stmts1 stmts2)
+    }
 
-pIfElse
-  = do
-      reserved "if"
-      exp <- pExp
-      reserved "then"
-      stmts1 <- many1 pStmt
-      reserved "else"
-      stmts2 <- many1 pStmt
-      reserved "fi"
-      return (IfElse exp stmts1 stmts2)
+-- pIfElse
+--   = do
+--       reserved "if"
+--       exp <- pExp
+--       reserved "then"
+--       stmts1 <- many1 pStmt
+--       reserved "else"
+--       stmts2 <- many1 pStmt
+--       reserved "fi"
+--       return (IfElse exp stmts1 stmts2)
 
 pWhile
   = do
