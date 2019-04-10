@@ -213,7 +213,6 @@ pIf
       reserved "then"
       stmts <- many1 pStmt
       reserved "fi"
-      semi
       return (If exp stmts)
 
 pIfElse
@@ -225,7 +224,6 @@ pIfElse
       reserved "else"
       stmts2 <- many1 pStmt
       reserved "fi"
-      semi
       return (IfElse exp stmts1 stmts2)
 
 pWhile
@@ -235,7 +233,6 @@ pWhile
     reserved "do"
     stmts <- many1 pStmt
     reserved "od"
-    semi
     return (While exp stmts)
 
 -----------------------------------------------------------------
