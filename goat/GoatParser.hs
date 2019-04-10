@@ -179,9 +179,9 @@ pStmt
 pRead
   = do
       reserved "read"
-      lvalue <- pLvalue
+      ident <- identifier
       semi
-      return (Read lvalue)
+      return (Read ident)
 
 pWrite
   = do
@@ -192,19 +192,19 @@ pWrite
 
 pAsg
   = do
-      lvalue <- pLvalue
+      ident <- identifier
       reservedOp ":="
       rvalue <- pExp
       semi
-      return (Assign lvalue rvalue)
+      return (Assign ident rvalue)
 
 pCall
   = do
       reserved "call"
-      lvalue <- pLvalue
+      ident <- identifier
       explist <- optional (sepBy pExp comma)
       semi
-      return (Call lvalue explist)
+      return (Call ident explist)
 
 pIf = try( do
     { reserved "if"
@@ -345,16 +345,15 @@ pBool
 --       reservedOp "!"
 --       exp <- pFactor
 --       return (UnotOp exp)
-
-
-pLvalue :: Parser Lvalue
-pLvalue
-  = do
-      ident <- identifier
-      return (LId ident)
-      <?>
-      "lvalue"
-
+--
+-- pLvalue :: Parser Lvalue
+-- pLvalue
+--   = do
+--       ident <- identifier
+--       return (LId ident)
+--       <?>
+--       "lvalue"
+--
 -- pOp_add, pOp_mul, pOp_min, pOp_div, pOp_or, pOp_and, pOp_eq, pOp_neq, pOp_les, pOp_leseq, pOp_grt, pOp_grteq :: Parser (Expr -> Expr -> Expr)
 
 -- pOp_add

@@ -8,10 +8,6 @@ data PType
   = BoolType | IntType | FloatType
     deriving (Show, Eq)
 
-data Lvalue
-  = LId Ident
-    deriving (Show, Eq)
-
 data Expr
   = Id Ident
   | BoolConst Bool
@@ -43,10 +39,10 @@ data VDecl = VDecl
     } deriving (Show, Eq)
 
 data Stmt
-  = Assign Lvalue Expr
-  | Read Lvalue
+  = Assign Ident Expr
+  | Read Ident
   | Write Expr
-  | Call Lvalue ()
+  | Call Ident ()
   | If Expr [Stmt]
   | IfElse Expr [Stmt] [Stmt]
   | While Expr [Stmt]
