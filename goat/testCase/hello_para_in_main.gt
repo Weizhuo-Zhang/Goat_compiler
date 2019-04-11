@@ -1,0 +1,4 @@
+proc main(var int b)
+begin
+    write "Hello, kid!\n";
+end

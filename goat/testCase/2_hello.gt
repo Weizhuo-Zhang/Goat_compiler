@@ -1,0 +1,9 @@
+proc main()
+begin
+    write "Hello, kid!\n";
+end
+
+proc main()
+begin
+    write "Hello, kid!\n";
+end
