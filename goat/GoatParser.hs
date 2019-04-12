@@ -1,14 +1,10 @@
-module Main where
+module GoatParser where
 
 import GoatAST
-import GoatPrettyPrint
-import Data.Char
 import Text.Parsec
 import Text.Parsec.Expr
 import Text.Parsec.Language (emptyDef)
 import qualified Text.Parsec.Token as Q
-import System.Environment
-import System.Exit
 
 -----------------------------------------------------------------
 -- define lexer, reserved words and reserved operator
@@ -237,17 +233,6 @@ pIf =
         }
     <?> "If statement"
 
--- pIfElse
---   = do
---       reserved "if"
---       exp <- pExp
---       reserved "then"
---       stmts1 <- many1 pStmt
---       reserved "else"
---       stmts2 <- many1 pStmt
---       reserved "fi"
---       return (IfElse exp stmts1 stmts2)
-
 pWhile = do
     reserved "while"
     exp   <- pExp
@@ -263,29 +248,6 @@ pWhile = do
 --             and (&&) | or (||)
 -----------------------------------------------------------------
 pExp, pNum, pIdent, pString, pBool :: Parser Expr
--- pUneg, pUnot, pTerm, pFactor :: Parser Expr
--- pExp
---   = pString
---     <|>
---     pBool
---     -- <|>
---     -- pOp_or
---     -- <|>
---     -- pOp_and
---     <|>
---     (chainl1 pTerm (choice [pOp_add, pOp_min]))
---     <?>
---     "expression"
---
--- pTerm
---   = chainl1 pFactor (choice [pOp_mul, pOp_div])
---     <?>
---     "\"term\""
---
--- pFactor
---   = choice [pUneg, pUnot, parens pExp, pNum, pIdent]
---     <?>
---     "\"factor\""
 
 pExp
  = buildExpressionParser table pFac
@@ -366,88 +328,6 @@ pBool
     <?>
     "bool"
 
--- pUneg
---   = do
---       reservedOp "-"
---       exp <- pFactor
---       return (UnegOp exp)
---
--- pUnot
---   = do
---       reservedOp "!"
---       exp <- pFactor
---       return (UnotOp exp)
---
--- pLvalue :: Parser Lvalue
--- pLvalue
---   = do
---       ident <- identifier
---       return (LId ident)
---       <?>
---       "lvalue"
---
--- pOp_add, pOp_mul, pOp_min, pOp_div, pOp_or, pOp_and, pOp_eq, pOp_neq, pOp_les, pOp_leseq, pOp_grt, pOp_grteq :: Parser (Expr -> Expr -> Expr)
-
--- pOp_add
---   = do
---     reservedOp "+"
---     return Add
---
--- pOp_mul
---   = do
---     reservedOp "*"
---     return Mul
---
--- pOp_min
---   = do
---     reservedOp "-"
---     return Min
---
--- pOp_div
---   = do
---     reservedOp "/"
---     return Div
---
--- pOp_or
---   = do
---     reservedOp "||"
---     return Or
---
--- pOp_and
---   = do
---     reservedOp "&&"
---     return And
---
--- pOp_eq
---   = do
---     reservedOp "="
---     return Eq
---
--- pOp_neq
---   = do
---     reservedOp "!="
---     return Neq
---
--- pOp_les
---   = do
---     reservedOp "<"
---     return Les
---
--- pOp_leseq
---   = do
---     reservedOp "<="
---     return Leseq
---
--- pOp_grt
---   = do
---     reservedOp ">"
---     return Grt
---
--- pOp_grteq
---   = do
---     reservedOp ">="
---     return Grteq
-
 pMain :: Parser GoatProgram
 pMain
   = do
@@ -455,31 +335,3 @@ pMain
     p <- pProg
     eof
     return p
-
-checkArgs :: String -> [String] -> IO ()
-checkArgs progName []
-  = exitWithError ("Usage: " ++ progName ++ " [-p] fileName\n\n")
-checkArgs progName (x:xs)
-  = if "-p" == x then
-        return ()
-    else
-        exitWithError ("Sorry, we have not impletement the compiler yet.\n" ++
-                "[ERROR] Usage: " ++ progName ++ " [-p] fileName\n\n")
---        ProgramParameters { doPrettyPrint = True
---                          , fileName      = head xs }
--- checkArgs progName _
---  = exitWithError "Sorry, we have not impletement the compiler yet."
-
-main :: IO ()
-main
-  = do { progName <- getProgName
-        ; args <- getArgs
-        ; checkArgs progName args
-        ; input <- readFile (args !! 1)
-        ; let output = runParser pMain 0 "" input
-        ; case output of
-            Right ast -> prettyPrint ast -- print ast
-            Left  err -> do { putStr "Parse error at "
-                            ; print err
-                            }
-        }
