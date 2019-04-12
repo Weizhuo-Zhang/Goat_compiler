@@ -237,17 +237,6 @@ pIf =
         }
     <?> "If statement"
 
--- pIfElse
---   = do
---       reserved "if"
---       exp <- pExp
---       reserved "then"
---       stmts1 <- many1 pStmt
---       reserved "else"
---       stmts2 <- many1 pStmt
---       reserved "fi"
---       return (IfElse exp stmts1 stmts2)
-
 pWhile = do
     reserved "while"
     exp   <- pExp
@@ -263,29 +252,6 @@ pWhile = do
 --             and (&&) | or (||)
 -----------------------------------------------------------------
 pExp, pNum, pIdent, pString, pBool :: Parser Expr
--- pUneg, pUnot, pTerm, pFactor :: Parser Expr
--- pExp
---   = pString
---     <|>
---     pBool
---     -- <|>
---     -- pOp_or
---     -- <|>
---     -- pOp_and
---     <|>
---     (chainl1 pTerm (choice [pOp_add, pOp_min]))
---     <?>
---     "expression"
---
--- pTerm
---   = chainl1 pFactor (choice [pOp_mul, pOp_div])
---     <?>
---     "\"term\""
---
--- pFactor
---   = choice [pUneg, pUnot, parens pExp, pNum, pIdent]
---     <?>
---     "\"factor\""
 
 pExp
  = buildExpressionParser table pFac
