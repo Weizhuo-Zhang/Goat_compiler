@@ -1,15 +1,22 @@
 module GoatPrettyPrint where
 
 import GoatAST
-import System.Exit(die)
+import GoatExit
+import System.Exit
 
 -- TODO should trace line number
+-- exitWithSuccess :: String -> IO ()
+-- exitWithSuccess message = do
+--   putStrLn message
+--     exitWith ExitSuccess
+
 -----------------------------------------------------------------
 -- print error message to stderr and exit
 -----------------------------------------------------------------
-exitWithError :: String -> IO ()
-exitWithError a = do
-    die ("[ERROR] " ++ a)
+-- exitWithError :: String -> Int -> IO ()
+-- exitWithError message  = do
+--     putStrLn ("[ERROR] " ++ message)
+--     exitWith (ExitFailure )
 
 -----------------------------------------------------------------
 -- print indention
@@ -336,16 +343,22 @@ printProc (proc:procs) = do
 -----------------------------------------------------------------
 checkMainParam :: [Parameter] -> IO ()
 checkMainParam [] = return ()
-checkMainParam _  = exitWithError "'main()' procedure should be parameter-less."
+checkMainParam _  = do
+  exitWithError "'main()' procedure should be parameter-less." MainWithParam
+  return ()
 
 -----------------------------------------------------------------
 -- check the number of main procedure
 -----------------------------------------------------------------
 checkMainNum :: Int -> IO ()
 checkMainNum numMain
-    | 0 == numMain = exitWithError "There is no 'main()' procedure."
+    | 0 == numMain = do
+      exitWithError "There is no 'main()' procedure." MissingMain
+      return ()
     | 1 == numMain = return ()
-    | otherwise = exitWithError "There is more than one 'main()' procedure"
+    | otherwise = do
+        exitWithError "There is more than one 'main()' procedure" MultipleMain
+        return ()
 
 -----------------------------------------------------------------
 -- get the number of main procedure
