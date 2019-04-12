@@ -1,5 +1,5 @@
-Goat: GoatParser.hs GoatAST.hs GoatPrettyPrint.hs
-	ghc GoatParser.hs -o Goat
+Goat: Goat.hs GoatParser.hs GoatAST.hs GoatPrettyPrint.hs
+	ghc Goat.hs -o Goat
 
 clean:
 	rm -f *.o *.hi *.out
