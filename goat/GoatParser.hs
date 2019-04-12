@@ -1,14 +1,10 @@
 module GoatParser where
 
 import GoatAST
-import GoatPrettyPrint
-import Data.Char
 import Text.Parsec
 import Text.Parsec.Expr
 import Text.Parsec.Language (emptyDef)
 import qualified Text.Parsec.Token as Q
-import System.Environment
-import System.Exit
 
 -----------------------------------------------------------------
 -- define lexer, reserved words and reserved operator
@@ -332,10 +328,10 @@ pBool
     <?>
     "bool"
 
-    pMain :: Parser GoatProgram
-    pMain
-      = do
-        whiteSpace
-        p <- pProg
-        eof
-        return p
+pMain :: Parser GoatProgram
+pMain
+  = do
+    whiteSpace
+    p <- pProg
+    eof
+    return p
