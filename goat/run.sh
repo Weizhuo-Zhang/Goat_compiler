@@ -1,4 +1,5 @@
-ghc GoatParser.hs -o Goat
+# ghc GoatParser.hs -o Goat
+ghc Goat.hs -o Goat
 ./Goat -p testCase/blank.gt
 ./Goat -p testCase/2_hello.gt
 ./Goat -p testCase/test.gt
