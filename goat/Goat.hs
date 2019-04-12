@@ -3,8 +3,8 @@ module Main where
 import GoatAST
 import GoatParser
 import GoatPrettyPrint
-import Text.Parsec
-import System.Environment
+import Text.Parsec (runParser)
+import System.Environment (getArgs, getProgName)
 
 checkArgs :: String -> [String] -> IO ()
 checkArgs progName []
