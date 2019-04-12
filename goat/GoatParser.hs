@@ -448,13 +448,6 @@ pBool
 --     reservedOp ">="
 --     return Grteq
 
-pMain :: Parser GoatProgram
-pMain
-  = do
-    whiteSpace
-    p <- pProg
-    eof
-    return p
 
 -- checkArgs :: String -> [String] -> IO ()
 -- checkArgs progName []

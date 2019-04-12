@@ -11,6 +11,14 @@ import qualified Text.Parsec.Token as Q
 import System.Environment
 import System.Exit
 
+pMain :: Parser GoatProgram
+pMain
+  = do
+    whiteSpace
+    p <- pProg
+    eof
+    return p
+
 checkArgs :: String -> [String] -> IO ()
 checkArgs progName []
   = exitWithError ("Usage: " ++ progName ++ " [-p] fileName\n\n")
