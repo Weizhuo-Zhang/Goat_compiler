@@ -331,3 +331,11 @@ pBool
     do {reserved "false"; return (BoolConst False)}
     <?>
     "bool"
+
+    pMain :: Parser GoatProgram
+    pMain
+      = do
+        whiteSpace
+        p <- pProg
+        eof
+        return p
