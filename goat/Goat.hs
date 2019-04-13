@@ -4,7 +4,6 @@ import GoatAST
 import GoatParser
 import GoatPrettyPrint
 import GoatExit
-import System.Exit
 import Text.Parsec (runParser)
 import System.Environment (getArgs, getProgName)
 
@@ -13,7 +12,7 @@ checkArgs _ ['-':_] = exitWithError "Missing filename" MissingFile
 checkArgs _ [filename] = return Compile
 checkArgs _ ["-p", filename] = return Pprint
 checkArgs _ ["-a", filename] = return Parse
-checkArgs progname _  = exitWithError ("Usage: " ++ progname ++ " [-p] filename") MissingFile
+checkArgs progname _  = exitWithError ("Usage: " ++ progname ++ " [-p] filename") WrongUsage
 
 main :: IO ()
 main
@@ -31,10 +30,9 @@ main
            input <- readFile filename
            let output = runParser pMain 0 "" input
            case output of
-             Right ast -> putStrLn (show ast) -- print ast
-             Left  err -> do {  putStr "Parse error at "
-                             ; print err
-                             ; exitWith (ExitFailure 2)
+             Right ast -> print ast -- print ast
+             Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
+                             ; return ()
                              }
        else
          do
@@ -44,7 +42,6 @@ main
            let output = runParser pMain 0 "" input
            case output of
              Right ast -> prettyPrint ast -- print ast
-             Left  err -> do {  putStr "Parse error at "
-                             ; print err
-                             ; exitWith (ExitFailure 2)
+             Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
+                             ; return ()
                              }

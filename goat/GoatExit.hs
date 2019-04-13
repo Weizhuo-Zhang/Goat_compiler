@@ -13,6 +13,7 @@ data GoatExitCode = Success       -- 0
                   | MissingMain   -- 3
                   | MultipleMain  -- 4
                   | MainWithParam -- 5
+                  | ParseError    -- 6
                   deriving Enum
 
 
