@@ -30,9 +30,9 @@ main
            input <- readFile filename
            let output = runParser pMain 0 "" input
            case output of
-             Right ast -> prettyPrint ast -- print ast
-             Left  err -> do { putStr "Parse error at "
-                             ; print err
+             Right ast -> print ast -- print ast
+             Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
+                             ; return ()
                              }
        else
          do
@@ -42,6 +42,6 @@ main
            let output = runParser pMain 0 "" input
            case output of
              Right ast -> prettyPrint ast -- print ast
-             Left  err -> do { putStr "Parse error at "
-                             ; print err
+             Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
+                             ; return ()
                              }
