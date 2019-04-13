@@ -4,6 +4,7 @@ import GoatAST
 import GoatParser
 import GoatPrettyPrint
 import GoatExit
+import System.Exit
 import Text.Parsec (runParser)
 import System.Environment (getArgs, getProgName)
 
@@ -31,7 +32,9 @@ main
            let output = runParser pMain 0 "" input
            case output of
              Right ast -> putStrLn (show ast) -- print ast
-             Left  err -> do { exitWithError ("Parse error at: " ++ err) WrongUsage
+             Left  err -> do {  putStr "Parse error at "
+                             ; print err
+                             ; exitWith (ExitFailure 2)
                              }
        else
          do
@@ -41,5 +44,7 @@ main
            let output = runParser pMain 0 "" input
            case output of
              Right ast -> prettyPrint ast -- print ast
-             Left  err -> do { exitWithError ("Parse error at: " ++ err) WrongUsage
+             Left  err -> do {  putStr "Parse error at "
+                             ; print err
+                             ; exitWith (ExitFailure 2)
                              }

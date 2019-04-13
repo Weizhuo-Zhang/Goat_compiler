@@ -202,6 +202,7 @@ pAsg = do
     sidcat <- pExprSIndicator
     whiteSpace
     reservedOp ":="
+    whiteSpace
     rvalue <- pExp
     semi
     return (Assign (Variable ident sidcat) rvalue)
