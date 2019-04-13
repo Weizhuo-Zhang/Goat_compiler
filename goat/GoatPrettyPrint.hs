@@ -273,7 +273,7 @@ getTopExpr expr =
         BoolConst   val   -> getConst val
         IntConst    val   -> getConst val
         FloatConst  val   -> getConst val
-        StrConst    val   -> getConst val
+        StrConst    val   -> "\"" ++ val ++ "\""
         Add   lExpr rExpr -> getInfixOpResult  lExpr " + "  rExpr
         Mul   lExpr rExpr -> getInfixOpResult  lExpr " * "  rExpr
         Sub   lExpr rExpr -> getInfixOpResult  lExpr " - "  rExpr
@@ -299,7 +299,7 @@ getExpr expr =
         BoolConst   val   -> getConst val
         IntConst    val   -> getConst val
         FloatConst  val   -> getConst val
-        StrConst    val   -> getConst val
+        StrConst    val   -> "\"" ++ val ++ "\""
         Add   lExpr rExpr -> "(" ++ getInfixOpResult lExpr " + "  rExpr ++ ")"
         Mul   lExpr rExpr -> "(" ++ getInfixOpResult lExpr " * "  rExpr ++ ")"
         Sub   lExpr rExpr -> "(" ++ getInfixOpResult lExpr " - "  rExpr ++ ")"

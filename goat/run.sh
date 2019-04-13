@@ -1,4 +1,4 @@
-# ghc GoatParser.hs -o Goat
+make clean
 ghc Goat.hs -o Goat
 ./Goat -p testCase/blank.gt
 ./Goat -p testCase/2_hello.gt
@@ -9,3 +9,4 @@ ghc Goat.hs -o Goat
 ./Goat -p testCase/io.gt
 ./Goat -p testCase/test_hello.gt
 ./Goat -p testCase/stmtTest.gt
+./Goat -p testCase/backslash.gt
