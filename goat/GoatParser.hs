@@ -97,6 +97,7 @@ pProgHeader = do
 -----------------------------------------------------------------
 -- parameters := (var|ref) (int|float|bool) identifier
 -----------------------------------------------------------------
+
 pParameter :: Parser Parameter
 pParameter = do
     pidcat    <-  pPIndicator
@@ -135,7 +136,11 @@ pProgBody = do
     <?> "procedure body"
 
 -----------------------------------------------------------------
--- cdecl := (int|float|bool) identifier (shape indicator)
+-- variable declarations
+-- vdecl := (int|float|bool) identifier (shape indicator)
+-- shape indicator
+-- determine whether a identifier is an array, a matrix or
+-- no indicator
 -----------------------------------------------------------------
 
 pVDecl :: Parser VDecl
@@ -168,6 +173,7 @@ pSIndicator =
 
 -----------------------------------------------------------------
 -- define statements
+-- statement contains read, asgin, write, call, if, ifelse, while
 -----------------------------------------------------------------
 
 pStmt, pAsg, pRead, pWrite, pCall, pIf, pWhile :: Parser Stmt
@@ -244,8 +250,8 @@ pWhile = do
 
 -----------------------------------------------------------------
 -- define expressions
--- Unfinished: 6 relevant operators (<,>,<=,>=,=,!=)
---             and (&&) | or (||)
+-- expression contains operations, relations, expressions, string
+-- and boolean
 -----------------------------------------------------------------
 pExp, pNum, pIdent, pString, pBool :: Parser Expr
 

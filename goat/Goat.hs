@@ -12,7 +12,7 @@ checkArgs _ ['-':_] = exitWithError "Missing filename" MissingFile
 checkArgs _ [filename] = return Compile
 checkArgs _ ["-p", filename] = return Pprint
 checkArgs _ ["-a", filename] = return Parse
-checkArgs progname _  = exitWithError ("Usage: " ++ progname ++ " [-p] filename") WrongUsage
+checkArgs progname _  = exitWithError ("Usage: " ++ progname ++ " [-p] filename") MissingFile
 
 main :: IO ()
 main
@@ -30,9 +30,8 @@ main
            input <- readFile filename
            let output = runParser pMain 0 "" input
            case output of
-             Right ast -> prettyPrint ast -- print ast
-             Left  err -> do { putStr "Parse error at "
-                             ; print err
+             Right ast -> putStrLn (show ast) -- print ast
+             Left  err -> do { exitWithError ("Parse error at: " ++ err) WrongUsage
                              }
        else
          do
@@ -42,6 +41,5 @@ main
            let output = runParser pMain 0 "" input
            case output of
              Right ast -> prettyPrint ast -- print ast
-             Left  err -> do { putStr "Parse error at "
-                             ; print err
+             Left  err -> do { exitWithError ("Parse error at: " ++ err) WrongUsage
                              }
