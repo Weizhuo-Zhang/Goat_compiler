@@ -1,15 +1,22 @@
 module GoatPrettyPrint where
 
 import GoatAST
-import System.Exit(die)
+import GoatExit
+import System.Exit
 
 -- TODO should trace line number
+-- exitWithSuccess :: String -> IO ()
+-- exitWithSuccess message = do
+--   putStrLn message
+--     exitWith ExitSuccess
+
 -----------------------------------------------------------------
 -- print error message to stderr and exit
 -----------------------------------------------------------------
-exitWithError :: String -> IO ()
-exitWithError a = do
-    die ("[ERROR] " ++ a)
+-- exitWithError :: String -> Int -> IO ()
+-- exitWithError message  = do
+--     putStrLn ("[ERROR] " ++ message)
+--     exitWith (ExitFailure )
 
 -----------------------------------------------------------------
 -- print indention
@@ -334,18 +341,18 @@ printProc (proc:procs) = do
 -----------------------------------------------------------------
 -- check whether the main procedure is parameter-less
 -----------------------------------------------------------------
-checkMainParam :: [Parameter] -> IO ()
-checkMainParam [] = return ()
-checkMainParam _  = exitWithError "'main()' procedure should be parameter-less."
+checkMainParam :: [Parameter] -> IO Task
+checkMainParam [] = return Unit
+checkMainParam _  = exitWithError "'main()' procedure should be parameter-less." MainWithParam
 
 -----------------------------------------------------------------
 -- check the number of main procedure
 -----------------------------------------------------------------
-checkMainNum :: Int -> IO ()
+checkMainNum :: Int -> IO Task
 checkMainNum numMain
-    | 0 == numMain = exitWithError "There is no 'main()' procedure."
-    | 1 == numMain = return ()
-    | otherwise = exitWithError "There is more than one 'main()' procedure"
+    | 0 == numMain = exitWithError "There is no 'main()' procedure." MissingMain
+    | 1 == numMain = return Unit
+    | otherwise = exitWithError "There is more than one 'main()' procedure" MultipleMain
 
 -----------------------------------------------------------------
 -- get the number of main procedure
