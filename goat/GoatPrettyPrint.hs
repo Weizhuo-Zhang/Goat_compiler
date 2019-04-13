@@ -341,24 +341,18 @@ printProc (proc:procs) = do
 -----------------------------------------------------------------
 -- check whether the main procedure is parameter-less
 -----------------------------------------------------------------
-checkMainParam :: [Parameter] -> IO ()
-checkMainParam [] = return ()
-checkMainParam _  = do
-  exitWithError "'main()' procedure should be parameter-less." MainWithParam
-  return ()
+checkMainParam :: [Parameter] -> IO Task
+checkMainParam [] = return Unit
+checkMainParam _  = exitWithError "'main()' procedure should be parameter-less." MainWithParam
 
 -----------------------------------------------------------------
 -- check the number of main procedure
 -----------------------------------------------------------------
-checkMainNum :: Int -> IO ()
+checkMainNum :: Int -> IO Task
 checkMainNum numMain
-    | 0 == numMain = do
-      exitWithError "There is no 'main()' procedure." MissingMain
-      return ()
-    | 1 == numMain = return ()
-    | otherwise = do
-        exitWithError "There is more than one 'main()' procedure" MultipleMain
-        return ()
+    | 0 == numMain = exitWithError "There is no 'main()' procedure." MissingMain
+    | 1 == numMain = return Unit
+    | otherwise = exitWithError "There is more than one 'main()' procedure" MultipleMain
 
 -----------------------------------------------------------------
 -- get the number of main procedure
