@@ -148,7 +148,7 @@ pVariableDeclaration = do
     <?> "procedure variable declaration"
 
 
-pShapeIndicator :: Parser SIndicator
+pShapeIndicator :: Parser ShapeIndicator
 pShapeIndicator =
     try (do { n <- brackets pInt
             ; return (Array n)
@@ -286,7 +286,7 @@ pInt =
          }
         <?> "integer"
 
-pExprSIndicator :: Parser SIndicator
+pExprSIndicator :: Parser ShapeIndicator
 pExprSIndicator =
     try (do { exp <- brackets pExp
             ; return (Array exp)

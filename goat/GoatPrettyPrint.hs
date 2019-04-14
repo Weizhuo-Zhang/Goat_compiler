@@ -50,7 +50,7 @@ printPassIndicator pIndicator = do
 -----------------------------------------------------------------
 -- get String of shape Indicator type such as Array and Matrix
 -----------------------------------------------------------------
-getSIndicator :: SIndicator -> String
+getSIndicator :: ShapeIndicator -> String
 getSIndicator sIndicator =
     case sIndicator of
         NoIndicator -> ""
