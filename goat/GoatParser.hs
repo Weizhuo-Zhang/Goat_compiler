@@ -167,7 +167,7 @@ pShapeIndicator =
 -- statement contains read, asgin, write, call, if, ifelse, while
 -----------------------------------------------------------------
 
-pStatement, pAssignment, pRead, pWrite, pCall, pIf, pWhile :: Parser Stmt
+pStatement, pAssignment, pRead, pWrite, pCall, pIf, pWhile :: Parser Statement
 
 pStatement = choice [pAssignment, pRead, pWrite, pCall, pIf, pWhile]
           <?> "statement"

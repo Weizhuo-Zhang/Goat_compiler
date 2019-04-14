@@ -157,7 +157,7 @@ printCallStmt id exprs indent = do
 -----------------------------------------------------------------
 -- print the common part of If Statements and If-Else Statements
 -----------------------------------------------------------------
-printIfCommon :: Expression -> [Stmt] -> Int -> IO ()
+printIfCommon :: Expression -> [Statement] -> Int -> IO ()
 printIfCommon expr stmts indent = do
     { printIndent indent
     ; putStr "if "
@@ -178,7 +178,7 @@ printIfEnd indent = do
 -----------------------------------------------------------------
 -- print If Statements
 -----------------------------------------------------------------
-printIfStmt :: Expression -> [Stmt] -> Int -> IO ()
+printIfStmt :: Expression -> [Statement] -> Int -> IO ()
 printIfStmt expr stmts indent = do
     { printIfCommon expr stmts indent
     ; printIfEnd indent
@@ -187,7 +187,7 @@ printIfStmt expr stmts indent = do
 -----------------------------------------------------------------
 -- print If-Else Statements
 -----------------------------------------------------------------
-printIfElseStmt :: Expression -> [Stmt] -> [Stmt] -> Int -> IO ()
+printIfElseStmt :: Expression -> [Statement] -> [Statement] -> Int -> IO ()
 printIfElseStmt expr stmts1 stmts2 indent = do
     { printIfCommon expr stmts1 indent
     ; printIndent indent
@@ -199,7 +199,7 @@ printIfElseStmt expr stmts1 stmts2 indent = do
 -----------------------------------------------------------------
 -- print While Statements
 -----------------------------------------------------------------
-printWhileStmt :: Expression -> [Stmt] -> Int -> IO ()
+printWhileStmt :: Expression -> [Statement] -> Int -> IO ()
 printWhileStmt expr stmts indent = do
     { printIndent indent
     ; putStr "while "
@@ -213,7 +213,7 @@ printWhileStmt expr stmts indent = do
 -----------------------------------------------------------------
 -- print Statement
 -----------------------------------------------------------------
-printStatement :: Stmt -> Int -> IO ()
+printStatement :: Statement -> Int -> IO ()
 printStatement stmt indent = do
     case stmt of
         Assign var  expr          -> printAssignStmt var  expr   indent
@@ -227,7 +227,7 @@ printStatement stmt indent = do
 -----------------------------------------------------------------
 -- print list of Statement
 -----------------------------------------------------------------
-printStatements :: [Stmt] -> Int -> IO ()
+printStatements :: [Statement] -> Int -> IO ()
 printStatements [] _                = return ()
 printStatements (stmt:stmts) indent = do
     { printStatement stmt indent
