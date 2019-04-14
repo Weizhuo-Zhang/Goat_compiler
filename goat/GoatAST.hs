@@ -1,18 +1,21 @@
 module GoatAST where
 
+------------------------------------------------------------------------------
+-- Identifier of Goat.
+------------------------------------------------------------------------------
 type Identifier = String
 
-data BaseType
-    = BoolType
-    | IntType
-    | FloatType
-    deriving (Show, Eq)
+------------------------------------------------------------------------------
+-- Base type of Goat.
+------------------------------------------------------------------------------
+data BaseType = BoolType | IntType | FloatType deriving (Show, Eq)
 
-data Variable
-    = Variable
-    { varId             :: Identifier
-    , varShapeIndicator :: ShapeIndicator
-    } deriving (Show, Eq)
+------------------------------------------------------------------------------
+-- Variable of Goat.
+------------------------------------------------------------------------------
+data Variable = Variable { varId             :: Identifier
+                         , varShapeIndicator :: ShapeIndicator
+                         } deriving (Show, Eq)
 
 
 data Expr
