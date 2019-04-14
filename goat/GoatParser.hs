@@ -150,6 +150,7 @@ pVDecl = do
     ptype  <- pPtype
     ident  <- identifier
     sidcat <- pSIndicator
+    whiteSpace
     semi
     return (VDecl ptype (Variable ident sidcat))
     <?> "procedure variable declaration"
