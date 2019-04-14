@@ -31,7 +31,7 @@ printIndent indent = do
 -----------------------------------------------------------------
 -- print BaseType such as bool, float and int
 -----------------------------------------------------------------
-printBaseType :: PType -> IO ()
+printBaseType :: BaseType -> IO ()
 printBaseType baseType = do
     case baseType of
         BoolType  -> putStr "bool"
