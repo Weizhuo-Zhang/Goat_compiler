@@ -80,11 +80,9 @@ data Expr
         { unaryNotExpr     :: Expr }
     deriving (Show, Eq)
 
-data VariableDeclaration
-    = VariableDeclaration
-    { vdeclType            :: PType
-    , vdeclVar             :: Variable
-    } deriving (Show, Eq)
+data VariableDeclaration = VariableDeclaration { declarationType     :: PType
+                                               , declarationVariable :: Variable
+                                               } deriving (Show, Eq)
 
 data Stmt
     = Assign
