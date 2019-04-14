@@ -20,11 +20,11 @@ data Variable = Variable { varId             :: Identifier
 -------------------------------------------------------------------------------
 -- Expression.
 -------------------------------------------------------------------------------
-data Expression = ExprVar { exprVar          :: Variable }
-                | BoolConst { boolConstVal     :: Bool }
-                | IntConst { intConstVal      :: Int }
+data Expression = ExprVar    { exprVar          :: Variable }
+                | BoolConst  { boolConstVal     :: Bool }
+                | IntConst   { intConstVal      :: Int }
                 | FloatConst { floatConstVal    :: Float }
-                | StrConst { strConstVal      :: String }
+                | StrConst   { strConstVal      :: String }
                 | Add { addLeftExpr  :: Expression
                       , addRightExpr :: Expression
                       }
