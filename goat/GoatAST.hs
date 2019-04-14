@@ -1,6 +1,6 @@
 module GoatAST where
 
-type Ident = String
+type Identifier = String
 
 data PType
     = BoolType
@@ -10,8 +10,8 @@ data PType
 
 data Variable
     = Variable
-    { varId                :: Ident
-    , varSIndicator        :: SIndicator
+    { varId             :: Identifier
+    , varShapeIndicator :: ShapeIndicator
     } deriving (Show, Eq)
 
 
@@ -94,7 +94,7 @@ data Stmt
     | Write
         { writeExpr        :: Expr }
     | Call
-        { callIdent        :: Ident
+        { callIdent        :: Identifier
         , callExprs        :: [Expr]
         }
     | If
@@ -123,7 +123,7 @@ data PIndicator
     | RefType
     deriving (Show, Eq)
 
-data SIndicator
+data ShapeIndicator
     = Array
       { arrayExpr          :: Expr }
     | Matrix
@@ -137,12 +137,12 @@ data Parameter
     = Parameter
     { passingIndicator     :: PIndicator
     , passingType          :: PType
-    , passingIdent         :: Ident
+    , passingIdent         :: Identifier
     } deriving (Show, Eq)
 
 data Header
     = Header
-    { headerIdent          :: Ident
+    { headerIdent          :: Identifier
     , parameters           :: [Parameter]
     } deriving (Show, Eq)
 
