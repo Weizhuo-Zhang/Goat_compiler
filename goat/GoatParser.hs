@@ -37,7 +37,7 @@ semi       = Q.semi lexer
 comma      = Q.comma lexer
 dot        = Q.dot lexer
 parens     = Q.parens lexer
-squares    = Q.squares lexer
+brackets   = Q.brackets lexer
 reserved   = Q.reserved lexer
 reservedOp = Q.reservedOp lexer
 
@@ -85,14 +85,8 @@ pProcedure = do
 
 pProgHeader :: Parser Header
 pProgHeader = do
-    ident     <- identifier
-    char '('
-    whiteSpace
-    params    <- sepBy pParameter comma
-    char ')'
-    whiteSpace
-    -- newline
-    -- whiteSpace
+    ident  <- identifier
+    params <- parens $ sepBy pParameter comma
     return (Header ident params)
     <?> "procedure header"
 
@@ -102,9 +96,9 @@ pProgHeader = do
 
 pParameter :: Parser Parameter
 pParameter = do
-    pidcat    <-  pPIndicator
-    ptype     <-  pPtype
-    ident     <-  identifier
+    pidcat <- pPIndicator
+    ptype  <- pPtype
+    ident  <- identifier
     return (Parameter pidcat ptype ident)
     <?> "parameters"
 
@@ -157,22 +151,15 @@ pVDecl = do
 
 pSIndicator :: Parser SIndicator
 pSIndicator =
-    try (do { char '['
-            ; whiteSpace
-            ; n <- pInt
-            ; char ']'
+    try (do { n <- brackets pInt
             ; return (Array n)
             }
         )
     <|>
-    try (do { char '['
-            ; whiteSpace
-            ; m <- pInt
-            ; comma
-            ; n <- pInt
-            ; char ']'
-            ; return (Matrix m n)
-            })
+    try (do { intList <- brackets $ sepBy pInt comma
+            ; return (Matrix (intList !! 0) (intList !! 1))
+            }
+        )
     <|>  do { return (NoIndicator) }
     <?> "shape indicator"
 
@@ -215,10 +202,7 @@ pAsg = do
 pCall = do
     reserved "call"
     ident   <- identifier
-    char '('
-    expList <- sepBy pExp comma
---    explist <- optional (sepBy pExp comma)
-    char ')'
+    expList <- parens $ sepBy pExp comma
     semi
     return (Call ident expList)
     <?> "Call statement"
@@ -306,22 +290,15 @@ pInt =
 
 pExprSIndicator :: Parser SIndicator
 pExprSIndicator =
-    try (do { char '['
-            ; whiteSpace
-            ; exp   <- pExp
-            ; char ']'
+    try (do { exp <- brackets pExp
             ; return (Array exp)
             }
         )
     <|>
-    try (do { char '['
-            ; whiteSpace
-            ; expM   <- pExp
-            ; comma
-            ; expN   <- pExp
-            ; char ']'
-            ; return (Matrix expM expN)
-            })
+    try (do { expList <- brackets $ sepBy pExp comma
+            ; return (Matrix (expList !! 0) (expList !! 1))
+            }
+        )
     <|>  do { return (NoIndicator) }
 
 pIdent

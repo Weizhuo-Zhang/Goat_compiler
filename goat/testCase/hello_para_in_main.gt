@@ -1,4 +1,4 @@
-proc main(var int b)
+proc main(val int b)
 begin
     write "Hello, kid!\n";
 end
