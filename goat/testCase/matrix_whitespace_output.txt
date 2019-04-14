@@ -1,3 +1,0 @@
-[ERROR] Parse error at (line 10, column 18):
-unexpected "."
-expecting shape indicator
