@@ -143,7 +143,7 @@ printWriteStmt expr indent = do
 -----------------------------------------------------------------
 -- print Call Statements such as call n(3 + 5);
 -----------------------------------------------------------------
-printCallStmt :: Ident -> [Expr] -> Int -> IO ()
+printCallStmt :: Identifier -> [Expr] -> Int -> IO ()
 printCallStmt id exprs indent = do
     { printIndent indent
     ; putStr "call "
