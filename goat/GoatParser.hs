@@ -13,18 +13,18 @@ type Parser a
     = Parsec String Int a
 
 lexer :: Q.TokenParser Int
-lexer
-  = Q.makeTokenParser
-    (emptyDef
-    { Q.commentLine     = "#"
-    , Q.nestedComments  = True
-    , Q.identStart      = letter
-    , Q.identLetter     = alphaNum <|> char '_' <|> char '\''
-    , Q.opStart         = oneOf "+-*/|&!=<>:"
-    , Q.opLetter        = oneOf "|&="
-    , Q.reservedNames   = myReserved
-    , Q.reservedOpNames = myOpnames
-    })
+lexer = Q.makeTokenParser (emptyDef { Q.commentLine     = "#"
+                                    , Q.nestedComments  = True
+                                    , Q.identStart      = letter
+                                    , Q.identLetter     = alphaNum
+                                                       <|> char '_'
+                                                       <|> char '\''
+                                    , Q.opStart         = oneOf "+-*/|&!=<>:"
+                                    , Q.opLetter        = oneOf "|&="
+                                    , Q.reservedNames   = myReserved
+                                    , Q.reservedOpNames = myOpnames
+                                    }
+                          )
 
 whiteSpace = Q.whiteSpace lexer
 lexeme     = Q.lexeme lexer
@@ -43,15 +43,12 @@ reservedOp = Q.reservedOp lexer
 
 myReserved, myOpnames :: [String]
 
-myReserved
-  = ["begin", "bool", "call" , "do"  , "else", "end",
-     "false", "fi"  , "float", "if"  , "int" , "od",
-     "proc" , "read", "ref"  , "then", "true", "val",
-     "while", "write"]
+myReserved = ["begin", "bool", "call" , "do"  , "else", "end", "false", "fi"
+             ,"float", "if"  , "int" , "od", "proc" , "read", "ref"  , "then"
+             , "true", "val", "while", "write"]
 
-myOpnames
-  = ["+" , "-" , "*", "<", ">", "<=", ">=", "=", "!=",
-     "||", "&&", "!", "/", ":="]
+myOpnames = ["+" , "-" , "*", "<", ">", "<=", ">=", "=", "!=", "||", "&&"
+            , "!", "/", ":="]
 
 -----------------------------------------------------------------
 -- pProg is the topmost parsing function. It looks for a program
@@ -72,20 +69,19 @@ pProg = do
 pProcedure :: Parser Procedure
 pProcedure = do
     reserved "proc"
-    header    <- pProgHeader
-    body      <- pProgBody
+    header    <- pProcedureHeader
+    body      <- pProcedureBody
     return (Procedure header body)
     <?> "procedure"
 
 -----------------------------------------------------------------
--- pProgHeader looks for the program header, which contains a
+-- pProcedureHeader looks for the program header, which contains a
 -- function name followed by serveral parameters and variable
 -- declarations
 -----------------------------------------------------------------
-
-pProgHeader :: Parser Header
-pProgHeader = do
-    ident  <- identifier
+pProcedureHeader :: Parser Header
+pProcedureHeader = do
+    id     <- identifier
     params <- parens $ sepBy pParameter comma
     return (Header ident params)
     <?> "procedure header"
@@ -96,11 +92,12 @@ pProgHeader = do
 
 pParameter :: Parser Parameter
 pParameter = do
-    pidcat <- pPIndicator
-    ptype  <- pPtype
-    ident  <- identifier
-    return (Parameter pidcat ptype ident)
+    pIndicator    <-  pPIndicator
+    pType         <-  pPtype
+    id            <-  identifier
+    return (Parameter pIndicator pType id)
     <?> "parameters"
+
 
 pPIndicator :: Parser PIndicator
 pPIndicator
@@ -109,7 +106,8 @@ pPIndicator
     do { reserved "ref"; return RefType }
     <?> "passing indicator type"
 
-pPtype :: Parser PType
+
+pPtype :: Parser BaseType
 pPtype
   = do { reserved "bool"; return BoolType }
     <|>
@@ -119,16 +117,16 @@ pPtype
     <?> "base type indicator"
 
 -----------------------------------------------------------------
--- pProgBody looks for body, which contains one or more statements
+-- pProcedureBody looks for body, which contains one or more statements
 -----------------------------------------------------------------
 
-pProgBody :: Parser Body
-pProgBody = do
-    vdecls <- many pVDecl
+pProcedureBody :: Parser Body
+pProcedureBody = do
+    variableDeclarations <- many pVariableDeclaration
     reserved "begin"
-    stmts  <- many1 pStmt
+    stmts                <- many1 pStatement
     reserved "end"
-    return (Body vdecls stmts)
+    return (Body variableDeclarations stmts)
     <?> "procedure body"
 
 -----------------------------------------------------------------
@@ -139,18 +137,19 @@ pProgBody = do
 -- no indicator
 -----------------------------------------------------------------
 
-pVDecl :: Parser VDecl
-pVDecl = do
-    ptype  <- pPtype
-    ident  <- identifier
-    sidcat <- pSIndicator
+pVariableDeclaration :: Parser VariableDeclaration
+pVariableDeclaration = do
+    pType  <- pPtype
+    id  <- identifier
+    shapeIndicator <- pShapeIndicator
     whiteSpace
     semi
-    return (VDecl ptype (Variable ident sidcat))
+    return (VariableDeclaration pType (Variable id shapeIndicator))
     <?> "procedure variable declaration"
 
-pSIndicator :: Parser SIndicator
-pSIndicator =
+
+pShapeIndicator :: Parser SIndicator
+pShapeIndicator =
     try (do { n <- brackets pInt
             ; return (Array n)
             }
@@ -168,18 +167,17 @@ pSIndicator =
 -- statement contains read, asgin, write, call, if, ifelse, while
 -----------------------------------------------------------------
 
-pStmt, pAsg, pRead, pWrite, pCall, pIf, pWhile :: Parser Stmt
+pStatement, pAssignment, pRead, pWrite, pCall, pIf, pWhile :: Parser Stmt
 
-pStmt
-  = choice [pAsg, pRead, pWrite, pCall, pIf, pWhile]
-    <?> "statement"
+pStatement = choice [pAssignment, pRead, pWrite, pCall, pIf, pWhile]
+          <?> "statement"
 
 pRead = do
     reserved "read"
-    ident  <- identifier
-    sidcat <- pExprSIndicator
+    id  <- identifier
+    shapeIndicator <- pExprSIndicator
     semi
-    return (Read (Variable ident sidcat))
+    return (Read (Variable id shapeIndicator))
     <?> "read statement"
 
 pWrite = do
@@ -189,22 +187,22 @@ pWrite = do
     return (Write exp)
     <?> "write statement"
 
-pAsg = do
-    ident  <- identifier
-    sidcat <- pExprSIndicator
+pAssignment = do
+    id  <- identifier
+    shapeIndicator <- pExprSIndicator
     whiteSpace
     reservedOp ":="
     rvalue <- pExp
     semi
-    return (Assign (Variable ident sidcat) rvalue)
+    return (Assign (Variable id shapeIndicator) rvalue)
     <?> "Assign statement"
 
 pCall = do
     reserved "call"
-    ident   <- identifier
+    id   <- identifier
     expList <- parens $ sepBy pExp comma
     semi
-    return (Call ident expList)
+    return (Call id expList)
     <?> "Call statement"
 
 pIf =
@@ -212,7 +210,7 @@ pIf =
         { reserved "if"
         ; exp   <- pExp
         ; reserved "then"
-        ; stmts <- many1 pStmt
+        ; stmts <- many1 pStatement
         ; reserved "fi"
         ; return (If exp stmts)
         })
@@ -220,9 +218,9 @@ pIf =
         { reserved "if"
         ; exp    <- pExp
         ; reserved "then"
-        ; stmts1 <- many1 pStmt
+        ; stmts1 <- many1 pStatement
         ; reserved "else"
-        ; stmts2 <- many1 pStmt
+        ; stmts2 <- many1 pStatement
         ; reserved "fi"
         ; return (IfElse exp stmts1 stmts2)
         }
@@ -232,7 +230,7 @@ pWhile = do
     reserved "while"
     exp   <- pExp
     reserved "do"
-    stmts <- many1 pStmt
+    stmts <- many1 pStatement
     reserved "od"
     return (While exp stmts)
     <?> "While statement"
@@ -242,15 +240,15 @@ pWhile = do
 -- expression contains operations, relations, expressions, string
 -- and boolean
 -----------------------------------------------------------------
-pExp, pFloat, pInt, pIdent, pString, pBool :: Parser Expr
+pExp, pFloat, pInt, pIdent, pString, pBool :: Parser Expression
 
 pExp
  = buildExpressionParser table pFac
 
-pFac :: Parser Expr
+pFac :: Parser Expression
 pFac = choice [parens pExp, pNum, pIdent, pBool]
 
-pNum :: Parser Expr
+pNum :: Parser Expression
 pNum = try (do pFloat)
       <|>
       do pInt
@@ -303,9 +301,9 @@ pExprSIndicator =
 
 pIdent
   = do
-      ident <- identifier
-      sidcat <- pExprSIndicator
-      return (ExprVar (Variable ident sidcat))
+      id <- identifier
+      shapeIndicator <- pExprSIndicator
+      return (ExprVar (Variable id shapeIndicator))
       <?>
       "identifier"
 
