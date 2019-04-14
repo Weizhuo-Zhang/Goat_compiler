@@ -61,7 +61,7 @@ getSIndicator sIndicator =
 -- get String of variable in form id, id[n] or id[m,n]
 -----------------------------------------------------------------
 getVariable :: Variable -> String
-getVariable var = (varId var) ++ (getSIndicator $ varSIndicator var)
+getVariable var = (varId var) ++ (getSIndicator $ varShapeIndicator var)
 
 -----------------------------------------------------------------
 -- print Parameters of procedure
