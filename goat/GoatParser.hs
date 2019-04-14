@@ -37,7 +37,7 @@ semi       = Q.semi lexer
 comma      = Q.comma lexer
 dot        = Q.dot lexer
 parens     = Q.parens lexer
-squares    = Q.squares lexer
+brackets   = Q.brackets lexer
 reserved   = Q.reserved lexer
 reservedOp = Q.reservedOp lexer
 
@@ -151,12 +151,12 @@ pVDecl = do
 
 pSIndicator :: Parser SIndicator
 pSIndicator =
-    try (do { n <- squares pInt
+    try (do { n <- brackets pInt
             ; return (Array n)
             }
         )
     <|>
-    try (do { intList <- squares $ sepBy pInt comma
+    try (do { intList <- brackets $ sepBy pInt comma
             ; return (Matrix (intList !! 0) (intList !! 1))
             }
         )
@@ -290,12 +290,12 @@ pInt =
 
 pExprSIndicator :: Parser SIndicator
 pExprSIndicator =
-    try (do { exp <- squares pExp
+    try (do { exp <- brackets pExp
             ; return (Array exp)
             }
         )
     <|>
-    try (do { expList <- squares $ sepBy pExp comma
+    try (do { expList <- brackets $ sepBy pExp comma
             ; return (Matrix (expList !! 0) (expList !! 1))
             }
         )
