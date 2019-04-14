@@ -80,8 +80,8 @@ data Expr
         { unaryNotExpr     :: Expr }
     deriving (Show, Eq)
 
-data VDecl
-    = VDecl
+data VariableDeclaration
+    = VariableDeclaration
     { vdeclType            :: PType
     , vdeclVar             :: Variable
     } deriving (Show, Eq)
@@ -116,7 +116,7 @@ data Stmt
 
 data Body
     = Body
-    { bodyVarDeclarations  :: [VDecl]
+    { bodyVarDeclarations  :: [VariableDeclaration]
     , bodyStatements       :: [Stmt]
     } deriving (Show, Eq)
 

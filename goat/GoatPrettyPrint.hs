@@ -94,16 +94,16 @@ printHeader header = do
 -----------------------------------------------------------------
 -- print variables declaration
 -----------------------------------------------------------------
-printVdecl :: [VDecl] -> IO ()
-printVdecl []           = return ()
-printVdecl (vdecl:vdels) = do
+printVariableDeclaration :: [VariableDeclaration] -> IO ()
+printVariableDeclaration []           = return ()
+printVariableDeclaration (vdecl:vdels) = do
     { printIndent 4
     ; printBaseType $ vdeclType vdecl
     ; putStr " "
     ; putStr $ getVariable $ vdeclVar vdecl
     ; putStr   ";"
     ; putStrLn ""
-    ; printVdecl vdels
+    ; printVariableDeclaration vdels
     }
 
 -----------------------------------------------------------------
@@ -320,7 +320,7 @@ getExpr expr =
 -----------------------------------------------------------------
 printBody :: Body -> IO ()
 printBody body = do
-    { printVdecl $ bodyVarDeclarations body
+    { printVariableDeclaration $ bodyVarDeclarations body
     ; putStrLn "begin"
     ; printStatements (bodyStatements body) 4
     ; putStrLn "end"
