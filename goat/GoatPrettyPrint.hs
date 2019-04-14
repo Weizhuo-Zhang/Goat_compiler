@@ -98,9 +98,9 @@ printVariableDeclaration :: [VariableDeclaration] -> IO ()
 printVariableDeclaration []           = return ()
 printVariableDeclaration (vdecl:vdels) = do
     { printIndent 4
-    ; printBaseType $ vdeclType vdecl
+    ; printBaseType $ declarationType vdecl
     ; putStr " "
-    ; putStr $ getVariable $ vdeclVar vdecl
+    ; putStr $ getVariable $ declarationVariable vdecl
     ; putStr   ";"
     ; putStrLn ""
     ; printVariableDeclaration vdels
