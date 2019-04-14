@@ -1,0 +1,15 @@
+proc main()
+    int matrix[1];
+            int matrix[   1];
+int matrix[   1    ];
+int matrix[1,2];
+int matrix[     1,2     ];
+int matrix[     1,    2     ];
+int matrix[     1     ,    2     ];
+int matrix[     -1     ,    2     ];
+int matrix[     -1     ,    -2     ];
+int matrix[     1.5     ,    -2.00     ];
+begin
+
+    write "\n";
+end
