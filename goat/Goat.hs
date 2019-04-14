@@ -7,13 +7,38 @@ import GoatExit
 import Text.Parsec (runParser)
 import System.Environment (getArgs, getProgName)
 
+-------------------------------- Documentation --------------------------------
+
+-- Authors:
+--   Shizhe Cai (shizhec) - 798125
+--   Weizhuo Zhang (weizhuoz) - 1018329
+--   Mingyang Zhang (mingyangz) - 650242
+--   An Luo (aluo1) - 657605
+
+-- This is the main file for Stage 1 of the project of COMP90045, Programming
+-- Language Implementation. This file provides two main methods: checkArgs and
+-- main.
+
+-- The aim of the project is to implement a compiler for a procedural (C-like)
+-- language called Goat.
+
+-------------------------------- Documentation --------------------------------
+
+-------------------------------------------------------------------------------
+-- Given the program name and arguments list, check if it's valid, thrown
+-- exception if it's not valid, otherwise return the corresponding Task value.
+-------------------------------------------------------------------------------
 checkArgs :: String -> [String] -> IO Task
 checkArgs _ ['-':_] = exitWithError "Missing filename" MissingFile
 checkArgs _ [filename] = return Compile
 checkArgs _ ["-p", filename] = return Pprint
 checkArgs _ ["-a", filename] = return Parse
-checkArgs progname _  = exitWithError ("Usage: " ++ progname ++ " [-p] filename") WrongUsage
+checkArgs progname _  = do
+  exitWithError ("Usage: " ++ progname ++ " [-p] filename") WrongUsage
 
+-------------------------------------------------------------------------------
+-- Main function of the compiler
+-------------------------------------------------------------------------------
 main :: IO ()
 main
   = do
