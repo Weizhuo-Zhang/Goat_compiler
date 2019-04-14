@@ -307,6 +307,7 @@ pInt =
 pExprSIndicator :: Parser SIndicator
 pExprSIndicator =
     try (do { char '['
+            ; whiteSpace
             ; exp   <- pExp
             ; char ']'
             ; return (Array exp)
@@ -314,6 +315,7 @@ pExprSIndicator =
         )
     <|>
     try (do { char '['
+            ; whiteSpace
             ; expM   <- pExp
             ; comma
             ; expN   <- pExp
