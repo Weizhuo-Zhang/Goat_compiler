@@ -158,7 +158,7 @@ pSIndicator :: Parser SIndicator
 pSIndicator =
     try (do { char '['
             ; whiteSpace
-            ; n <- pNum
+            ; n <- pInt
             ; char ']'
             ; return (Array n)
             }
@@ -166,9 +166,9 @@ pSIndicator =
     <|>
     try (do { char '['
             ; whiteSpace
-            ; m <- pNum
+            ; m <- pInt
             ; comma
-            ; n <- pNum
+            ; n <- pInt
             ; char ']'
             ; return (Matrix m n)
             })
@@ -257,13 +257,19 @@ pWhile = do
 -- expression contains operations, relations, expressions, string
 -- and boolean
 -----------------------------------------------------------------
-pExp, pNum, pIdent, pString, pBool :: Parser Expr
+pExp, pFloat, pInt, pIdent, pString, pBool :: Parser Expr
 
 pExp
  = buildExpressionParser table pFac
 
 pFac :: Parser Expr
 pFac = choice [parens pExp, pNum, pIdent, pBool]
+
+pNum :: Parser Expr
+pNum = try (do pFloat)
+      <|>
+      do pInt
+
 
 table = [[prefix   "-" UnaryMinus]
         ,[binary   "*" Mul, binary   "/"  Div]
@@ -284,17 +290,18 @@ binary name op
 relation name rel
     = Infix (do {reservedOp name; return rel}) AssocNone
 
-pNum =
-     try ( do { n <- many1 digit
-           ; char '.' <?> "float"
-           ; m <- many1 digit
-           ; return (FloatConst (read (n ++ "." ++m) :: Float))
-           }
-         )
-    <|>
-           do { n <- natural <?> "integer"
-           ; return (IntConst (fromInteger n :: Int))
-           }
+pFloat =
+      do { n <- many1 digit;
+           char '.';
+           m <- many1 digit;
+           return (FloatConst (read (n ++ "." ++m) :: Float))
+         }
+        <?> "float"
+pInt =
+      do { n <- natural;
+           return (IntConst (fromInteger n :: Int))
+         }
+        <?> "integer"
 
 pExprSIndicator :: Parser SIndicator
 pExprSIndicator =

@@ -7,9 +7,10 @@ int matrix[     1,2     ];
 int matrix[     1,    2     ];
 int matrix[     1     ,    2     ];
 int matrix[     1     ,    2     ];
+int matrix[     1.2     ,    2     ];
 int matrix[     1     ,    2     ];
-int matrix[     1.5     ,    2.00     ];
 begin
     a := -1;
+    b := -1.1;
     write "\n";
 end
