@@ -10,4 +10,5 @@ ghc Goat.hs -o Goat
 ./Goat -p testCase/test_hello.gt
 ./Goat -p testCase/stmtTest.gt
 ./Goat -p testCase/backslash.gt
-./Goat -p write_test.gt
+./Goat -p testCase/write_test.gt
+./Goat -p testCase/matrix_whitespace.gt
