@@ -85,14 +85,13 @@ printParameters (param:params) seperator = do
 -- print Header
 -------------------------------------------------------------------------------
 printHeader :: Header -> IO ()
-printHeader header = do
-    { putStr   "proc "
-    ; putStr $ headerIdent $ header
-    ; putStr   " ("
-    ; printParameters (parameters $ header) ""
-    ; putStr   ")"
-    ; putStrLn ""
-    }
+printHeader header = do { putStr   "proc "
+                        ; putStr $ headerIdent $ header
+                        ; putStr   " ("
+                        ; printParameters (parameters $ header) ""
+                        ; putStr   ")"
+                        ; putStrLn ""
+                        }
 
 -------------------------------------------------------------------------------
 -- print variables declaration
@@ -112,86 +111,79 @@ printVariableDeclaration (vdecl:vdels) = do
 -------------------------------------------------------------------------------
 -- print Assignment Statements such as n := 34;
 -------------------------------------------------------------------------------
-printAssignStmt :: Variable -> Expression -> Int -> IO ()
-printAssignStmt var expr indent = do
-    { printIndent indent
-    ; putStr $ getVariable var
-    ; putStr " := "
-    ; putStr $ getTopExpr expr
-    ; putStrLn ";"
-    }
+printAssignStatement :: Variable -> Expression -> Int -> IO ()
+printAssignStatement var expr indent = do { printIndent indent
+                                          ; putStr $ getVariable var
+                                          ; putStr " := "
+                                          ; putStr $ getTopExpr expr
+                                          ; putStrLn ";"
+                                          }
 
 -------------------------------------------------------------------------------
 -- print Read Statements such as read n[3,5];
 -------------------------------------------------------------------------------
-printReadStmt :: Variable -> Int -> IO ()
-printReadStmt var indent = do
-    { printIndent indent
-    ; putStr "read "
-    ; putStr $ getVariable var
-    ; putStrLn ";"
-    }
+printReadStatement :: Variable -> Int -> IO ()
+printReadStatement var indent = do { printIndent indent
+                                   ; putStr "read "
+                                   ; putStr $ getVariable var
+                                   ; putStrLn ";"
+                                   }
 
 -------------------------------------------------------------------------------
 -- print Write Statements such as write 3 + 5;
 -------------------------------------------------------------------------------
 printWriteStmt :: Expression -> Int -> IO ()
-printWriteStmt expr indent = do
-    { printIndent indent
-    ; putStr "write "
-    ; putStr $ getTopExpr expr
-    ; putStrLn ";"
-    }
+printWriteStmt expr indent = do { printIndent indent
+                                ; putStr "write "
+                                ; putStr $ getTopExpr expr
+                                ; putStrLn ";"
+                                }
 
 -------------------------------------------------------------------------------
 -- print Call Statements such as call n(3 + 5);
 -------------------------------------------------------------------------------
 printCallStmt :: Identifier -> [Expression] -> Int -> IO ()
-printCallStmt id exprs indent = do
-    { printIndent indent
-    ; putStr "call "
-    ; putStr id
-    ; putStr "("
-    ; printExprs exprs ""
-    ; putStr ")"
-    ; putStrLn ";"
-    }
+printCallStmt id exprs indent = do { printIndent indent
+                                   ; putStr "call "
+                                   ; putStr id
+                                   ; putStr "("
+                                   ; printExprs exprs ""
+                                   ; putStr ")"
+                                   ; putStrLn ";"
+                                   }
 
 -------------------------------------------------------------------------------
 -- print the common part of If Statements and If-Else Statements
 -------------------------------------------------------------------------------
 printIfCommon :: Expression -> [Statement] -> Int -> IO ()
-printIfCommon expr stmts indent = do
-    { printIndent indent
-    ; putStr "if "
-    ; printExprs [expr] ""
-    ; putStrLn " then"
-    ; printStatements stmts (indent + 4)
-    }
+printIfCommon expr stmts indent = do { printIndent indent
+                                     ; putStr "if "
+                                     ; printExprs [expr] ""
+                                     ; putStrLn " then"
+                                     ; printStatements stmts (indent + 4)
+                                     }
 
 -------------------------------------------------------------------------------
 -- print the end part of If Statements and If-Else Statements
 -------------------------------------------------------------------------------
 printIfEnd :: Int -> IO ()
-printIfEnd indent = do
-    { printIndent indent
-    ; putStrLn "fi"
-    }
+printIfEnd indent = do { printIndent indent
+                       ; putStrLn "fi"
+                       }
 
 -------------------------------------------------------------------------------
 -- print If Statements
 -------------------------------------------------------------------------------
-printIfStmt :: Expression -> [Statement] -> Int -> IO ()
-printIfStmt expr stmts indent = do
-    { printIfCommon expr stmts indent
-    ; printIfEnd indent
-    }
+printIfStatement :: Expression -> [Statement] -> Int -> IO ()
+printIfStatement expr stmts indent = do { printIfCommon expr stmts indent
+                                        ; printIfEnd indent
+                                        }
 
 -------------------------------------------------------------------------------
 -- print If-Else Statements
 -------------------------------------------------------------------------------
-printIfElseStmt :: Expression -> [Statement] -> [Statement] -> Int -> IO ()
-printIfElseStmt expr stmts1 stmts2 indent = do
+printIfElseStatement :: Expression -> [Statement] -> [Statement] -> Int -> IO ()
+printIfElseStatement expr stmts1 stmts2 indent = do
     { printIfCommon expr stmts1 indent
     ; printIndent indent
     ; putStrLn "else"
@@ -202,16 +194,15 @@ printIfElseStmt expr stmts1 stmts2 indent = do
 -------------------------------------------------------------------------------
 -- print While Statements
 -------------------------------------------------------------------------------
-printWhileStmt :: Expression -> [Statement] -> Int -> IO ()
-printWhileStmt expr stmts indent = do
-    { printIndent indent
-    ; putStr "while "
-    ; printExprs [expr] ""
-    ; putStrLn " do"
-    ; printStatements stmts (indent + 4)
-    ; printIndent indent
-    ; putStrLn "od"
-    }
+printWhileStatement :: Expression -> [Statement] -> Int -> IO ()
+printWhileStatement expr stmts indent = do { printIndent indent
+                                           ; putStr "while "
+                                           ; printExprs [expr] ""
+                                           ; putStrLn " do"
+                                           ; printStatements stmts (indent + 4)
+                                           ; printIndent indent
+                                           ; putStrLn "od"
+                                           }
 
 -------------------------------------------------------------------------------
 -- print Statement
@@ -219,23 +210,22 @@ printWhileStmt expr stmts indent = do
 printStatement :: Statement -> Int -> IO ()
 printStatement stmt indent = do
     case stmt of
-        Assign var  expr          -> printAssignStmt var  expr   indent
-        Read   var                -> printReadStmt   var  indent
+        Assign var  expr          -> printAssignStatement var  expr   indent
+        Read   var                -> printReadStatement   var  indent
         Write  expr               -> printWriteStmt  expr indent
         Call   id   exprs         -> printCallStmt   id   exprs  indent
-        If     expr stmts         -> printIfStmt     expr stmts  indent
-        IfElse expr stmts1 stmts2 -> printIfElseStmt expr stmts1 stmts2 indent
-        While  expr stmts         -> printWhileStmt  expr stmts  indent
+        If     expr stmts         -> printIfStatement     expr stmts  indent
+        IfElse expr stmts1 stmts2 -> printIfElseStatement expr stmts1 stmts2 indent
+        While  expr stmts         -> printWhileStatement  expr stmts  indent
 
 -------------------------------------------------------------------------------
 -- print list of Statement
 -------------------------------------------------------------------------------
 printStatements :: [Statement] -> Int -> IO ()
 printStatements [] _                = return ()
-printStatements (stmt:stmts) indent = do
-    { printStatement stmt indent
-    ; printStatements stmts indent
-    }
+printStatements (stmt:stmts) indent = do { printStatement stmt indent
+                                         ; printStatements stmts indent
+                                         }
 
 -------------------------------------------------------------------------------
 -- converte const variable to String
@@ -260,11 +250,10 @@ getPrefixOpResult expr op = op ++ (getExpr expr)
 -------------------------------------------------------------------------------
 printExprs :: [Expression] -> String -> IO ()
 printExprs [] _                   = return ()
-printExprs (expr:exprs) seperator = do
-    { putStr seperator
-    ; putStr $ getTopExpr expr
-    ; printExprs exprs ", "
-    }
+printExprs (expr:exprs) seperator = do { putStr seperator
+                                       ; putStr $ getTopExpr expr
+                                       ; printExprs exprs ", "
+                                       }
 
 -------------------------------------------------------------------------------
 -- print the root of expresssion which should no surrounded by ()
@@ -322,44 +311,44 @@ getExpr expr =
 -- print Body
 -------------------------------------------------------------------------------
 printBody :: Body -> IO ()
-printBody body = do
-    { printVariableDeclaration $ bodyVarDeclarations body
-    ; putStrLn "begin"
-    ; printStatements (bodyStatements body) 4
-    ; putStrLn "end"
-    }
+printBody body = do { printVariableDeclaration $ bodyVarDeclarations body
+                    ; putStrLn "begin"
+                    ; printStatements (bodyStatements body) 4
+                    ; putStrLn "end"
+                    }
 
 -------------------------------------------------------------------------------
 -- print Procedure
 -------------------------------------------------------------------------------
 printProc :: [Procedure] -> IO ()
 printProc []           = return ()
-printProc (proc:[])    = do
-    { printHeader $ header proc
-    ; printBody $ body proc
-    }
-printProc (proc:procs) = do
-    { printHeader $ header proc
-    ; printBody $ body proc
-    ; putStrLn ""
-    ; printProc (procs)
-    }
+printProc (proc:[])    = do { printHeader $ header proc
+                            ; printBody $ body proc
+                            }
+printProc (proc:procs) = do { printHeader $ header proc
+                            ; printBody $ body proc
+                            ; putStrLn ""
+                            ; printProc (procs)
+                            }
 
 -------------------------------------------------------------------------------
 -- check whether the main procedure is parameter-less
 -------------------------------------------------------------------------------
 checkMainParam :: [Parameter] -> IO Task
 checkMainParam [] = return Unit
-checkMainParam _  = exitWithError "'main()' procedure should be parameter-less." MainWithParam
+checkMainParam _  = do
+  exitWithError "'main()' procedure should be parameter-less." MainWithParam
 
 -------------------------------------------------------------------------------
 -- check the number of main procedure
 -------------------------------------------------------------------------------
 checkMainNum :: Int -> IO Task
 checkMainNum numMain
-    | 0 == numMain = exitWithError "There is no 'main()' procedure." MissingMain
+    | 0 == numMain = do
+        exitWithError "There is no 'main()' procedure." MissingMain
     | 1 == numMain = return Unit
-    | otherwise = exitWithError "There is more than one 'main()' procedure" MultipleMain
+    | otherwise = do
+        exitWithError "There is more than one 'main()' procedure" MultipleMain
 
 -------------------------------------------------------------------------------
 -- get the number of main procedure
@@ -375,9 +364,8 @@ countMain (proc:procs)
 -- main entry of prettyPrint module
 -------------------------------------------------------------------------------
 prettyPrint :: GoatProgram -> IO ()
-prettyPrint program = do
-    { let mainList = countMain $ procedures program
-    ; checkMainNum $ length $ mainList
-    ; checkMainParam $ parameters $ header $ head mainList
-    ; printProc (procedures program)
-    }
+prettyPrint program = do { let mainList = countMain $ procedures program
+                         ; checkMainNum $ length $ mainList
+                         ; checkMainParam $ parameters $ header $ head mainList
+                         ; printProc (procedures program)
+                         }
