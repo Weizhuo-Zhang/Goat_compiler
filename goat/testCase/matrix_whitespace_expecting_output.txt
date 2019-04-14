@@ -1,4 +1,4 @@
-proc main()
+proc main ()
     int matrix[1];
     int matrix[1];
     int matrix[1];
@@ -10,7 +10,7 @@ proc main()
     int matrix[1, 2];
     int d[2];
     int d[2, 3];
-    int d[2, 3];        ;
+    int d[2, 3];
     int d[2, 3];
 begin
     a := -1;
