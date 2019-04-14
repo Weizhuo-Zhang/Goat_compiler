@@ -1,0 +1,30 @@
+proc q ( val     float x
+               , ref int  k
+                      )
+    int n; float y;
+    bool a[8];
+    begin
+    a[7] := true;
+k := 42;
+end
+
+
+         proc                main(  )  
+
+
+
+begin
+    n:=4+7-(-9)*1-6;
+    write           y;
+    write          "\n";
+    write a[0,2];
+    write   "\n";
+    n:= n+1;
+    write (sumsq/count)-(mean*mean);
+    write "\n";
+end
+
+
+
+
+
