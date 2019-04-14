@@ -324,7 +324,6 @@ printBody body = do
     ; putStrLn "begin"
     ; printStatements (bodyStatements body) 4
     ; putStrLn "end"
-    ; putStrLn ""
     }
 
 -----------------------------------------------------------------
@@ -332,9 +331,14 @@ printBody body = do
 -----------------------------------------------------------------
 printProc :: [Procedure] -> IO ()
 printProc []           = return ()
+printProc (proc:[])    = do
+    { printHeader $ header proc
+    ; printBody $ body proc
+    }
 printProc (proc:procs) = do
     { printHeader $ header proc
     ; printBody $ body proc
+    ; putStrLn ""
     ; printProc (procs)
     }
 
