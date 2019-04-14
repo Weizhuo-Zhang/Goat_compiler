@@ -83,7 +83,7 @@ pProcedureHeader :: Parser Header
 pProcedureHeader = do
     id     <- identifier
     params <- parens $ sepBy pParameter comma
-    return (Header ident params)
+    return (Header id params)
     <?> "procedure header"
 
 -----------------------------------------------------------------
