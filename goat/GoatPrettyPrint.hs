@@ -109,7 +109,7 @@ printVariableDeclaration (vdecl:vdels) = do
 -----------------------------------------------------------------
 -- print Assignment Statements such as n := 34;
 -----------------------------------------------------------------
-printAssignStmt :: Variable -> Expr -> Int -> IO ()
+printAssignStmt :: Variable -> Expression -> Int -> IO ()
 printAssignStmt var expr indent = do
     { printIndent indent
     ; putStr $ getVariable var
@@ -132,7 +132,7 @@ printReadStmt var indent = do
 -----------------------------------------------------------------
 -- print Write Statements such as write 3 + 5;
 -----------------------------------------------------------------
-printWriteStmt :: Expr -> Int -> IO ()
+printWriteStmt :: Expression -> Int -> IO ()
 printWriteStmt expr indent = do
     { printIndent indent
     ; putStr "write "
@@ -143,7 +143,7 @@ printWriteStmt expr indent = do
 -----------------------------------------------------------------
 -- print Call Statements such as call n(3 + 5);
 -----------------------------------------------------------------
-printCallStmt :: Identifier -> [Expr] -> Int -> IO ()
+printCallStmt :: Identifier -> [Expression] -> Int -> IO ()
 printCallStmt id exprs indent = do
     { printIndent indent
     ; putStr "call "
@@ -157,7 +157,7 @@ printCallStmt id exprs indent = do
 -----------------------------------------------------------------
 -- print the common part of If Statements and If-Else Statements
 -----------------------------------------------------------------
-printIfCommon :: Expr -> [Stmt] -> Int -> IO ()
+printIfCommon :: Expression -> [Stmt] -> Int -> IO ()
 printIfCommon expr stmts indent = do
     { printIndent indent
     ; putStr "if "
@@ -178,7 +178,7 @@ printIfEnd indent = do
 -----------------------------------------------------------------
 -- print If Statements
 -----------------------------------------------------------------
-printIfStmt :: Expr -> [Stmt] -> Int -> IO ()
+printIfStmt :: Expression -> [Stmt] -> Int -> IO ()
 printIfStmt expr stmts indent = do
     { printIfCommon expr stmts indent
     ; printIfEnd indent
@@ -187,7 +187,7 @@ printIfStmt expr stmts indent = do
 -----------------------------------------------------------------
 -- print If-Else Statements
 -----------------------------------------------------------------
-printIfElseStmt :: Expr -> [Stmt] -> [Stmt] -> Int -> IO ()
+printIfElseStmt :: Expression -> [Stmt] -> [Stmt] -> Int -> IO ()
 printIfElseStmt expr stmts1 stmts2 indent = do
     { printIfCommon expr stmts1 indent
     ; printIndent indent
@@ -199,7 +199,7 @@ printIfElseStmt expr stmts1 stmts2 indent = do
 -----------------------------------------------------------------
 -- print While Statements
 -----------------------------------------------------------------
-printWhileStmt :: Expr -> [Stmt] -> Int -> IO ()
+printWhileStmt :: Expression -> [Stmt] -> Int -> IO ()
 printWhileStmt expr stmts indent = do
     { printIndent indent
     ; putStr "while "
@@ -243,19 +243,19 @@ getConst a = show a
 -----------------------------------------------------------------
 -- get string of result using infix operator
 -----------------------------------------------------------------
-getInfixOpResult :: Expr -> String -> Expr -> String
+getInfixOpResult :: Expression -> String -> Expression -> String
 getInfixOpResult lExpr op rExpr = (getExpr lExpr) ++ op ++ (getExpr rExpr)
 
 -----------------------------------------------------------------
 -- get string of result using prefix operator
 -----------------------------------------------------------------
-getPrefixOpResult :: Expr -> String -> String
+getPrefixOpResult :: Expression -> String -> String
 getPrefixOpResult expr op = op ++ (getExpr expr)
 
 -----------------------------------------------------------------
 -- print list of expressions
 -----------------------------------------------------------------
-printExprs :: [Expr] -> String -> IO ()
+printExprs :: [Expression] -> String -> IO ()
 printExprs [] _                   = return ()
 printExprs (expr:exprs) seperator = do
     { putStr seperator
@@ -266,7 +266,7 @@ printExprs (expr:exprs) seperator = do
 -----------------------------------------------------------------
 -- print the root of expresssion which should no surrounded by ()
 -----------------------------------------------------------------
-getTopExpr :: Expr -> String
+getTopExpr :: Expression -> String
 getTopExpr expr =
     case expr of
         ExprVar     var   -> getVariable var
@@ -292,7 +292,7 @@ getTopExpr expr =
 -----------------------------------------------------------------
 -- print the non-root of expresssion which might surrounded by ()
 -----------------------------------------------------------------
-getExpr :: Expr -> String
+getExpr :: Expression -> String
 getExpr expr =
     case expr of
         ExprVar     var   -> getVariable var

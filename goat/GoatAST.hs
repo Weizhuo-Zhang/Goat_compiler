@@ -18,69 +18,60 @@ data Variable = Variable { varId             :: Identifier
                          } deriving (Show, Eq)
 
 
-data Expr
-    = ExprVar
-        { exprVar          :: Variable }
-    | BoolConst
-        { boolConstVal     :: Bool }
-    | IntConst
-        { intConstVal      :: Int }
-    | FloatConst
-        { floatConstVal    :: Float }
-    | StrConst
-        { strConstVal      :: String }
-    | Add
-        { addLeftExpr      :: Expr
-        , addRightExpr     :: Expr
-        }
-    | Mul
-        { mulLeftExpr      :: Expr
-        , mulRightExpr     :: Expr
-        }
-    | Sub
-        { subLeftExpr      :: Expr
-        , subRightExpr     :: Expr
-        }
+data Expression = ExprVar { exprVar          :: Variable }
+          | BoolConst { boolConstVal     :: Bool }
+          | IntConst { intConstVal      :: Int }
+          | FloatConst { floatConstVal    :: Float }
+          | StrConst { strConstVal      :: String }
+          | Add { addLeftExpr      :: Expression
+                , addRightExpr     :: Expression
+                }
+          | Mul { mulLeftExpr      :: Expression
+                , mulRightExpr     :: Expression
+                }
+          | Sub { subLeftExpr      :: Expression
+                , subRightExpr     :: Expression
+                }
     | Div
-        { divLeftExpr      :: Expr
-        , divRightExpr     :: Expr
+        { divLeftExpr      :: Expression
+        , divRightExpr     :: Expression
         }
     | Or
-        { orLeftExpr       :: Expr
-        , orRightExpr      :: Expr
+        { orLeftExpr       :: Expression
+        , orRightExpr      :: Expression
         }
     | And
-        { andLeftExpr      :: Expr
-        , andRightExpr     :: Expr
+        { andLeftExpr      :: Expression
+        , andRightExpr     :: Expression
         }
     | Eq
-        { eqLeftExpr       :: Expr
-        , eqRightExpr      :: Expr
+        { eqLeftExpr       :: Expression
+        , eqRightExpr      :: Expression
         }
     | NotEq
-        { notEqLeftExpr    :: Expr
-        , notEqRightExpr   :: Expr
+        { notEqLeftExpr    :: Expression
+        , notEqRightExpr   :: Expression
         }
     | Les
-        { lesLeftExpr      :: Expr
-        , lesRightExpr     :: Expr
+        { lesLeftExpr      :: Expression
+        , lesRightExpr     :: Expression
         }
     | LesEq
-        { lesEqLeftExpr    :: Expr
-        , lesEqRightExpr   :: Expr
+        { lesEqLeftExpr    :: Expression
+        , lesEqRightExpr   :: Expression
         }
     | Grt
-        { grtLeftExpr      :: Expr
-        , grtRightExpr     :: Expr
+        { grtLeftExpr      :: Expression
+        , grtRightExpr     :: Expression
         }
     | GrtEq
-        { grtEqLeftExpr    :: Expr
-        , grtEqRightExpr   :: Expr
+        { grtEqLeftExpr    :: Expression
+        , grtEqRightExpr   :: Expression
         }
     | UnaryMinus
-        { unaryMinusExpr   :: Expr }
+        { unaryMinusExpr   :: Expression }
     | UnaryNot
-        { unaryNotExpr     :: Expr }
+        { unaryNotExpr     :: Expression }
     deriving (Show, Eq)
 
 data VariableDeclaration = VariableDeclaration { declarationType     :: BaseType
@@ -90,27 +81,27 @@ data VariableDeclaration = VariableDeclaration { declarationType     :: BaseType
 data Stmt
     = Assign
         { assignVal        :: Variable
-        , assignExpr       :: Expr
+        , assignExpr       :: Expression
         }
     | Read
         { readVal          :: Variable }
     | Write
-        { writeExpr        :: Expr }
+        { writeExpr        :: Expression }
     | Call
         { callIdent        :: Identifier
-        , callExprs        :: [Expr]
+        , callExprs        :: [Expression]
         }
     | If
-        { ifExpr           :: Expr
+        { ifExpr           :: Expression
         , ifStmts          :: [Stmt]
         }
     | IfElse
-        { ifElseExpr       :: Expr
+        { ifElseExpr       :: Expression
         , ifElseStmts1     :: [Stmt]
         , ifElseStmts2     :: [Stmt]
         }
     | While
-        { whileExpr        :: Expr
+        { whileExpr        :: Expression
         , whileStmts       :: [Stmt]
         }
     deriving (Show, Eq)
@@ -128,10 +119,10 @@ data PIndicator
 
 data ShapeIndicator
     = Array
-      { arrayExpr          :: Expr }
+      { arrayExpr          :: Expression }
     | Matrix
-      { matrixMExpr        :: Expr
-      , matrixNExpr        :: Expr
+      { matrixMExpr        :: Expression
+      , matrixNExpr        :: Expression
       }
     | NoIndicator
     deriving (Show, Eq)
