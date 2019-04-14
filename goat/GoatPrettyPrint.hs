@@ -39,12 +39,12 @@ printBaseType baseType = do
         FloatType -> putStr "float"
 
 -----------------------------------------------------------------
--- print Passing Indicator type such as "var" and "ref"
+-- print Passing Indicator type such as "val" and "ref"
 -----------------------------------------------------------------
 printPassIndicator :: PIndicator -> IO ()
 printPassIndicator pIndicator = do
     case pIndicator of
-        VarType   -> putStr "var"
+        VarType   -> putStr "val"
         RefType   -> putStr "ref"
 
 -----------------------------------------------------------------

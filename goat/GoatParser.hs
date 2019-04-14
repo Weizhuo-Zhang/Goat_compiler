@@ -87,15 +87,17 @@ pProgHeader :: Parser Header
 pProgHeader = do
     ident     <- identifier
     char '('
+    whiteSpace
     params    <- sepBy pParameter comma
     char ')'
-    newline
     whiteSpace
+    -- newline
+    -- whiteSpace
     return (Header ident params)
     <?> "procedure header"
 
 -----------------------------------------------------------------
--- parameters := (var|ref) (int|float|bool) identifier
+-- parameters := (val|ref) (int|float|bool) identifier
 -----------------------------------------------------------------
 
 pParameter :: Parser Parameter
@@ -108,7 +110,7 @@ pParameter = do
 
 pPIndicator :: Parser PIndicator
 pPIndicator
-  = do { reserved "var"; return VarType }
+  = do { reserved "val"; return VarType }
     <|>
     do { reserved "ref"; return RefType }
     <?> "passing indicator type"
