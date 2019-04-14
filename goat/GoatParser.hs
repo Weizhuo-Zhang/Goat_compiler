@@ -20,8 +20,8 @@ lexer
     , Q.nestedComments  = True
     , Q.identStart      = letter
     , Q.identLetter     = alphaNum <|> char '_' <|> char '\''
-    , Q.opStart         = oneOf "+-*:"
-    , Q.opLetter        = oneOf "+-*:=<>!|&"
+    , Q.opStart         = oneOf "+-*/|&!=<>:"
+    , Q.opLetter        = oneOf "|&="
     , Q.reservedNames   = myReserved
     , Q.reservedOpNames = myOpnames
     })
