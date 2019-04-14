@@ -53,8 +53,8 @@ printPassIndicator pIndicator = do
 -------------------------------------------------------------------------------
 -- get String of shape Indicator type such as Array and Matrix
 -------------------------------------------------------------------------------
-getSIndicator :: ShapeIndicator -> String
-getSIndicator sIndicator =
+getShapeIndicator :: ShapeIndicator -> String
+getShapeIndicator sIndicator =
     case sIndicator of
         NoIndicator -> ""
         Array  n    -> "[" ++ (getTopExpr n) ++ "]"
@@ -64,7 +64,7 @@ getSIndicator sIndicator =
 -- get String of variable in form id, id[n] or id[m,n]
 -------------------------------------------------------------------------------
 getVariable :: Variable -> String
-getVariable var = (varId var) ++ (getSIndicator $ varShapeIndicator var)
+getVariable var = (varId var) ++ (getShapeIndicator $ varShapeIndicator var)
 
 -------------------------------------------------------------------------------
 -- print Parameters of procedure
