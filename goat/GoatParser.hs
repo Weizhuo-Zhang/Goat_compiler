@@ -6,11 +6,27 @@ import Text.Parsec.Expr
 import Text.Parsec.Language (emptyDef)
 import qualified Text.Parsec.Token as Q
 
------------------------------------------------------------------
+-------------------------------- Documentation --------------------------------
+
+-- Authors:
+--   Shizhe Cai (shizhec) - 798125
+--   Weizhuo Zhang (weizhuoz) - 1018329
+--   Mingyang Zhang (mingyangz) - 650242
+--   An Luo (aluo1) - 657605
+
+-- This is the main file for Stage 1 of the project of COMP90045, Programming
+-- Language Implementation. This file provides two main methods: checkArgs and
+-- main.
+
+-- The aim of the project is to implement a compiler for a procedural (C-like)
+-- language called Goat.
+
+-------------------------------- Documentation --------------------------------
+
+-------------------------------------------------------------------------------
 -- define lexer, reserved words and reserved operator
------------------------------------------------------------------
-type Parser a
-    = Parsec String Int a
+-------------------------------------------------------------------------------
+type Parser a = Parsec String Int a
 
 lexer :: Q.TokenParser Int
 lexer = Q.makeTokenParser (emptyDef { Q.commentLine     = "#"
@@ -41,30 +57,30 @@ brackets   = Q.brackets lexer
 reserved   = Q.reserved lexer
 reservedOp = Q.reservedOp lexer
 
-myReserved, myOpnames :: [String]
-
+myReserved :: [String]
 myReserved = ["begin", "bool", "call" , "do"  , "else", "end", "false", "fi"
              ,"float", "if"  , "int" , "od", "proc" , "read", "ref"  , "then"
              , "true", "val", "while", "write"]
 
+myOpnames :: [String]
 myOpnames = ["+" , "-" , "*", "<", ">", "<=", ">=", "=", "!=", "||", "&&"
             , "!", "/", ":="]
 
------------------------------------------------------------------
--- pProg is the topmost parsing function. It looks for a program
+-------------------------------------------------------------------------------
+-- pProgram is the topmost parsing function. It looks for a program
 -- which contains one or more procedures
------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
-pProg :: Parser GoatProgram
-pProg = do
+pProgram :: Parser GoatProgram
+pProgram = do
     procedures <- many1 pProcedure
     return (GoatProgram procedures)
     <?> "program procedure"
 
------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- pProcedure looks for a procedure, which contains "proc"
 -- + header + "begin" + body + "end"
------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 pProcedure :: Parser Procedure
 pProcedure = do
@@ -74,11 +90,11 @@ pProcedure = do
     return (Procedure header body)
     <?> "procedure"
 
------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- pProcedureHeader looks for the program header, which contains a
 -- function name followed by serveral parameters and variable
 -- declarations
------------------------------------------------------------------
+-------------------------------------------------------------------------------
 pProcedureHeader :: Parser Header
 pProcedureHeader = do
     id     <- identifier
@@ -86,9 +102,6 @@ pProcedureHeader = do
     return (Header id params)
     <?> "procedure header"
 
------------------------------------------------------------------
--- parameters := (val|ref) (int|float|bool) identifier
------------------------------------------------------------------
 
 pParameter :: Parser Parameter
 pParameter = do
@@ -116,10 +129,9 @@ pPtype
     do { reserved "float"; return FloatType }
     <?> "base type indicator"
 
------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- pProcedureBody looks for body, which contains one or more statements
------------------------------------------------------------------
-
+-------------------------------------------------------------------------------
 pProcedureBody :: Parser Body
 pProcedureBody = do
     variableDeclarations <- many pVariableDeclaration
@@ -129,14 +141,13 @@ pProcedureBody = do
     return (Body variableDeclarations stmts)
     <?> "procedure body"
 
------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- variable declarations
 -- vdecl := (int|float|bool) identifier (shape indicator)
 -- shape indicator
 -- determine whether a identifier is an array, a matrix or
 -- no indicator
------------------------------------------------------------------
-
+-------------------------------------------------------------------------------
 pVariableDeclaration :: Parser VariableDeclaration
 pVariableDeclaration = do
     pType  <- pPtype
@@ -162,16 +173,16 @@ pShapeIndicator =
     <|>  do { return (NoIndicator) }
     <?> "shape indicator"
 
------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- define statements
 -- statement contains read, asgin, write, call, if, ifelse, while
------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
-pStatement, pAssignment, pRead, pWrite, pCall, pIf, pWhile :: Parser Statement
-
+pStatement :: Parser Statement
 pStatement = choice [pAssignment, pRead, pWrite, pCall, pIf, pWhile]
           <?> "statement"
 
+pRead :: Parser Statement
 pRead = do
     reserved "read"
     id  <- identifier
@@ -180,6 +191,7 @@ pRead = do
     return (Read (Variable id shapeIndicator))
     <?> "read statement"
 
+pWrite :: Parser Statement
 pWrite = do
     reserved "write"
     exp <- (pString <|> pExp)
@@ -187,6 +199,7 @@ pWrite = do
     return (Write exp)
     <?> "write statement"
 
+pAssignment :: Parser Statement
 pAssignment = do
     id  <- identifier
     shapeIndicator <- pExprSIndicator
@@ -197,6 +210,7 @@ pAssignment = do
     return (Assign (Variable id shapeIndicator) rvalue)
     <?> "Assign statement"
 
+pCall :: Parser Statement
 pCall = do
     reserved "call"
     id   <- identifier
@@ -205,6 +219,7 @@ pCall = do
     return (Call id expList)
     <?> "Call statement"
 
+pIf :: Parser Statement
 pIf =
     try( do
         { reserved "if"
@@ -226,6 +241,7 @@ pIf =
         }
     <?> "If statement"
 
+pWhile :: Parser Statement
 pWhile = do
     reserved "while"
     exp   <- pExp
@@ -235,15 +251,13 @@ pWhile = do
     return (While exp stmts)
     <?> "While statement"
 
------------------------------------------------------------------
+-------------------------------------------------------------------------------
 -- define expressions
 -- expression contains operations, relations, expressions, string
 -- and boolean
------------------------------------------------------------------
-pExp, pFloat, pInt, pIdent, pString, pBool :: Parser Expression
-
-pExp
- = buildExpressionParser table pFac
+-------------------------------------------------------------------------------
+pExp :: Parser Expression
+pExp = buildExpressionParser table pFac
 
 pFac :: Parser Expression
 pFac = choice [parens pExp, pNum, pIdent, pBool]
@@ -264,15 +278,13 @@ table = [[prefix   "-" UnaryMinus]
         ,[binary   "&&" And]
         ,[binary   "||" Or]]
 
-prefix name func
-    = Prefix (do {reservedOp name; return func})
+prefix name func = Prefix (do {reservedOp name; return func})
 
-binary name op
-    = Infix (do {reservedOp name; return op}) AssocLeft
+binary name op = Infix (do {reservedOp name; return op}) AssocLeft
 
-relation name rel
-    = Infix (do {reservedOp name; return rel}) AssocNone
+relation name rel = Infix (do {reservedOp name; return rel}) AssocNone
 
+pFloat :: Parser Expression
 pFloat =
       do { n <- many1 digit;
            char '.';
@@ -280,6 +292,8 @@ pFloat =
            return (FloatConst (read (n ++ "." ++m) :: Float))
          }
         <?> "float"
+
+pInt :: Parser Expression
 pInt =
       do { n <- natural;
            return (IntConst (fromInteger n :: Int))
@@ -307,6 +321,7 @@ pIdent
       <?>
       "identifier"
 
+pString :: Parser Expression
 pString
   = do
       char '"'
@@ -316,6 +331,7 @@ pString
       <?>
       "string"
 
+pBool :: Parser Expression
 pBool
   = do {reserved "true"; return (BoolConst True)}
     <|>
@@ -327,6 +343,6 @@ pMain :: Parser GoatProgram
 pMain
   = do
     whiteSpace
-    p <- pProg
+    p <- pProgram
     eof
     return p
