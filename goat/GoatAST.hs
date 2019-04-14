@@ -2,7 +2,7 @@ module GoatAST where
 
 type Identifier = String
 
-data PType
+data BaseType
     = BoolType
     | IntType
     | FloatType
@@ -80,7 +80,7 @@ data Expr
         { unaryNotExpr     :: Expr }
     deriving (Show, Eq)
 
-data VariableDeclaration = VariableDeclaration { declarationType     :: PType
+data VariableDeclaration = VariableDeclaration { declarationType     :: BaseType
                                                , declarationVariable :: Variable
                                                } deriving (Show, Eq)
 
@@ -136,7 +136,7 @@ data ShapeIndicator
 data Parameter
     = Parameter
     { passingIndicator     :: PIndicator
-    , passingType          :: PType
+    , passingType          :: BaseType
     , passingIdent         :: Identifier
     } deriving (Show, Eq)
 
