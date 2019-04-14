@@ -1,4 +1,4 @@
-proc test(var bool ident1, ref float ident2)
+proc test(val bool ident1, ref float ident2)
     bool ident3;
     int ident4;
 begin
