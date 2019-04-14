@@ -157,6 +157,7 @@ pVDecl = do
 pSIndicator :: Parser SIndicator
 pSIndicator =
     try (do { char '['
+            ; whiteSpace
             ; n <- pNum
             ; char ']'
             ; return (Array n)
@@ -164,6 +165,7 @@ pSIndicator =
         )
     <|>
     try (do { char '['
+            ; whiteSpace
             ; m <- pNum
             ; comma
             ; n <- pNum
