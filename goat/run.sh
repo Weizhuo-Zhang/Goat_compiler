@@ -12,6 +12,7 @@ ghc Goat.hs -o Goat
 ./Goat -p testCase/backslash.gt
 ./Goat -p testCase/write_test.gt
 
+echo "---------------------- matrix test case ----------------------"
 # testing for matrix
 ./Goat -p testCase/matrix_whitespace.gt > testCase/matrix_whitespace_output.txt
 diff testCase/matrix_whitespace_expecting_output.txt testCase/matrix_whitespace_output.txt
