@@ -40,44 +40,44 @@ data Expression = ExprVar    { exprVar          :: Variable }
                 | IntConst   { intConstVal      :: Int }
                 | FloatConst { floatConstVal    :: Float }
                 | StrConst   { strConstVal      :: String }
-                | Add { addLeftExpr  :: Expression
-                      , addRightExpr :: Expression
-                      }
-                | Mul { mulLeftExpr  :: Expression
-                      , mulRightExpr :: Expression
-                      }
-                | Sub { subLeftExpr  :: Expression
-                      , subRightExpr :: Expression
-                      }
-                | Div { divLeftExpr  :: Expression
-                      , divRightExpr :: Expression
-                      }
-                | Or { orLeftExpr  :: Expression
-                     , orRightExpr :: Expression
-                     }
-                | And { andLeftExpr  :: Expression
-                      , andRightExpr :: Expression
-                      }
-                | Eq { eqLeftExpr  :: Expression
-                     , eqRightExpr :: Expression
-                     }
-                | NotEq { notEqLeftExpr  :: Expression
-                        , notEqRightExpr :: Expression
-                        }
-                | Les { lesLeftExpr  :: Expression
-                      , lesRightExpr :: Expression
-                      }
-                | LesEq { lesEqLeftExpr  :: Expression
-                        , lesEqRightExpr :: Expression
-                        }
-                | Grt { grtLeftExpr  :: Expression
-                      , grtRightExpr :: Expression
-                      }
-                | GrtEq { grtEqLeftExpr  :: Expression
-                        , grtEqRightExpr :: Expression
-                        }
+                | Add        { addLeftExpr  :: Expression
+                             , addRightExpr :: Expression
+                             }
+                | Mul        { mulLeftExpr  :: Expression
+                             , mulRightExpr :: Expression
+                             }
+                | Sub        { subLeftExpr  :: Expression
+                             , subRightExpr :: Expression
+                             }
+                | Div        { divLeftExpr  :: Expression
+                             , divRightExpr :: Expression
+                             }
+                | Or         { orLeftExpr  :: Expression
+                             , orRightExpr :: Expression
+                             }
+                | And        { andLeftExpr  :: Expression
+                             , andRightExpr :: Expression
+                             }
+                | Eq         { eqLeftExpr  :: Expression
+                             , eqRightExpr :: Expression
+                             }
+                | NotEq      { notEqLeftExpr  :: Expression
+                             , notEqRightExpr :: Expression
+                             }
+                | Les        { lesLeftExpr  :: Expression
+                             , lesRightExpr :: Expression
+                             }
+                | LesEq      { lesEqLeftExpr  :: Expression
+                             , lesEqRightExpr :: Expression
+                             }
+                | Grt        { grtLeftExpr  :: Expression
+                             , grtRightExpr :: Expression
+                             }
+                | GrtEq      { grtEqLeftExpr  :: Expression
+                             , grtEqRightExpr :: Expression
+                             }
                 | UnaryMinus { unaryMinusExpr :: Expression }
-                | UnaryNot { unaryNotExpr :: Expression }
+                | UnaryNot   { unaryNotExpr :: Expression }
                 deriving (Show, Eq)
 
 -------------------------------------------------------------------------------
