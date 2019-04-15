@@ -1,6 +1,7 @@
 module GoatParser where
 
 import GoatAST
+import Data.Functor.Identity (Identity)
 import Text.Parsec
 import Text.Parsec.Expr
 import Text.Parsec.Language (emptyDef)
@@ -308,7 +309,12 @@ pTerm = choice [parens pExpression, pNumber, pIdentifier, pBool]
 pNumber :: Parser Expression
 pNumber = try (do pFloat) <|> do pInt
 
-
+-------------------------------------------------------------------------------
+-- Define the operator precedence table used in buildExpressionParser.
+-- The operator in the top of the table has the highest precedence, and the one
+-- at the bottom has the lowest precedence.
+-------------------------------------------------------------------------------
+table :: [[Operator String Int Identity Expression]]
 table = [[prefix   "-" UnaryMinus]
         ,[binary   "*" Mul, binary   "/"  Div]
         ,[binary   "+" Add, binary   "-"  Sub]
@@ -319,12 +325,38 @@ table = [[prefix   "-" UnaryMinus]
         ,[binary   "&&" And]
         ,[binary   "||" Or]]
 
-prefix name func = Prefix (do { reservedOp name; return func })
+-------------------------------------------------------------------------------
+-- Prefix operator
+-------------------------------------------------------------------------------
+prefix :: String -> (Expression -> Expression)
+       -> Operator String Int Identity Expression
+prefix name prefixOperator = Prefix (do { reservedOp name;
+                                          return prefixOperator
+                                        })
 
-binary name op = Infix (do { reservedOp name; return op }) AssocLeft
+-------------------------------------------------------------------------------
+-- Binary operator
+-------------------------------------------------------------------------------
+binary :: String -> (Expression -> Expression -> Expression)
+       -> Operator String Int Identity Expression
+binary name binaryOperator = Infix (do { reservedOp name;
+                                         return binaryOperator
+                                       }
+                                   ) AssocLeft
 
-relation name rel = Infix (do { reservedOp name; return rel }) AssocNone
+-------------------------------------------------------------------------------
+-- Relation operator.
+-------------------------------------------------------------------------------
+relation :: String -> (Expression -> Expression -> Expression)
+         -> Operator String Int Identity Expression
+relation name relationOperator = Infix (do { reservedOp name;
+                                             return relationOperator
+                                             }
+                                       ) AssocNone
 
+-------------------------------------------------------------------------------
+-- Define parser parsing float number.
+-------------------------------------------------------------------------------
 pFloat :: Parser Expression
 pFloat = do { n <- many1 digit;
               char '.';
@@ -333,12 +365,18 @@ pFloat = do { n <- many1 digit;
             }
          <?> "float"
 
+-------------------------------------------------------------------------------
+-- Define parser parsing integer.
+-------------------------------------------------------------------------------
 pInt :: Parser Expression
 pInt = do { n <- natural;
             return (IntConst (fromInteger n :: Int))
           }
        <?> "integer"
 
+-------------------------------------------------------------------------------
+-- Define parser parsing the shape indicator.
+-------------------------------------------------------------------------------
 pExpressionShapeIndicator :: Parser ShapeIndicator
 pExpressionShapeIndicator =
     try (do { exp <- brackets pExpression
@@ -352,28 +390,39 @@ pExpressionShapeIndicator =
         )
     <|>  do { return (NoIndicator) }
 
+-------------------------------------------------------------------------------
+-- Define parser parsing the identifier.
+-------------------------------------------------------------------------------
+pIdentifier :: Parser Expression
 pIdentifier = do
-  id <- identifier
+  id             <- identifier
   shapeIndicator <- pExpressionShapeIndicator
   return (ExprVar (Variable id shapeIndicator))
-  <?>
-  "identifier"
+  <?> "identifier"
 
+-------------------------------------------------------------------------------
+-- Define parser parsing the string.
+-------------------------------------------------------------------------------
 pString :: Parser Expression
 pString = do
   char '"'
   str <- many (satisfy (/= '"'))
   char '"'
   return (StrConst str)
-  <?>
-  "string"
+  <?> "string"
 
+-------------------------------------------------------------------------------
+-- Define parser parsing the bool value.
+-------------------------------------------------------------------------------
 pBool :: Parser Expression
 pBool = do {reserved "true"; return (BoolConst True)}
         <|>
         do {reserved "false"; return (BoolConst False)}
         <?> "bool"
 
+-------------------------------------------------------------------------------
+-- main function of the parser.
+-------------------------------------------------------------------------------
 pMain :: Parser GoatProgram
 pMain = do
   whiteSpace
