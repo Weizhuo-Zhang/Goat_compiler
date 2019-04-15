@@ -9,12 +9,6 @@ import System.Environment (getArgs, getProgName)
 
 -------------------------------- Documentation --------------------------------
 
--- Authors:
---   Shizhe Cai (shizhec) - 798125
---   Weizhuo Zhang (weizhuoz) - 1018329
---   Mingyang Zhang (mingyangz) - 650242
---   An Luo (aluo1) - 657605
-
 -- This is the main file for Stage 1 of the project of COMP90045, Programming
 -- Language Implementation. This file provides two main methods: checkArgs and
 -- main.
