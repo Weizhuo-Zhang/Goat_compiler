@@ -73,7 +73,8 @@ getShapeIndicator shapeIndicator =
 -- Get String of variable in form id, id[n] or id[m,n].
 -------------------------------------------------------------------------------
 getVariable :: Variable -> String
-getVariable var = (varId var) ++ (getShapeIndicator $ varShapeIndicator var)
+getVariable variable = (varId variable)
+                    ++ (getShapeIndicator $ varShapeIndicator variable)
 
 -------------------------------------------------------------------------------
 -- Print Parameters of procedure
@@ -99,7 +100,7 @@ printHeader header = do { putStr   "proc "
                         ; putStr   " ("
                         ; printParameters (parameters $ header) ""
                         ; putStr   ")"
-                        ; putStrLn ""
+                        ; putStrLn "" -- print new line character
                         }
 
 -------------------------------------------------------------------------------
@@ -120,13 +121,13 @@ printVariableDeclaration (variableDeclaration:declarations) = do
 -- Print Assignment Statements such as n := 34;
 -------------------------------------------------------------------------------
 printAssignStatement :: Variable -> Expression -> Int -> IO ()
-printAssignStatement var expr numberOfSpace = do
+printAssignStatement variable expression numberOfSpace = do
     { printIndentation numberOfSpace
-    ; putStr $ getVariable var
+    ; putStr $ getVariable variable
     ; printOneWhiteSpace
     ; putStr ":="
     ; printOneWhiteSpace
-    ; putStr $ getTopExpr expr
+    ; putStr $ getTopExpr expression
     ; printSemiColon
     }
 
@@ -134,194 +135,218 @@ printAssignStatement var expr numberOfSpace = do
 -- Print Read Statements such as read n[3,5];
 -------------------------------------------------------------------------------
 printReadStatement :: Variable -> Int -> IO ()
-printReadStatement var numberOfSpace = do { printIndentation numberOfSpace
-                                          ; putStr "read"
-                                          ; printOneWhiteSpace
-                                          ; putStr $ getVariable var
-                                          ; printSemiColon
-                                          }
+printReadStatement variable numberOfSpace = do { printIndentation numberOfSpace
+                                               ; putStr "read"
+                                               ; printOneWhiteSpace
+                                               ; putStr $ getVariable variable
+                                               ; printSemiColon
+                                               }
 
 -------------------------------------------------------------------------------
 -- Print Write Statements such as write 3 + 5;
 -------------------------------------------------------------------------------
-printWriteStmt :: Expression -> Int -> IO ()
-printWriteStmt expr numberOfSpace = do { printIndentation numberOfSpace
-                                       ; putStr "write"
-                                       ; printOneWhiteSpace
-                                       ; putStr $ getTopExpr expr
-                                       ; printSemiColon
-                                       }
+printWriteStatement :: Expression -> Int -> IO ()
+printWriteStatement expression numberOfSpace = do
+    { printIndentation numberOfSpace
+    ; putStr "write"
+    ; printOneWhiteSpace
+    ; putStr $ getTopExpr expression
+    ; printSemiColon
+    }
 
 -------------------------------------------------------------------------------
--- print Call Statements such as call n(3 + 5);
+-- Print Call Statements such as call n(3 + 5);
 -------------------------------------------------------------------------------
-printCallStmt :: Identifier -> [Expression] -> Int -> IO ()
-printCallStmt id exprs numberOfSpace = do { printIndentation numberOfSpace
-                                   ; putStr "call "
-                                   ; putStr id
-                                   ; putStr "("
-                                   ; printExprs exprs ""
-                                   ; putStr ")"
-                                   ; printSemiColon
-                                   }
+printCallStatement :: Identifier -> [Expression] -> Int -> IO ()
+printCallStatement id expressions numberOfSpace = do
+    { printIndentation numberOfSpace
+    ; putStr "call "
+    ; putStr id
+    ; putStr "("
+    ; printExprs expressions ""
+    ; putStr ")"
+    ; printSemiColon
+    }
 
 -------------------------------------------------------------------------------
--- print the common part of If Statements and If-Else Statements
+-- Print the common part of If Statements and If-Else Statements.
 -------------------------------------------------------------------------------
 printIfCommon :: Expression -> [Statement] -> Int -> IO ()
-printIfCommon expr stmts numberOfSpace = do { printIndentation numberOfSpace
-                                     ; putStr "if "
-                                     ; printExprs [expr] ""
-                                     ; putStrLn " then"
-                                     ; printStatements stmts (numberOfSpace + 4)
-                                     }
+printIfCommon expression statements numberOfSpace = do
+    { printIndentation numberOfSpace
+    ; putStr "if "
+    ; printExprs [expression] ""
+    ; putStrLn " then"
+    ; printStatements statements (numberOfSpace + 4)
+    }
 
 -------------------------------------------------------------------------------
--- print the end part of If Statements and If-Else Statements
+-- print the end part of If Statements and If-Else Statements.
 -------------------------------------------------------------------------------
 printIfEnd :: Int -> IO ()
 printIfEnd numberOfSpace = do { printIndentation numberOfSpace
-                       ; putStrLn "fi"
-                       }
+                              ; putStrLn "fi"
+                              }
 
 -------------------------------------------------------------------------------
--- print If Statements
+-- Print If Statements.
 -------------------------------------------------------------------------------
 printIfStatement :: Expression -> [Statement] -> Int -> IO ()
-printIfStatement expr stmts numberOfSpace = do { printIfCommon expr stmts numberOfSpace
-                                        ; printIfEnd numberOfSpace
-                                        }
-
--------------------------------------------------------------------------------
--- print If-Else Statements
--------------------------------------------------------------------------------
-printIfElseStatement :: Expression -> [Statement] -> [Statement] -> Int -> IO ()
-printIfElseStatement expr stmts1 stmts2 numberOfSpace = do
-    { printIfCommon expr stmts1 numberOfSpace
-    ; printIndentation numberOfSpace
-    ; putStrLn "else"
-    ; printStatements stmts2 (numberOfSpace + 4)
+printIfStatement expression statements numberOfSpace = do
+    { printIfCommon expression statements numberOfSpace
     ; printIfEnd numberOfSpace
     }
 
 -------------------------------------------------------------------------------
--- print While Statements
+-- Print If-Else Statements
+-------------------------------------------------------------------------------
+printIfElseStatement :: Expression -> [Statement] -> [Statement] -> Int -> IO ()
+printIfElseStatement expression statement1 statement2 numberOfSpace = do
+    { printIfCommon expression statement1 numberOfSpace
+    ; printIndentation numberOfSpace
+    ; putStrLn "else"
+    ; printStatements statement2 (numberOfSpace + 4)
+    ; printIfEnd numberOfSpace
+    }
+
+-------------------------------------------------------------------------------
+-- Print While Statements.
 -------------------------------------------------------------------------------
 printWhileStatement :: Expression -> [Statement] -> Int -> IO ()
-printWhileStatement expr stmts numberOfSpace = do { printIndentation numberOfSpace
-                                           ; putStr "while "
-                                           ; printExprs [expr] ""
-                                           ; putStrLn " do"
-                                           ; printStatements stmts (numberOfSpace + 4)
-                                           ; printIndentation numberOfSpace
-                                           ; putStrLn "od"
-                                           }
+printWhileStatement expression statements numberOfSpace = do
+    { printIndentation numberOfSpace
+    ; putStr "while "
+    ; printExprs [expression] ""
+    ; putStrLn " do"
+    ; printStatements statements (numberOfSpace + 4)
+    ; printIndentation numberOfSpace
+    ; putStrLn "od"
+    }
 
 -------------------------------------------------------------------------------
--- print Statement
+-- Print statement.
 -------------------------------------------------------------------------------
 printStatement :: Statement -> Int -> IO ()
-printStatement stmt numberOfSpace = do
-    case stmt of
-        Assign var  expr          -> printAssignStatement var  expr   numberOfSpace
-        Read   var                -> printReadStatement   var  numberOfSpace
-        Write  expr               -> printWriteStmt  expr numberOfSpace
-        Call   id   exprs         -> printCallStmt   id   exprs  numberOfSpace
-        If     expr stmts         -> printIfStatement     expr stmts  numberOfSpace
-        IfElse expr stmts1 stmts2 -> printIfElseStatement expr stmts1 stmts2 numberOfSpace
-        While  expr stmts         -> printWhileStatement  expr stmts  numberOfSpace
+printStatement statement numberOfSpace = do
+    case statement of
+        Assign variable  expression    -> printAssignStatement variable
+                                                               expression
+                                                               numberOfSpace
+        Read   variable                -> printReadStatement   variable
+                                                               numberOfSpace
+        Write  expression              -> printWriteStatement  expression
+                                                               numberOfSpace
+        Call   id   expressions        -> printCallStatement   id
+                                                               expressions
+                                                               numberOfSpace
+        If     expression statements   -> printIfStatement     expression
+                                                               statements
+                                                               numberOfSpace
+        IfElse expression statement1 statement2
+                                       -> printIfElseStatement expression
+                                                               statement1
+                                                               statement2
+                                                               numberOfSpace
+        While  expression statements   -> printWhileStatement  expression
+                                                               statements
+                                                               numberOfSpace
 
 -------------------------------------------------------------------------------
--- print list of Statement
+-- Print statement list.
 -------------------------------------------------------------------------------
 printStatements :: [Statement] -> Int -> IO ()
-printStatements [] _                = return ()
-printStatements (stmt:stmts) numberOfSpace = do { printStatement stmt numberOfSpace
-                                         ; printStatements stmts numberOfSpace
-                                         }
+printStatements [] _                                 = return ()
+printStatements (statement:statements) numberOfSpace = do
+    { printStatement statement numberOfSpace
+    ; printStatements statements numberOfSpace
+    }
 
 -------------------------------------------------------------------------------
--- converte const variable to String
+-- Convert constant variable to string.
 -------------------------------------------------------------------------------
 getConst :: (Show a) => a -> String
 getConst a = show a
 
 -------------------------------------------------------------------------------
--- get string of result using infix operator
+-- Get string of result using infix operator.
 -------------------------------------------------------------------------------
 getInfixOpResult :: Expression -> String -> Expression -> String
-getInfixOpResult lExpr op rExpr = (getExpr lExpr) ++ op ++ (getExpr rExpr)
+getInfixOpResult lExpr operator rExpr = (getExpr lExpr)
+                                      ++ operator
+                                      ++ (getExpr rExpr)
 
 -------------------------------------------------------------------------------
--- get string of result using prefix operator
+-- Get string of result using prefix operator
 -------------------------------------------------------------------------------
 getPrefixOpResult :: Expression -> String -> String
-getPrefixOpResult expr op = op ++ (getExpr expr)
+getPrefixOpResult expression operator = operator ++ (getExpr expression)
 
 -------------------------------------------------------------------------------
--- print list of expressions
+-- Print list of expressionessions.
 -------------------------------------------------------------------------------
 printExprs :: [Expression] -> String -> IO ()
-printExprs [] _                   = return ()
-printExprs (expr:exprs) seperator = do { putStr seperator
-                                       ; putStr $ getTopExpr expr
-                                       ; printExprs exprs ", "
-                                       }
+printExprs [] _                               = return ()
+printExprs (expression:expressions) seperator = do
+    { putStr seperator
+    ; putStr $ getTopExpr expression
+    ; printExprs expressions ", "
+    }
 
 -------------------------------------------------------------------------------
--- print the root of expresssion which should no surrounded by ()
+-- Print the root of expressionesssion which should no surrounded by ().
 -------------------------------------------------------------------------------
 getTopExpr :: Expression -> String
-getTopExpr expr =
-    case expr of
-        ExprVar     var   -> getVariable var
-        BoolConst   val   -> getConst val
-        IntConst    val   -> getConst val
-        FloatConst  val   -> getConst val
-        StrConst    val   -> "\"" ++ val ++ "\""
-        Add   lExpr rExpr -> getInfixOpResult  lExpr " + "  rExpr
-        Mul   lExpr rExpr -> getInfixOpResult  lExpr " * "  rExpr
-        Sub   lExpr rExpr -> getInfixOpResult  lExpr " - "  rExpr
-        Div   lExpr rExpr -> getInfixOpResult  lExpr " / "  rExpr
-        Or    lExpr rExpr -> getInfixOpResult  lExpr " || " rExpr
-        And   lExpr rExpr -> getInfixOpResult  lExpr " && " rExpr
-        Eq    lExpr rExpr -> getInfixOpResult  lExpr " = "  rExpr
-        NotEq lExpr rExpr -> getInfixOpResult  lExpr " != " rExpr
-        Les   lExpr rExpr -> getInfixOpResult  lExpr " < "  rExpr
-        LesEq lExpr rExpr -> getInfixOpResult  lExpr " <= " rExpr
-        Grt   lExpr rExpr -> getInfixOpResult  lExpr " > "  rExpr
-        GrtEq lExpr rExpr -> getInfixOpResult  lExpr " >= " rExpr
-        UnaryMinus  expr  -> getPrefixOpResult expr "-"
-        UnaryNot    expr  -> getPrefixOpResult expr "!"
+getTopExpr expression =
+    case expression of
+        ExprVar     variable   -> getVariable variable
+        BoolConst   val        -> getConst val
+        IntConst    val        -> getConst val
+        FloatConst  val        -> getConst val
+        StrConst    val        -> "\"" ++ val ++ "\""
+        Add   lExpr rExpr      -> getInfixOpResult  lExpr " + "  rExpr
+        Mul   lExpr rExpr      -> getInfixOpResult  lExpr " * "  rExpr
+        Sub   lExpr rExpr      -> getInfixOpResult  lExpr " - "  rExpr
+        Div   lExpr rExpr      -> getInfixOpResult  lExpr " / "  rExpr
+        Or    lExpr rExpr      -> getInfixOpResult  lExpr " || " rExpr
+        And   lExpr rExpr      -> getInfixOpResult  lExpr " && " rExpr
+        Eq    lExpr rExpr      -> getInfixOpResult  lExpr " = "  rExpr
+        NotEq lExpr rExpr      -> getInfixOpResult  lExpr " != " rExpr
+        Les   lExpr rExpr      -> getInfixOpResult  lExpr " < "  rExpr
+        LesEq lExpr rExpr      -> getInfixOpResult  lExpr " <= " rExpr
+        Grt   lExpr rExpr      -> getInfixOpResult  lExpr " > "  rExpr
+        GrtEq lExpr rExpr      -> getInfixOpResult  lExpr " >= " rExpr
+        UnaryMinus  expression -> getPrefixOpResult expression "-"
+        UnaryNot    expression -> getPrefixOpResult expression "!"
 
 -------------------------------------------------------------------------------
--- print the non-root of expresssion which might surrounded by ()
+-- Wrap the given string with parenthesis.
+-------------------------------------------------------------------------------
+wrapStringWithParen :: String -> String
+wrapStringWithParen value = "(" ++ value ++ ")"
+
+-------------------------------------------------------------------------------
+-- Print the non-root of expressionesssion which might surrounded by ().
 -------------------------------------------------------------------------------
 getExpr :: Expression -> String
-getExpr expr =
-    case expr of
-        ExprVar     var   -> getVariable var
-        BoolConst   val   -> getConst val
-        IntConst    val   -> getConst val
-        FloatConst  val   -> getConst val
-        StrConst    val   -> "\"" ++ val ++ "\""
-        Add   lExpr rExpr -> "(" ++ getInfixOpResult lExpr " + "  rExpr ++ ")"
-        Mul   lExpr rExpr -> "(" ++ getInfixOpResult lExpr " * "  rExpr ++ ")"
-        Sub   lExpr rExpr -> "(" ++ getInfixOpResult lExpr " - "  rExpr ++ ")"
-        Div   lExpr rExpr -> "(" ++ getInfixOpResult lExpr " / "  rExpr ++ ")"
-        Or    lExpr rExpr -> "(" ++ getInfixOpResult lExpr " || " rExpr ++ ")"
-        And   lExpr rExpr -> "(" ++ getInfixOpResult lExpr " && " rExpr ++ ")"
-        Eq    lExpr rExpr -> "(" ++ getInfixOpResult lExpr " = "  rExpr ++ ")"
-        NotEq lExpr rExpr -> "(" ++ getInfixOpResult lExpr " != " rExpr ++ ")"
-        Les   lExpr rExpr -> "(" ++ getInfixOpResult lExpr " < "  rExpr ++ ")"
-        LesEq lExpr rExpr -> "(" ++ getInfixOpResult lExpr " <= " rExpr ++ ")"
-        Grt   lExpr rExpr -> "(" ++ getInfixOpResult lExpr " > "  rExpr ++ ")"
-        GrtEq lExpr rExpr -> "(" ++ getInfixOpResult lExpr " >= " rExpr ++ ")"
-        UnaryMinus  expr  -> getPrefixOpResult expr "-"
-        UnaryNot    expr  -> getPrefixOpResult expr "!"
+getExpr expression =
+    let expressionString = getTopExpr expression
+    in case expression of
+        Add   _ _ -> wrapStringWithParen expressionString
+        Mul   _ _ -> wrapStringWithParen expressionString
+        Sub   _ _ -> wrapStringWithParen expressionString
+        Div   _ _ -> wrapStringWithParen expressionString
+        Or    _ _ -> wrapStringWithParen expressionString
+        And   _ _ -> wrapStringWithParen expressionString
+        Eq    _ _ -> wrapStringWithParen expressionString
+        NotEq _ _ -> wrapStringWithParen expressionString
+        Les   _ _ -> wrapStringWithParen expressionString
+        LesEq _ _ -> wrapStringWithParen expressionString
+        Grt   _ _ -> wrapStringWithParen expressionString
+        GrtEq _ _ -> wrapStringWithParen expressionString
+        otherwise -> expressionString
 
 -------------------------------------------------------------------------------
--- print Body
+-- Print Body.
 -------------------------------------------------------------------------------
 printBody :: Body -> IO ()
 printBody body = do { printVariableDeclaration $ bodyVarDeclarations body
@@ -340,12 +365,12 @@ printProc (proc:[])    = do { printHeader $ header proc
                             }
 printProc (proc:procs) = do { printHeader $ header proc
                             ; printBody $ body proc
-                            ; putStrLn ""
+                            ; putStrLn "" -- print new line character
                             ; printProc (procs)
                             }
 
 -------------------------------------------------------------------------------
--- check whether the main procedure is parameter-less
+-- Check whether the main procedure is parameter-less.
 -------------------------------------------------------------------------------
 checkMainParam :: [Parameter] -> IO Task
 checkMainParam [] = return Unit
@@ -353,7 +378,7 @@ checkMainParam _  = do
   exitWithError "'main()' procedure should be parameter-less." MainWithParam
 
 -------------------------------------------------------------------------------
--- check the number of main procedure
+-- Check the number of main procedure.
 -------------------------------------------------------------------------------
 checkMainNum :: Int -> IO Task
 checkMainNum numMain
@@ -364,7 +389,7 @@ checkMainNum numMain
         exitWithError "There is more than one 'main()' procedure" MultipleMain
 
 -------------------------------------------------------------------------------
--- get the number of main procedure
+-- Get the number of main procedure.
 -------------------------------------------------------------------------------
 countMain :: [Procedure] -> [Procedure]
 countMain [] = []
@@ -374,7 +399,7 @@ countMain (proc:procs)
 
 
 -------------------------------------------------------------------------------
--- main entry of prettyPrint module
+-- Main entry of prettyPrint module.
 -------------------------------------------------------------------------------
 prettyPrint :: GoatProgram -> IO ()
 prettyPrint program = do { let mainList = countMain $ procedures program
