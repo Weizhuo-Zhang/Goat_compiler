@@ -29,11 +29,11 @@ import System.Environment (getArgs, getProgName)
 -- exception if it's not valid, otherwise return the corresponding Task value.
 -------------------------------------------------------------------------------
 checkArgs :: String -> [String] -> IO Task
-checkArgs _ ['-':_] = exitWithError "Missing filename" MissingFile
-checkArgs _ [filename] = return Compile
+checkArgs _ ['-':_]          = exitWithError "Missing filename" MissingFile
+checkArgs _ [filename]       = return Compile
 checkArgs _ ["-p", filename] = return Pprint
 checkArgs _ ["-a", filename] = return Parse
-checkArgs progname _  = do
+checkArgs progname _         = do
   exitWithError ("Usage: " ++ progname ++ " [-p] filename") WrongUsage
 
 -------------------------------------------------------------------------------
@@ -43,8 +43,8 @@ main :: IO ()
 main
   = do
      progname <- getProgName
-     args <- getArgs
-     task <- checkArgs progname args
+     args     <- getArgs
+     task     <- checkArgs progname args
      if task == Compile then
        do
          exitWithSuccess "Sorry, cannot generate code yet"
