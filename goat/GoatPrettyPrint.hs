@@ -408,8 +408,4 @@ countMain (proc:procs)
 -- Main entry of prettyPrint module.
 -------------------------------------------------------------------------------
 prettyPrint :: GoatProgram -> IO ()
-prettyPrint program = do { let mainList = countMain $ procedures program
-                         ; checkMainNum $ length $ mainList
-                         ; checkMainParam $ parameters $ header $ head mainList
-                         ; printProc (procedures program)
-                         }
+prettyPrint program = printProc (procedures program)
