@@ -38,7 +38,7 @@ c. Individual: Deadline for completing double-blind peer reviewing.
 
 #### Project Specification
 
-## [Project Stage 2 Specification](./Assignment_2.pdf)
+[Project Stage 2 Specification](./Assignment_2.pdf)
 
 ---
 
