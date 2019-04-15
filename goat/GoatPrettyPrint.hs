@@ -20,6 +20,12 @@ import System.Exit
 -------------------------------- Documentation --------------------------------
 
 -------------------------------------------------------------------------------
+-- Number of white space needed for indentation.
+-------------------------------------------------------------------------------
+indentationSpaceNumber :: Int
+indentationSpaceNumber = 4
+
+-------------------------------------------------------------------------------
 -- Print indention.
 -------------------------------------------------------------------------------
 printIndentation :: Int -> IO ()
@@ -109,7 +115,7 @@ printHeader header = do { putStr   "proc "
 printVariableDeclaration :: [VariableDeclaration] -> IO ()
 printVariableDeclaration []                                 = return ()
 printVariableDeclaration (variableDeclaration:declarations) = do
-    { printIndentation 4
+    { printIndentation indentationSpaceNumber
     ; printBaseType $ declarationType variableDeclaration
     ; printOneWhiteSpace
     ; putStr $ getVariable $ declarationVariable variableDeclaration
@@ -177,7 +183,7 @@ printIfCommon expression statements numberOfSpace = do
     ; putStr "if "
     ; printExprs [expression] ""
     ; putStrLn " then"
-    ; printStatements statements (numberOfSpace + 4)
+    ; printStatements statements (numberOfSpace + indentationSpaceNumber)
     }
 
 -------------------------------------------------------------------------------
@@ -205,7 +211,7 @@ printIfElseStatement expression statement1 statement2 numberOfSpace = do
     { printIfCommon expression statement1 numberOfSpace
     ; printIndentation numberOfSpace
     ; putStrLn "else"
-    ; printStatements statement2 (numberOfSpace + 4)
+    ; printStatements statement2 (numberOfSpace + indentationSpaceNumber)
     ; printIfEnd numberOfSpace
     }
 
@@ -218,7 +224,7 @@ printWhileStatement expression statements numberOfSpace = do
     ; putStr "while "
     ; printExprs [expression] ""
     ; putStrLn " do"
-    ; printStatements statements (numberOfSpace + 4)
+    ; printStatements statements (numberOfSpace + indentationSpaceNumber)
     ; printIndentation numberOfSpace
     ; putStrLn "od"
     }
@@ -351,7 +357,7 @@ getExpr expression =
 printBody :: Body -> IO ()
 printBody body = do { printVariableDeclaration $ bodyVarDeclarations body
                     ; putStrLn "begin"
-                    ; printStatements (bodyStatements body) 4
+                    ; printStatements (bodyStatements body) indentationSpaceNumber
                     ; putStrLn "end"
                     }
 
