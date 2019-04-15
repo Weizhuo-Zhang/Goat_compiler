@@ -1,0 +1,1221 @@
+============================================
+vis/aluo1.out
+17:52:59_Monday_15_April_2019
+============================================
+COMP90045 project - Test of parser and pretty-printer
+User:  aluo1
+
+--- Makefile found ---
+--- Running Makefile ---
+ghc Goat.hs -o Goat
+[1 of 5] Compiling GoatAST          ( GoatAST.hs, GoatAST.o )
+[2 of 5] Compiling GoatExit         ( GoatExit.hs, GoatExit.o )
+[3 of 5] Compiling GoatParser       ( GoatParser.hs, GoatParser.o )
+[4 of 5] Compiling GoatPrettyPrint  ( GoatPrettyPrint.hs, GoatPrettyPrint.o )
+[5 of 5] Compiling Main             ( Goat.hs, Goat.o )
+Linking Goat ...
+
+--- Succeeded to create a file called Goat ---
+
+**********************************************   Parsing assoc.gt:
+Okay
+**********************************************   Parsing bell.gt:
+Okay
+**********************************************   Parsing gcd.gt:
+Okay
+**********************************************   Parsing hail.gt:
+Okay
+**********************************************   Parsing matrixmul.gt:
+Okay
+**********************************************   Parsing power.gt:
+Okay
+**********************************************   Parsing q1.gt:
+Okay
+**********************************************   Parsing q2.gt:
+Okay
+**********************************************   Parsing q3.gt:
+Okay
+**********************************************   Parsing q4.gt:
+Okay
+**********************************************   Parsing sort.gt:
+Okay
+**********************************************   Parsing stddev.gt:
+Okay
+**********************************************   Parsing missing_rel.bad.gt:
+Okay
+**********************************************   Parsing mode1.bad.gt:
+Okay
+**********************************************   Parsing mode2.bad.gt:
+Okay
+**********************************************   Parsing mode3.bad.gt:
+Okay
+**********************************************   Parsing mode4.bad.gt:
+Okay
+**********************************************   Parsing multivar1.bad.gt:
+Okay
+18 of 18 tests passed.
+
+--- End of testing for aluo1 ---
+
+============================================
+src/Goat.hs
+17:52:55_Monday_15_April_2019
+============================================
+module Main where
+
+import GoatAST
+import GoatParser
+import GoatPrettyPrint
+import GoatExit
+import Text.Parsec (runParser)
+import System.Environment (getArgs, getProgName)
+
+-------------------------------- Documentation --------------------------------
+
+-- Authors:
+--   Shizhe Cai (shizhec) - 798125
+--   Weizhuo Zhang (weizhuoz) - 1018329
+--   Mingyang Zhang (mingyangz) - 650242
+--   An Luo (aluo1) - 657605
+
+-- This is the main file for Stage 1 of the project of COMP90045, Programming
+-- Language Implementation. This file provides two main methods: checkArgs and
+-- main.
+
+-- The aim of the project is to implement a compiler for a procedural (C-like)
+-- language called Goat.
+
+-------------------------------- Documentation --------------------------------
+
+-------------------------------------------------------------------------------
+-- Given the program name and arguments list, check if it's valid, thrown
+-- exception if it's not valid, otherwise return the corresponding Task value.
+-------------------------------------------------------------------------------
+checkArgs :: String -> [String] -> IO Task
+checkArgs _ ['-':_]          = exitWithError "Missing filename" MissingFile
+checkArgs _ [filename]       = return Compile
+checkArgs _ ["-p", filename] = return Pprint
+checkArgs _ ["-a", filename] = return Parse
+checkArgs progname _         = do
+  exitWithError ("Usage: " ++ progname ++ " [-p] filename") WrongUsage
+
+-------------------------------------------------------------------------------
+-- Main function of the compiler
+-------------------------------------------------------------------------------
+main :: IO ()
+main
+  = do
+     progname <- getProgName
+     args     <- getArgs
+     task     <- checkArgs progname args
+     if task == Compile then
+       do
+         exitWithSuccess "Sorry, cannot generate code yet"
+     else
+       if task == Parse then
+         do
+           let [_, filename] = args
+           input <- readFile filename
+           let output = runParser pMain 0 "" input
+           case output of
+             Right ast -> print ast -- print ast
+             Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
+                             ; return ()
+                             }
+       else
+         do
+           let [_, filename] = args
+           input <- readFile filename
+           -- let output = ast input
+           let output = runParser pMain 0 "" input
+           case output of
+             Right ast -> prettyPrint ast -- print ast
+             Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
+                             ; return ()
+                             }
+============================================
+src/Makefile
+17:52:54_Monday_15_April_2019
+============================================
+Goat: Goat.hs GoatParser.hs GoatAST.hs GoatPrettyPrint.hs
+	ghc Goat.hs -o Goat
+
+clean:
+	rm -f *.o *.hi *.out
+	rm -f Goat
+
+============================================
+src/GoatPrettyPrint.hs
+17:52:55_Monday_15_April_2019
+============================================
+module GoatPrettyPrint where
+
+import GoatAST
+import GoatExit
+import System.Exit
+
+-------------------------------- Documentation --------------------------------
+
+-- Authors:
+--   Shizhe Cai (shizhec) - 798125
+--   Weizhuo Zhang (weizhuoz) - 1018329
+--   Mingyang Zhang (mingyangz) - 650242
+--   An Luo (aluo1) - 657605
+
+-- This file contains the pretty print-related information of the Goat program.
+
+-- The aim of the project is to implement a compiler for a procedural (C-like)
+-- language called Goat.
+
+-------------------------------- Documentation --------------------------------
+
+-------------------------------------------------------------------------------
+-- Number of white space needed for indentation.
+-------------------------------------------------------------------------------
+indentationSpaceNumber :: Int
+indentationSpaceNumber = 4
+
+-------------------------------------------------------------------------------
+-- Print indention.
+-------------------------------------------------------------------------------
+printIndentation :: Int -> IO ()
+printIndentation 0 = return ()
+printIndentation numberOfSpace = do { printOneWhiteSpace
+                                    ; printIndentation (numberOfSpace - 1)
+                                    }
+
+-------------------------------------------------------------------------------
+-- Print one white space.
+-------------------------------------------------------------------------------
+printOneWhiteSpace :: IO ()
+printOneWhiteSpace = putStr " "
+
+-------------------------------------------------------------------------------
+-- Print semicolon, together with the new line character.
+-------------------------------------------------------------------------------
+printSemiColon :: IO ()
+printSemiColon = putStrLn ";"
+
+-------------------------------------------------------------------------------
+-- Print BaseType: bool, float and int.
+-------------------------------------------------------------------------------
+printBaseType :: BaseType -> IO ()
+printBaseType baseType = do
+    case baseType of
+        BoolType  -> putStr "bool"
+        IntType   -> putStr "int"
+        FloatType -> putStr "float"
+
+-------------------------------------------------------------------------------
+-- Print Passing Indicator type: "val" and "ref".
+-------------------------------------------------------------------------------
+printParameterIndicator :: ParameterIndicator -> IO ()
+printParameterIndicator parameterIndicator = do
+    case parameterIndicator of
+        VarType   -> putStr "val"
+        RefType   -> putStr "ref"
+
+-------------------------------------------------------------------------------
+-- Get String of shape Indicator type such as Array and Matrix.
+-------------------------------------------------------------------------------
+getShapeIndicator :: ShapeIndicator -> String
+getShapeIndicator shapeIndicator =
+    case shapeIndicator of
+        NoIndicator -> ""
+        Array  n    -> "[" ++ (getTopExpr n) ++ "]"
+        Matrix m n  -> "[" ++ (getTopExpr m) ++ ", " ++ (getTopExpr n) ++ "]"
+
+-------------------------------------------------------------------------------
+-- Get String of variable in form id, id[n] or id[m,n].
+-------------------------------------------------------------------------------
+getVariable :: Variable -> String
+getVariable variable = (varId variable)
+                    ++ (getShapeIndicator $ varShapeIndicator variable)
+
+-------------------------------------------------------------------------------
+-- Print Parameters of procedure
+-------------------------------------------------------------------------------
+printParameters :: [Parameter] -> String -> IO ()
+printParameters [] _                     = return ()
+printParameters (param:params) seperator = do
+    { putStr seperator
+    ; printParameterIndicator $ passingIndicator param
+    ; printOneWhiteSpace
+    ; printBaseType $ passingType param
+    ; printOneWhiteSpace
+    ; putStr $ passingIdent param
+    ; printParameters (params) ", "
+    }
+
+-------------------------------------------------------------------------------
+-- Print procedure header.
+-------------------------------------------------------------------------------
+printHeader :: Header -> IO ()
+printHeader header = do { putStr   "proc "
+                        ; putStr $ headerIdent $ header
+                        ; putStr   " ("
+                        ; printParameters (parameters $ header) ""
+                        ; putStr   ")"
+                        ; putStrLn "" -- print new line character
+                        }
+
+-------------------------------------------------------------------------------
+-- Print variables declaration.
+-------------------------------------------------------------------------------
+printVariableDeclaration :: [VariableDeclaration] -> IO ()
+printVariableDeclaration []                                 = return ()
+printVariableDeclaration (variableDeclaration:declarations) = do
+    { printIndentation indentationSpaceNumber
+    ; printBaseType $ declarationType variableDeclaration
+    ; printOneWhiteSpace
+    ; putStr $ getVariable $ declarationVariable variableDeclaration
+    ; printSemiColon
+    ; printVariableDeclaration declarations
+    }
+
+-------------------------------------------------------------------------------
+-- Print Assignment Statements such as n := 34;
+-------------------------------------------------------------------------------
+printAssignStatement :: Variable -> Expression -> Int -> IO ()
+printAssignStatement variable expression numberOfSpace = do
+    { printIndentation numberOfSpace
+    ; putStr $ getVariable variable
+    ; printOneWhiteSpace
+    ; putStr ":="
+    ; printOneWhiteSpace
+    ; putStr $ getTopExpr expression
+    ; printSemiColon
+    }
+
+-------------------------------------------------------------------------------
+-- Print Read Statements such as read n[3,5];
+-------------------------------------------------------------------------------
+printReadStatement :: Variable -> Int -> IO ()
+printReadStatement variable numberOfSpace = do { printIndentation numberOfSpace
+                                               ; putStr "read"
+                                               ; printOneWhiteSpace
+                                               ; putStr $ getVariable variable
+                                               ; printSemiColon
+                                               }
+
+-------------------------------------------------------------------------------
+-- Print Write Statements such as write 3 + 5;
+-------------------------------------------------------------------------------
+printWriteStatement :: Expression -> Int -> IO ()
+printWriteStatement expression numberOfSpace = do
+    { printIndentation numberOfSpace
+    ; putStr "write"
+    ; printOneWhiteSpace
+    ; putStr $ getTopExpr expression
+    ; printSemiColon
+    }
+
+-------------------------------------------------------------------------------
+-- Print Call Statements such as call n(3 + 5);
+-------------------------------------------------------------------------------
+printCallStatement :: Identifier -> [Expression] -> Int -> IO ()
+printCallStatement id expressions numberOfSpace = do
+    { printIndentation numberOfSpace
+    ; putStr "call "
+    ; putStr id
+    ; putStr "("
+    ; printExprs expressions ""
+    ; putStr ")"
+    ; printSemiColon
+    }
+
+-------------------------------------------------------------------------------
+-- Print the common part of If Statements and If-Else Statements.
+-------------------------------------------------------------------------------
+printIfCommon :: Expression -> [Statement] -> Int -> IO ()
+printIfCommon expression statements numberOfSpace = do
+    { printIndentation numberOfSpace
+    ; putStr "if "
+    ; printExprs [expression] ""
+    ; putStrLn " then"
+    ; printStatements statements (numberOfSpace + indentationSpaceNumber)
+    }
+
+-------------------------------------------------------------------------------
+-- print the end part of If Statements and If-Else Statements.
+-------------------------------------------------------------------------------
+printIfEnd :: Int -> IO ()
+printIfEnd numberOfSpace = do { printIndentation numberOfSpace
+                              ; putStrLn "fi"
+                              }
+
+-------------------------------------------------------------------------------
+-- Print If Statements.
+-------------------------------------------------------------------------------
+printIfStatement :: Expression -> [Statement] -> Int -> IO ()
+printIfStatement expression statements numberOfSpace = do
+    { printIfCommon expression statements numberOfSpace
+    ; printIfEnd numberOfSpace
+    }
+
+-------------------------------------------------------------------------------
+-- Print If-Else Statements
+-------------------------------------------------------------------------------
+printIfElseStatement :: Expression -> [Statement] -> [Statement] -> Int -> IO ()
+printIfElseStatement expression statement1 statement2 numberOfSpace = do
+    { printIfCommon expression statement1 numberOfSpace
+    ; printIndentation numberOfSpace
+    ; putStrLn "else"
+    ; printStatements statement2 (numberOfSpace + indentationSpaceNumber)
+    ; printIfEnd numberOfSpace
+    }
+
+-------------------------------------------------------------------------------
+-- Print While Statements.
+-------------------------------------------------------------------------------
+printWhileStatement :: Expression -> [Statement] -> Int -> IO ()
+printWhileStatement expression statements numberOfSpace = do
+    { printIndentation numberOfSpace
+    ; putStr "while "
+    ; printExprs [expression] ""
+    ; putStrLn " do"
+    ; printStatements statements (numberOfSpace + indentationSpaceNumber)
+    ; printIndentation numberOfSpace
+    ; putStrLn "od"
+    }
+
+-------------------------------------------------------------------------------
+-- Print statement.
+-------------------------------------------------------------------------------
+printStatement :: Statement -> Int -> IO ()
+printStatement statement numberOfSpace = do
+    case statement of
+        Assign variable  expression    -> printAssignStatement variable
+                                                               expression
+                                                               numberOfSpace
+        Read   variable                -> printReadStatement   variable
+                                                               numberOfSpace
+        Write  expression              -> printWriteStatement  expression
+                                                               numberOfSpace
+        Call   id   expressions        -> printCallStatement   id
+                                                               expressions
+                                                               numberOfSpace
+        If     expression statements   -> printIfStatement     expression
+                                                               statements
+                                                               numberOfSpace
+        IfElse expression statement1 statement2
+                                       -> printIfElseStatement expression
+                                                               statement1
+                                                               statement2
+                                                               numberOfSpace
+        While  expression statements   -> printWhileStatement  expression
+                                                               statements
+                                                               numberOfSpace
+
+-------------------------------------------------------------------------------
+-- Print statement list.
+-------------------------------------------------------------------------------
+printStatements :: [Statement] -> Int -> IO ()
+printStatements [] _                                 = return ()
+printStatements (statement:statements) numberOfSpace = do
+    { printStatement statement numberOfSpace
+    ; printStatements statements numberOfSpace
+    }
+
+-------------------------------------------------------------------------------
+-- Convert constant variable to string.
+-------------------------------------------------------------------------------
+getConst :: (Show a) => a -> String
+getConst a = show a
+
+-------------------------------------------------------------------------------
+-- Get string of result using infix operator.
+-------------------------------------------------------------------------------
+getInfixOpResult :: Expression -> String -> Expression -> String
+getInfixOpResult lExpr operator rExpr = (getExpr lExpr)
+                                      ++ operator
+                                      ++ (getExpr rExpr)
+
+-------------------------------------------------------------------------------
+-- Get string of result using prefix operator
+-------------------------------------------------------------------------------
+getPrefixOpResult :: Expression -> String -> String
+getPrefixOpResult expression operator = operator ++ (getExpr expression)
+
+-------------------------------------------------------------------------------
+-- Print list of expressionessions.
+-------------------------------------------------------------------------------
+printExprs :: [Expression] -> String -> IO ()
+printExprs [] _                               = return ()
+printExprs (expression:expressions) seperator = do
+    { putStr seperator
+    ; putStr $ getTopExpr expression
+    ; printExprs expressions ", "
+    }
+
+-------------------------------------------------------------------------------
+-- Print the root of expressionesssion which should no surrounded by ().
+-------------------------------------------------------------------------------
+getTopExpr :: Expression -> String
+getTopExpr expression =
+    case expression of
+        ExprVar     variable   -> getVariable variable
+        BoolConst   val        -> getConst val
+        IntConst    val        -> getConst val
+        FloatConst  val        -> getConst val
+        StrConst    val        -> "\"" ++ val ++ "\""
+        Add   lExpr rExpr      -> getInfixOpResult  lExpr " + "  rExpr
+        Mul   lExpr rExpr      -> getInfixOpResult  lExpr " * "  rExpr
+        Sub   lExpr rExpr      -> getInfixOpResult  lExpr " - "  rExpr
+        Div   lExpr rExpr      -> getInfixOpResult  lExpr " / "  rExpr
+        Or    lExpr rExpr      -> getInfixOpResult  lExpr " || " rExpr
+        And   lExpr rExpr      -> getInfixOpResult  lExpr " && " rExpr
+        Eq    lExpr rExpr      -> getInfixOpResult  lExpr " = "  rExpr
+        NotEq lExpr rExpr      -> getInfixOpResult  lExpr " != " rExpr
+        Les   lExpr rExpr      -> getInfixOpResult  lExpr " < "  rExpr
+        LesEq lExpr rExpr      -> getInfixOpResult  lExpr " <= " rExpr
+        Grt   lExpr rExpr      -> getInfixOpResult  lExpr " > "  rExpr
+        GrtEq lExpr rExpr      -> getInfixOpResult  lExpr " >= " rExpr
+        UnaryMinus  expression -> getPrefixOpResult expression "-"
+        UnaryNot    expression -> getPrefixOpResult expression "!"
+
+-------------------------------------------------------------------------------
+-- Wrap the given string with parenthesis.
+-------------------------------------------------------------------------------
+wrapStringWithParen :: String -> String
+wrapStringWithParen value = "(" ++ value ++ ")"
+
+-------------------------------------------------------------------------------
+-- Print the non-root of expressionesssion which might surrounded by ().
+-------------------------------------------------------------------------------
+getExpr :: Expression -> String
+getExpr expression =
+    let expressionString = getTopExpr expression
+    in case expression of
+        Add   _ _ -> wrapStringWithParen expressionString
+        Mul   _ _ -> wrapStringWithParen expressionString
+        Sub   _ _ -> wrapStringWithParen expressionString
+        Div   _ _ -> wrapStringWithParen expressionString
+        Or    _ _ -> wrapStringWithParen expressionString
+        And   _ _ -> wrapStringWithParen expressionString
+        Eq    _ _ -> wrapStringWithParen expressionString
+        NotEq _ _ -> wrapStringWithParen expressionString
+        Les   _ _ -> wrapStringWithParen expressionString
+        LesEq _ _ -> wrapStringWithParen expressionString
+        Grt   _ _ -> wrapStringWithParen expressionString
+        GrtEq _ _ -> wrapStringWithParen expressionString
+        otherwise -> expressionString
+
+-------------------------------------------------------------------------------
+-- Print Body.
+-------------------------------------------------------------------------------
+printBody :: Body -> IO ()
+printBody body = do { printVariableDeclaration $ bodyVarDeclarations body
+                    ; putStrLn "begin"
+                    ; printStatements (bodyStatements body) indentationSpaceNumber
+                    ; putStrLn "end"
+                    }
+
+-------------------------------------------------------------------------------
+-- print Procedure
+-------------------------------------------------------------------------------
+printProc :: [Procedure] -> IO ()
+printProc []           = return ()
+printProc (proc:[])    = do { printHeader $ header proc
+                            ; printBody $ body proc
+                            }
+printProc (proc:procs) = do { printHeader $ header proc
+                            ; printBody $ body proc
+                            ; putStrLn "" -- print new line character
+                            ; printProc (procs)
+                            }
+
+-------------------------------------------------------------------------------
+-- Check whether the main procedure is parameter-less.
+-------------------------------------------------------------------------------
+checkMainParam :: [Parameter] -> IO Task
+checkMainParam [] = return Unit
+checkMainParam _  = do
+  exitWithError "'main()' procedure should be parameter-less." MainWithParam
+
+-------------------------------------------------------------------------------
+-- Check the number of main procedure.
+-------------------------------------------------------------------------------
+checkMainNum :: Int -> IO Task
+checkMainNum numMain
+    | 0 == numMain = do
+        exitWithError "There is no 'main()' procedure." MissingMain
+    | 1 == numMain = return Unit
+    | otherwise = do
+        exitWithError "There is more than one 'main()' procedure" MultipleMain
+
+-------------------------------------------------------------------------------
+-- Get the number of main procedure.
+-------------------------------------------------------------------------------
+countMain :: [Procedure] -> [Procedure]
+countMain [] = []
+countMain (proc:procs)
+    | "main" == (headerIdent $ header proc) = proc : countMain procs
+    | otherwise = countMain procs
+
+
+-------------------------------------------------------------------------------
+-- Main entry of prettyPrint module.
+-------------------------------------------------------------------------------
+prettyPrint :: GoatProgram -> IO ()
+prettyPrint program = do { let mainList = countMain $ procedures program
+                         ; checkMainNum $ length $ mainList
+                         ; checkMainParam $ parameters $ header $ head mainList
+                         ; printProc (procedures program)
+                         }
+============================================
+src/GoatExit.hs
+17:52:55_Monday_15_April_2019
+============================================
+module GoatExit where
+
+import System.Exit
+
+-------------------------------- Documentation --------------------------------
+
+-- Authors:
+--   Shizhe Cai (shizhec) - 798125
+--   Weizhuo Zhang (weizhuoz) - 1018329
+--   Mingyang Zhang (mingyangz) - 650242
+--   An Luo (aluo1) - 657605
+
+-- This file contains the exit-related information of the Goat program,
+-- including 2 data types: ExitCode and Task, and 2 functions: exitWithSuccess
+-- and exitWithError.
+
+-- The aim of the project is to implement a compiler for a procedural (C-like)
+-- language called Goat.
+
+-------------------------------- Documentation --------------------------------
+
+-------------------------------------------------------------------------------
+-- Task type of this Goat compiler.
+-------------------------------------------------------------------------------
+data Task = Unit | Exit | Compile | Pprint | Parse deriving Eq
+
+-------------------------------------------------------------------------------
+-- Exit code constant, it starts from 0, increase by 1.
+-------------------------------------------------------------------------------
+data GoatExitCode = Success       -- 0
+                  | MissingFile   -- 1
+                  | WrongUsage    -- 2
+                  | MissingMain   -- 3
+                  | MultipleMain  -- 4
+                  | MainWithParam -- 5
+                  | ParseError    -- 6
+                  deriving Enum
+
+-------------------------------------------------------------------------------
+-- Print message to stdout, and exit as successful.
+-------------------------------------------------------------------------------
+exitWithSuccess :: String -> IO ()
+exitWithSuccess message = do
+  putStrLn (message)
+  exitWith ExitSuccess
+
+-------------------------------------------------------------------------------
+-- Print error message to stderr and exit
+-------------------------------------------------------------------------------
+exitWithError :: String -> GoatExitCode -> IO Task
+exitWithError message exitCode = do
+    putStrLn ("[ERROR] " ++ message)
+    exitWith (ExitFailure $ fromEnum exitCode)
+============================================
+src/GoatParser.hs
+17:52:55_Monday_15_April_2019
+============================================
+module GoatParser where
+
+import GoatAST
+import Data.Functor.Identity (Identity)
+import Text.Parsec
+import Text.Parsec.Expr
+import Text.Parsec.Language (emptyDef)
+import qualified Text.Parsec.Token as Q
+
+-------------------------------- Documentation --------------------------------
+
+-- Authors:
+--   Shizhe Cai (shizhec) - 798125
+--   Weizhuo Zhang (weizhuoz) - 1018329
+--   Mingyang Zhang (mingyangz) - 650242
+--   An Luo (aluo1) - 657605
+
+-- This file contains the parser-related information of the Goat program.
+
+-- The aim of the project is to implement a compiler for a procedural (C-like)
+-- language called Goat.
+
+-------------------------------- Documentation --------------------------------
+
+-------------------------------------------------------------------------------
+-- Define the synonym for of Parser type.
+-------------------------------------------------------------------------------
+type Parser a = Parsec String Int a
+
+-------------------------------------------------------------------------------
+-- lexer definition
+-------------------------------------------------------------------------------
+lexer :: Q.TokenParser Int
+lexer = Q.makeTokenParser (emptyDef { Q.commentLine     = "#"
+                                    , Q.nestedComments  = True
+                                    , Q.identStart      = letter
+                                    , Q.identLetter     = alphaNum
+                                                       <|> char '_'
+                                                       <|> char '\''
+                                    , Q.opStart         = oneOf "+-*/|&!=<>:"
+                                    , Q.opLetter        = oneOf "|&="
+                                    , Q.reservedNames   = myReservedWords
+                                    , Q.reservedOpNames = myOperators
+                                    }
+                          )
+
+whiteSpace = Q.whiteSpace lexer
+lexeme     = Q.lexeme lexer
+natural    = Q.natural lexer
+float      = Q.float lexer
+decimal    = Q.decimal lexer
+identifier = Q.identifier lexer
+colon      = Q.colon lexer
+semi       = Q.semi lexer
+comma      = Q.comma lexer
+dot        = Q.dot lexer
+parens     = Q.parens lexer
+brackets   = Q.brackets lexer
+reserved   = Q.reserved lexer
+reservedOp = Q.reservedOp lexer
+
+-------------------------------------------------------------------------------
+-- Define reserved words.
+-------------------------------------------------------------------------------
+myReservedWords :: [String]
+myReservedWords = ["begin", "bool",  "call", "do",  "else",  "end",  "false"
+                  ,"fi"   , "float", "if"  , "int", "od",    "proc", "read"
+                  ,"ref"  , "then",  "true", "val", "while", "write"]
+
+-------------------------------------------------------------------------------
+-- Define reserved operator
+-------------------------------------------------------------------------------
+myOperators :: [String]
+myOperators = ["+", "-", "*", "<", ">", "<=", ">=", "=", "!=", "||", "&&" ,"!"
+              ,"/", ":="]
+
+-------------------------------------------------------------------------------
+-- This is the top-most parsing function. It looks for a program which contains
+-- one or more procedures.
+-------------------------------------------------------------------------------
+pProgram :: Parser GoatProgram
+pProgram = do
+    procedures <- many1 pProcedure
+    return (GoatProgram procedures)
+    <?> "program procedure"
+
+-------------------------------------------------------------------------------
+-- pProcedure looks for a procedure, whose structure should be:
+-- "proc" + header + "begin" + body + "end"
+-------------------------------------------------------------------------------
+pProcedure :: Parser Procedure
+pProcedure = do
+    reserved "proc"
+    header    <- pProcedureHeader
+    body      <- pProcedureBody
+    return (Procedure header body)
+    <?> "procedure"
+
+-------------------------------------------------------------------------------
+-- pProcedureHeader looks for the procedure header, which contains a
+-- procedure name followed by serveral parameters and variable declarations.
+-------------------------------------------------------------------------------
+pProcedureHeader :: Parser Header
+pProcedureHeader = do
+    id     <- identifier
+    params <- parens $ sepBy pParameter comma
+    return (Header id params)
+    <?> "procedure header"
+
+-------------------------------------------------------------------------------
+-- pParameter looks for the parameter, which contains an indicator, type of the
+-- parameter, and the identifier.
+-------------------------------------------------------------------------------
+pParameter :: Parser Parameter
+pParameter = do
+    pIndicator    <-  pParameterIndicator
+    parameterType <-  pParameterType
+    id            <-  identifier
+    return (Parameter pIndicator parameterType id)
+    <?> "parameters"
+
+
+-------------------------------------------------------------------------------
+-- pParameterIndicator looks for the indicator of the parameter, and return the
+-- corresponding ParameterIndicator type value if it matches the value.
+-------------------------------------------------------------------------------
+pParameterIndicator :: Parser ParameterIndicator
+pParameterIndicator = do { reserved "val"; return VarType }
+                      <|>
+                      do { reserved "ref"; return RefType }
+                      <?> "passing indicator type"
+
+
+-------------------------------------------------------------------------------
+-- pParameterType looks for the base type of the parameter, and return the
+-- corresponding BaseType type value if it matches.
+-------------------------------------------------------------------------------
+pParameterType :: Parser BaseType
+pParameterType = do { reserved "bool"; return BoolType }
+                 <|>
+                 do { reserved "int"; return IntType }
+                 <|>
+                 do { reserved "float"; return FloatType }
+                 <?> "base type indicator"
+
+-------------------------------------------------------------------------------
+-- pProcedureBody looks for body, which contains one or more statements.
+-------------------------------------------------------------------------------
+pProcedureBody :: Parser Body
+pProcedureBody = do
+    variableDeclarations <- many pVariableDeclaration
+    reserved "begin"
+    statements           <- many1 pStatement
+    reserved "end"
+    return (Body variableDeclarations statements)
+    <?> "procedure body"
+
+-------------------------------------------------------------------------------
+-- pVariableDeclaration looks for the variable declaration, whose pattern
+-- should be:
+-- variableDeclaration := ParameterType identifier ShapeIndicator
+-- If it is found, return a value with VariableDeclaration type.
+-------------------------------------------------------------------------------
+pVariableDeclaration :: Parser VariableDeclaration
+pVariableDeclaration = do
+    parameterType  <- pParameterType
+    id             <- identifier
+    shapeIndicator <- pShapeIndicator
+    whiteSpace
+    semi
+    return (VariableDeclaration parameterType (Variable id shapeIndicator))
+    <?> "procedure variable declaration"
+
+
+-------------------------------------------------------------------------------
+-- pShapeIndicator looks for the shape indicator of the variable, whose pattern
+-- should be: [m] or [m, n].
+-------------------------------------------------------------------------------
+pShapeIndicator :: Parser ShapeIndicator
+pShapeIndicator =
+    try (do { n <- brackets pInt
+            ; return (Array n)
+            }
+        )
+    <|>
+    try (do { intList <- brackets $ sepBy pInt comma
+            ; return (Matrix (intList !! 0) (intList !! 1))
+            }
+        )
+    <|>  do { return (NoIndicator) }
+    <?> "shape indicator"
+
+-------------------------------------------------------------------------------
+-- Define statement.
+-------------------------------------------------------------------------------
+pStatement :: Parser Statement
+pStatement = choice [pAssignment, pRead, pWrite, pCall, pIf, pWhile]
+          <?> "statement"
+
+-------------------------------------------------------------------------------
+-- Define the read statement.
+-------------------------------------------------------------------------------
+pRead :: Parser Statement
+pRead = do
+    reserved "read"
+    id             <- identifier
+    shapeIndicator <- pExpressionShapeIndicator
+    semi
+    return (Read (Variable id shapeIndicator))
+    <?> "read statement"
+
+-------------------------------------------------------------------------------
+-- Define the write statement.
+-------------------------------------------------------------------------------
+pWrite :: Parser Statement
+pWrite = do
+    reserved "write"
+    expression <- (pString <|> pExpression)
+    semi
+    return (Write expression)
+    <?> "write statement"
+
+-------------------------------------------------------------------------------
+-- Define the assignment statement.
+-------------------------------------------------------------------------------
+pAssignment :: Parser Statement
+pAssignment = do
+    id  <- identifier
+    shapeIndicator <- pExpressionShapeIndicator
+    whiteSpace
+    reservedOp ":="
+    rvalue <- pExpression
+    semi
+    return (Assign (Variable id shapeIndicator) rvalue)
+    <?> "Assign statement"
+
+-------------------------------------------------------------------------------
+-- Define the call statement.
+-------------------------------------------------------------------------------
+pCall :: Parser Statement
+pCall = do
+    reserved "call"
+    id      <- identifier
+    expressionList <- parens $ sepBy pExpression comma
+    semi
+    return (Call id expressionList)
+    <?> "Call statement"
+
+-------------------------------------------------------------------------------
+-- Define the if statement.
+-------------------------------------------------------------------------------
+pIf :: Parser Statement
+pIf =
+    try(do { reserved "if"
+           ; expression <- pExpression
+           ; reserved "then"
+           ; statements <- many1 pStatement
+           ; reserved "fi"
+           ; return (If expression statements)
+           }
+        )
+    <|> do { reserved "if"
+           ; expression     <- pExpression
+           ; reserved "then"
+           ; ifStatements   <- many1 pStatement
+           ; reserved "else"
+           ; elseStatements <- many1 pStatement
+           ; reserved "fi"
+           ; return (IfElse expression ifStatements elseStatements)
+           }
+    <?> "If statement"
+
+-------------------------------------------------------------------------------
+-- Define the while statement
+-------------------------------------------------------------------------------
+pWhile :: Parser Statement
+pWhile = do
+    reserved "while"
+    expression <- pExpression
+    reserved "do"
+    statements <- many1 pStatement
+    reserved "od"
+    return (While expression statements)
+    <?> "While statement"
+
+-------------------------------------------------------------------------------
+-- define expressions
+-- expression contains operations, relations, expressions, string
+-- and boolean
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+-- Define the expression.
+-------------------------------------------------------------------------------
+pExpression :: Parser Expression
+pExpression = buildExpressionParser table pTerm
+
+-------------------------------------------------------------------------------
+-- Define the term used in buildExpressionParser.
+-------------------------------------------------------------------------------
+pTerm :: Parser Expression
+pTerm = choice [parens pExpression, pNumber, pIdentifier, pBool]
+
+
+-------------------------------------------------------------------------------
+-- Define the number.
+-------------------------------------------------------------------------------
+pNumber :: Parser Expression
+pNumber = try (do pFloat) <|> do pInt
+
+-------------------------------------------------------------------------------
+-- Define the operator precedence table used in buildExpressionParser.
+-- The operator in the top of the table has the highest precedence, and the one
+-- at the bottom has the lowest precedence.
+-------------------------------------------------------------------------------
+table :: [[Operator String Int Identity Expression]]
+table = [[prefix   "-" UnaryMinus]
+        ,[binary   "*" Mul, binary   "/"  Div]
+        ,[binary   "+" Add, binary   "-"  Sub]
+        ,[relation "=" Eq,  relation "!=" NotEq
+        , relation "<" Les, relation "<=" LesEq
+        , relation ">" Grt, relation ">=" GrtEq]
+        ,[prefix   "!" UnaryNot]
+        ,[binary   "&&" And]
+        ,[binary   "||" Or]]
+
+-------------------------------------------------------------------------------
+-- Prefix operator
+-------------------------------------------------------------------------------
+prefix :: String -> (Expression -> Expression)
+       -> Operator String Int Identity Expression
+prefix name prefixOperator = Prefix (do { reservedOp name;
+                                          return prefixOperator
+                                        })
+
+-------------------------------------------------------------------------------
+-- Binary operator
+-------------------------------------------------------------------------------
+binary :: String -> (Expression -> Expression -> Expression)
+       -> Operator String Int Identity Expression
+binary name binaryOperator = Infix (do { reservedOp name;
+                                         return binaryOperator
+                                       }
+                                   ) AssocLeft
+
+-------------------------------------------------------------------------------
+-- Relation operator.
+-------------------------------------------------------------------------------
+relation :: String -> (Expression -> Expression -> Expression)
+         -> Operator String Int Identity Expression
+relation name relationOperator = Infix (do { reservedOp name;
+                                             return relationOperator
+                                             }
+                                       ) AssocNone
+
+-------------------------------------------------------------------------------
+-- Define parser parsing float number.
+-------------------------------------------------------------------------------
+pFloat :: Parser Expression
+pFloat = do { n <- many1 digit;
+              char '.';
+              m <- many1 digit;
+              return (FloatConst (read (n ++ "." ++m) :: Float))
+            }
+         <?> "float"
+
+-------------------------------------------------------------------------------
+-- Define parser parsing integer.
+-------------------------------------------------------------------------------
+pInt :: Parser Expression
+pInt = do { n <- natural;
+            return (IntConst (fromInteger n :: Int))
+          }
+       <?> "integer"
+
+-------------------------------------------------------------------------------
+-- Define parser parsing the shape indicator.
+-------------------------------------------------------------------------------
+pExpressionShapeIndicator :: Parser ShapeIndicator
+pExpressionShapeIndicator =
+    try (do { expression <- brackets pExpression
+            ; return (Array expression)
+            }
+        )
+    <|>
+    try (do { expressionList <- brackets $ sepBy pExpression comma
+            ; return (Matrix (expressionList !! 0) (expressionList !! 1))
+            }
+        )
+    <|>  do { return (NoIndicator) }
+
+-------------------------------------------------------------------------------
+-- Define parser parsing the identifier.
+-------------------------------------------------------------------------------
+pIdentifier :: Parser Expression
+pIdentifier = do
+  id             <- identifier
+  shapeIndicator <- pExpressionShapeIndicator
+  return (ExprVar (Variable id shapeIndicator))
+  <?> "identifier"
+
+-------------------------------------------------------------------------------
+-- Define parser parsing the string.
+-------------------------------------------------------------------------------
+pString :: Parser Expression
+pString = do
+  char '"'
+  str <- many (satisfy (/= '"'))
+  char '"'
+  return (StrConst str)
+  <?> "string"
+
+-------------------------------------------------------------------------------
+-- Define parser parsing the bool value.
+-------------------------------------------------------------------------------
+pBool :: Parser Expression
+pBool = do {reserved "true"; return (BoolConst True)}
+        <|>
+        do {reserved "false"; return (BoolConst False)}
+        <?> "bool"
+
+-------------------------------------------------------------------------------
+-- main function of the parser.
+-------------------------------------------------------------------------------
+pMain :: Parser GoatProgram
+pMain = do
+  whiteSpace
+  p <- pProgram
+  eof
+  return p
+============================================
+src/GoatAST.hs
+17:52:55_Monday_15_April_2019
+============================================
+module GoatAST where
+
+-------------------------------- Documentation --------------------------------
+
+-- Authors:
+--   Shizhe Cai (shizhec) - 798125
+--   Weizhuo Zhang (weizhuoz) - 1018329
+--   Mingyang Zhang (mingyangz) - 650242
+--   An Luo (aluo1) - 657605
+
+-- This file contains the abstract syntax tree for the Goat language.
+
+-- The aim of the project is to implement a compiler for a procedural (C-like)
+-- language called Goat.
+
+-------------------------------- Documentation --------------------------------
+
+-------------------------------------------------------------------------------
+-- Identifier.
+-------------------------------------------------------------------------------
+type Identifier = String
+
+-------------------------------------------------------------------------------
+-- Base type.
+-------------------------------------------------------------------------------
+data BaseType = BoolType | IntType | FloatType deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Variable.
+-------------------------------------------------------------------------------
+data Variable = Variable { varId             :: Identifier
+                         , varShapeIndicator :: ShapeIndicator
+                         } deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Expression.
+-------------------------------------------------------------------------------
+data Expression = ExprVar    { exprVar          :: Variable }
+                | BoolConst  { boolConstVal     :: Bool }
+                | IntConst   { intConstVal      :: Int }
+                | FloatConst { floatConstVal    :: Float }
+                | StrConst   { strConstVal      :: String }
+                | Add        { addLeftExpr  :: Expression
+                             , addRightExpr :: Expression
+                             }
+                | Mul        { mulLeftExpr  :: Expression
+                             , mulRightExpr :: Expression
+                             }
+                | Sub        { subLeftExpr  :: Expression
+                             , subRightExpr :: Expression
+                             }
+                | Div        { divLeftExpr  :: Expression
+                             , divRightExpr :: Expression
+                             }
+                | Or         { orLeftExpr  :: Expression
+                             , orRightExpr :: Expression
+                             }
+                | And        { andLeftExpr  :: Expression
+                             , andRightExpr :: Expression
+                             }
+                | Eq         { eqLeftExpr  :: Expression
+                             , eqRightExpr :: Expression
+                             }
+                | NotEq      { notEqLeftExpr  :: Expression
+                             , notEqRightExpr :: Expression
+                             }
+                | Les        { lesLeftExpr  :: Expression
+                             , lesRightExpr :: Expression
+                             }
+                | LesEq      { lesEqLeftExpr  :: Expression
+                             , lesEqRightExpr :: Expression
+                             }
+                | Grt        { grtLeftExpr  :: Expression
+                             , grtRightExpr :: Expression
+                             }
+                | GrtEq      { grtEqLeftExpr  :: Expression
+                             , grtEqRightExpr :: Expression
+                             }
+                | UnaryMinus { unaryMinusExpr :: Expression }
+                | UnaryNot   { unaryNotExpr :: Expression }
+                deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Variable Declaration.
+-------------------------------------------------------------------------------
+data VariableDeclaration = VariableDeclaration
+                           { declarationType     :: BaseType
+                           , declarationVariable :: Variable
+                           } deriving (Show, Eq)
+
+ ------------------------------------------------------------------------------
+ -- Statement types.
+ ------------------------------------------------------------------------------
+data Statement = Assign { assignVal  :: Variable
+                        , assignExpr :: Expression
+                        }
+               | Read   { readVal          :: Variable }
+               | Write  { writeExpr        :: Expression }
+               | Call   { callIdent :: Identifier
+                        , callExprs :: [Expression]
+                        }
+               | If     { ifExpr       :: Expression
+                        , ifStatements :: [Statement]
+                        }
+               | IfElse { ifElseExpr        :: Expression
+                        , ifElseStatements1 :: [Statement]
+                        , ifElseStatements2 :: [Statement]
+                        }
+               | While  { whileExpr       :: Expression
+                        , whileStatements :: [Statement]
+                        }
+               deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Procedure body.
+-------------------------------------------------------------------------------
+data Body = Body { bodyVarDeclarations :: [VariableDeclaration]
+                 , bodyStatements      :: [Statement]
+                 } deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Procedure indicator types.
+-------------------------------------------------------------------------------
+data ParameterIndicator = VarType | RefType deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Shape indicator types.
+-------------------------------------------------------------------------------
+data ShapeIndicator = Array  { arrayExpr :: Expression }
+                    | Matrix { matrixMExpr :: Expression
+                             , matrixNExpr :: Expression
+                             }
+                    | NoIndicator
+                    deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Procedure parameter types.
+-------------------------------------------------------------------------------
+data Parameter = Parameter { passingIndicator :: ParameterIndicator
+                           , passingType      :: BaseType
+                           , passingIdent     :: Identifier
+                           } deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Procedure header.
+-------------------------------------------------------------------------------
+data Header = Header { headerIdent :: Identifier
+                     , parameters  :: [Parameter]
+                     } deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Procedure.
+-------------------------------------------------------------------------------
+data Procedure = Procedure { header :: Header
+                           , body   :: Body
+                           } deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Goat program types.
+-------------------------------------------------------------------------------
+data GoatProgram = GoatProgram { procedures :: [Procedure]} deriving (Show, Eq)
