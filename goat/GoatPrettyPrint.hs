@@ -44,7 +44,7 @@ printBaseType baseType = do
 -------------------------------------------------------------------------------
 -- print Passing Indicator type such as "val" and "ref"
 -------------------------------------------------------------------------------
-printPassIndicator :: PIndicator -> IO ()
+printPassIndicator :: ParameterIndicator -> IO ()
 printPassIndicator pIndicator = do
     case pIndicator of
         VarType   -> putStr "val"

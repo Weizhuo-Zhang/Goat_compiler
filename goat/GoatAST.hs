@@ -121,7 +121,7 @@ data Body = Body { bodyVarDeclarations :: [VariableDeclaration]
 -------------------------------------------------------------------------------
 -- Procedure indicator types.
 -------------------------------------------------------------------------------
-data PIndicator = VarType | RefType deriving (Show, Eq)
+data ParameterIndicator = VarType | RefType deriving (Show, Eq)
 
 -------------------------------------------------------------------------------
 -- Shape indicator types.
@@ -136,7 +136,7 @@ data ShapeIndicator = Array  { arrayExpr :: Expression }
 -------------------------------------------------------------------------------
 -- Procedure parameter types.
 -------------------------------------------------------------------------------
-data Parameter = Parameter { passingIndicator :: PIndicator
+data Parameter = Parameter { passingIndicator :: ParameterIndicator
                            , passingType      :: BaseType
                            , passingIdent     :: Identifier
                            } deriving (Show, Eq)
