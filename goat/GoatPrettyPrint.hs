@@ -22,11 +22,11 @@ import System.Exit
 -------------------------------------------------------------------------------
 -- Print indention.
 -------------------------------------------------------------------------------
-printIndent :: Int -> IO ()
-printIndent 0 = return ()
-printIndent indent = do { printOneWhiteSpace
-                        ; printIndent (indent - 1)
-                        }
+printIndentation :: Int -> IO ()
+printIndentation 0 = return ()
+printIndentation numberOfSpace = do { printOneWhiteSpace
+                                    ; printIndentation (numberOfSpace - 1)
+                                    }
 
 -------------------------------------------------------------------------------
 -- Print one white space.
@@ -85,7 +85,7 @@ printParameters (param:params) seperator = do
     }
 
 -------------------------------------------------------------------------------
--- print Header
+-- Print procedure header.
 -------------------------------------------------------------------------------
 printHeader :: Header -> IO ()
 printHeader header = do { putStr   "proc "
@@ -97,56 +97,60 @@ printHeader header = do { putStr   "proc "
                         }
 
 -------------------------------------------------------------------------------
--- print variables declaration
+-- Print variables declaration.
 -------------------------------------------------------------------------------
 printVariableDeclaration :: [VariableDeclaration] -> IO ()
-printVariableDeclaration []           = return ()
-printVariableDeclaration (vdecl:vdels) = do
-    { printIndent 4
-    ; printBaseType $ declarationType vdecl
+printVariableDeclaration []                                 = return ()
+printVariableDeclaration (variableDeclaration:declarations) = do
+    { printIndentation 4
+    ; printBaseType $ declarationType variableDeclaration
     ; printOneWhiteSpace
-    ; putStr $ getVariable $ declarationVariable vdecl
-    ; putStr   ";"
-    ; putStrLn ""
-    ; printVariableDeclaration vdels
+    ; putStr $ getVariable $ declarationVariable variableDeclaration
+    ; putStrLn   ";"
+    ; printVariableDeclaration declarations
     }
 
 -------------------------------------------------------------------------------
--- print Assignment Statements such as n := 34;
+-- Print Assignment Statements such as n := 34;
 -------------------------------------------------------------------------------
 printAssignStatement :: Variable -> Expression -> Int -> IO ()
-printAssignStatement var expr indent = do { printIndent indent
+printAssignStatement var expr numberOfSpace = do
+    { printIndentation numberOfSpace
+    ; putStr $ getVariable var
+    ; printOneWhiteSpace
+    ; putStr ":="
+    ; printOneWhiteSpace
+    ; putStr $ getTopExpr expr
+    ; putStrLn ";"
+    }
+
+-------------------------------------------------------------------------------
+-- Print Read Statements such as read n[3,5];
+-------------------------------------------------------------------------------
+printReadStatement :: Variable -> Int -> IO ()
+printReadStatement var numberOfSpace = do { printIndentation numberOfSpace
+                                          ; putStr "read"
+                                          ; printOneWhiteSpace
                                           ; putStr $ getVariable var
-                                          ; putStr " := "
-                                          ; putStr $ getTopExpr expr
                                           ; putStrLn ";"
                                           }
 
 -------------------------------------------------------------------------------
--- print Read Statements such as read n[3,5];
--------------------------------------------------------------------------------
-printReadStatement :: Variable -> Int -> IO ()
-printReadStatement var indent = do { printIndent indent
-                                   ; putStr "read "
-                                   ; putStr $ getVariable var
-                                   ; putStrLn ";"
-                                   }
-
--------------------------------------------------------------------------------
--- print Write Statements such as write 3 + 5;
+-- Print Write Statements such as write 3 + 5;
 -------------------------------------------------------------------------------
 printWriteStmt :: Expression -> Int -> IO ()
-printWriteStmt expr indent = do { printIndent indent
-                                ; putStr "write "
-                                ; putStr $ getTopExpr expr
-                                ; putStrLn ";"
-                                }
+printWriteStmt expr numberOfSpace = do { printIndentation numberOfSpace
+                                       ; putStr "write"
+                                       ; printOneWhiteSpace
+                                       ; putStr $ getTopExpr expr
+                                       ; putStrLn ";"
+                                       }
 
 -------------------------------------------------------------------------------
 -- print Call Statements such as call n(3 + 5);
 -------------------------------------------------------------------------------
 printCallStmt :: Identifier -> [Expression] -> Int -> IO ()
-printCallStmt id exprs indent = do { printIndent indent
+printCallStmt id exprs numberOfSpace = do { printIndentation numberOfSpace
                                    ; putStr "call "
                                    ; putStr id
                                    ; putStr "("
@@ -159,18 +163,18 @@ printCallStmt id exprs indent = do { printIndent indent
 -- print the common part of If Statements and If-Else Statements
 -------------------------------------------------------------------------------
 printIfCommon :: Expression -> [Statement] -> Int -> IO ()
-printIfCommon expr stmts indent = do { printIndent indent
+printIfCommon expr stmts numberOfSpace = do { printIndentation numberOfSpace
                                      ; putStr "if "
                                      ; printExprs [expr] ""
                                      ; putStrLn " then"
-                                     ; printStatements stmts (indent + 4)
+                                     ; printStatements stmts (numberOfSpace + 4)
                                      }
 
 -------------------------------------------------------------------------------
 -- print the end part of If Statements and If-Else Statements
 -------------------------------------------------------------------------------
 printIfEnd :: Int -> IO ()
-printIfEnd indent = do { printIndent indent
+printIfEnd numberOfSpace = do { printIndentation numberOfSpace
                        ; putStrLn "fi"
                        }
 
@@ -178,32 +182,32 @@ printIfEnd indent = do { printIndent indent
 -- print If Statements
 -------------------------------------------------------------------------------
 printIfStatement :: Expression -> [Statement] -> Int -> IO ()
-printIfStatement expr stmts indent = do { printIfCommon expr stmts indent
-                                        ; printIfEnd indent
+printIfStatement expr stmts numberOfSpace = do { printIfCommon expr stmts numberOfSpace
+                                        ; printIfEnd numberOfSpace
                                         }
 
 -------------------------------------------------------------------------------
 -- print If-Else Statements
 -------------------------------------------------------------------------------
 printIfElseStatement :: Expression -> [Statement] -> [Statement] -> Int -> IO ()
-printIfElseStatement expr stmts1 stmts2 indent = do
-    { printIfCommon expr stmts1 indent
-    ; printIndent indent
+printIfElseStatement expr stmts1 stmts2 numberOfSpace = do
+    { printIfCommon expr stmts1 numberOfSpace
+    ; printIndentation numberOfSpace
     ; putStrLn "else"
-    ; printStatements stmts2 (indent + 4)
-    ; printIfEnd indent
+    ; printStatements stmts2 (numberOfSpace + 4)
+    ; printIfEnd numberOfSpace
     }
 
 -------------------------------------------------------------------------------
 -- print While Statements
 -------------------------------------------------------------------------------
 printWhileStatement :: Expression -> [Statement] -> Int -> IO ()
-printWhileStatement expr stmts indent = do { printIndent indent
+printWhileStatement expr stmts numberOfSpace = do { printIndentation numberOfSpace
                                            ; putStr "while "
                                            ; printExprs [expr] ""
                                            ; putStrLn " do"
-                                           ; printStatements stmts (indent + 4)
-                                           ; printIndent indent
+                                           ; printStatements stmts (numberOfSpace + 4)
+                                           ; printIndentation numberOfSpace
                                            ; putStrLn "od"
                                            }
 
@@ -211,23 +215,23 @@ printWhileStatement expr stmts indent = do { printIndent indent
 -- print Statement
 -------------------------------------------------------------------------------
 printStatement :: Statement -> Int -> IO ()
-printStatement stmt indent = do
+printStatement stmt numberOfSpace = do
     case stmt of
-        Assign var  expr          -> printAssignStatement var  expr   indent
-        Read   var                -> printReadStatement   var  indent
-        Write  expr               -> printWriteStmt  expr indent
-        Call   id   exprs         -> printCallStmt   id   exprs  indent
-        If     expr stmts         -> printIfStatement     expr stmts  indent
-        IfElse expr stmts1 stmts2 -> printIfElseStatement expr stmts1 stmts2 indent
-        While  expr stmts         -> printWhileStatement  expr stmts  indent
+        Assign var  expr          -> printAssignStatement var  expr   numberOfSpace
+        Read   var                -> printReadStatement   var  numberOfSpace
+        Write  expr               -> printWriteStmt  expr numberOfSpace
+        Call   id   exprs         -> printCallStmt   id   exprs  numberOfSpace
+        If     expr stmts         -> printIfStatement     expr stmts  numberOfSpace
+        IfElse expr stmts1 stmts2 -> printIfElseStatement expr stmts1 stmts2 numberOfSpace
+        While  expr stmts         -> printWhileStatement  expr stmts  numberOfSpace
 
 -------------------------------------------------------------------------------
 -- print list of Statement
 -------------------------------------------------------------------------------
 printStatements :: [Statement] -> Int -> IO ()
 printStatements [] _                = return ()
-printStatements (stmt:stmts) indent = do { printStatement stmt indent
-                                         ; printStatements stmts indent
+printStatements (stmt:stmts) numberOfSpace = do { printStatement stmt numberOfSpace
+                                         ; printStatements stmts numberOfSpace
                                          }
 
 -------------------------------------------------------------------------------
