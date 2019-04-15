@@ -126,7 +126,7 @@ data PIndicator = VarType | RefType deriving (Show, Eq)
 -------------------------------------------------------------------------------
 -- Shape indicator types.
 -------------------------------------------------------------------------------
-data ShapeIndicator = Array { arrayExpr :: Expression }
+data ShapeIndicator = Array  { arrayExpr :: Expression }
                     | Matrix { matrixMExpr :: Expression
                              , matrixNExpr :: Expression
                              }
