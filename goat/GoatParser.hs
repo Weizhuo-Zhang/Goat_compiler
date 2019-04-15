@@ -150,9 +150,9 @@ pProcedureBody :: Parser Body
 pProcedureBody = do
     variableDeclarations <- many pVariableDeclaration
     reserved "begin"
-    stmts                <- many1 pStatement
+    statements           <- many1 pStatement
     reserved "end"
-    return (Body variableDeclarations stmts)
+    return (Body variableDeclarations statements)
     <?> "procedure body"
 
 -------------------------------------------------------------------------------
@@ -215,9 +215,9 @@ pRead = do
 pWrite :: Parser Statement
 pWrite = do
     reserved "write"
-    exp <- (pString <|> pExpression)
+    expression <- (pString <|> pExpression)
     semi
-    return (Write exp)
+    return (Write expression)
     <?> "write statement"
 
 -------------------------------------------------------------------------------
@@ -241,9 +241,9 @@ pCall :: Parser Statement
 pCall = do
     reserved "call"
     id      <- identifier
-    expList <- parens $ sepBy pExpression comma
+    expressionList <- parens $ sepBy pExpression comma
     semi
-    return (Call id expList)
+    return (Call id expressionList)
     <?> "Call statement"
 
 -------------------------------------------------------------------------------
@@ -252,21 +252,21 @@ pCall = do
 pIf :: Parser Statement
 pIf =
     try(do { reserved "if"
-           ; exp    <- pExpression
+           ; expression <- pExpression
            ; reserved "then"
-           ; stmts  <- many1 pStatement
+           ; statements <- many1 pStatement
            ; reserved "fi"
-           ; return (If exp stmts)
+           ; return (If expression statements)
            }
         )
     <|> do { reserved "if"
-           ; exp    <- pExpression
+           ; expression     <- pExpression
            ; reserved "then"
-           ; stmts1 <- many1 pStatement
+           ; ifStatements   <- many1 pStatement
            ; reserved "else"
-           ; stmts2 <- many1 pStatement
+           ; elseStatements <- many1 pStatement
            ; reserved "fi"
-           ; return (IfElse exp stmts1 stmts2)
+           ; return (IfElse expression ifStatements elseStatements)
            }
     <?> "If statement"
 
@@ -276,11 +276,11 @@ pIf =
 pWhile :: Parser Statement
 pWhile = do
     reserved "while"
-    exp   <- pExpression
+    expression <- pExpression
     reserved "do"
-    stmts <- many1 pStatement
+    statements <- many1 pStatement
     reserved "od"
-    return (While exp stmts)
+    return (While expression statements)
     <?> "While statement"
 
 -------------------------------------------------------------------------------
@@ -378,13 +378,13 @@ pInt = do { n <- natural;
 -------------------------------------------------------------------------------
 pExpressionShapeIndicator :: Parser ShapeIndicator
 pExpressionShapeIndicator =
-    try (do { exp <- brackets pExpression
-            ; return (Array exp)
+    try (do { expression <- brackets pExpression
+            ; return (Array expression)
             }
         )
     <|>
-    try (do { expList <- brackets $ sepBy pExpression comma
-            ; return (Matrix (expList !! 0) (expList !! 1))
+    try (do { expressionList <- brackets $ sepBy pExpression comma
+            ; return (Matrix (expressionList !! 0) (expressionList !! 1))
             }
         )
     <|>  do { return (NoIndicator) }
