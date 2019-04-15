@@ -12,27 +12,30 @@ import System.Exit
 --   Mingyang Zhang (mingyangz) - 650242
 --   An Luo (aluo1) - 657605
 
--- This file contains the exit-related information of the Goat program,
--- including 2 data types: ExitCode and Task, and 2 functions: exitWithSuccess
--- and exitWithError.
+-- This file contains the pretty print-related information of the Goat program.
 
 -- The aim of the project is to implement a compiler for a procedural (C-like)
 -- language called Goat.
 
 -------------------------------- Documentation --------------------------------
 
-
 -------------------------------------------------------------------------------
--- print indention
+-- Print indention.
 -------------------------------------------------------------------------------
 printIndent :: Int -> IO ()
 printIndent 0 = return ()
-printIndent indent = do { putStr " "
+printIndent indent = do { printOneWhiteSpace
                         ; printIndent (indent - 1)
                         }
 
 -------------------------------------------------------------------------------
--- print BaseType such as bool, float and int
+-- Print one white space.
+-------------------------------------------------------------------------------
+printOneWhiteSpace :: IO ()
+printOneWhiteSpace = putStr " "
+
+-------------------------------------------------------------------------------
+-- Print BaseType: bool, float and int.
 -------------------------------------------------------------------------------
 printBaseType :: BaseType -> IO ()
 printBaseType baseType = do
@@ -42,41 +45,41 @@ printBaseType baseType = do
         FloatType -> putStr "float"
 
 -------------------------------------------------------------------------------
--- print Passing Indicator type such as "val" and "ref"
+-- Print Passing Indicator type: "val" and "ref".
 -------------------------------------------------------------------------------
-printPassIndicator :: ParameterIndicator -> IO ()
-printPassIndicator pIndicator = do
-    case pIndicator of
+printParameterIndicator :: ParameterIndicator -> IO ()
+printParameterIndicator parameterIndicator = do
+    case parameterIndicator of
         VarType   -> putStr "val"
         RefType   -> putStr "ref"
 
 -------------------------------------------------------------------------------
--- get String of shape Indicator type such as Array and Matrix
+-- Get String of shape Indicator type such as Array and Matrix.
 -------------------------------------------------------------------------------
 getShapeIndicator :: ShapeIndicator -> String
-getShapeIndicator sIndicator =
-    case sIndicator of
+getShapeIndicator shapeIndicator =
+    case shapeIndicator of
         NoIndicator -> ""
         Array  n    -> "[" ++ (getTopExpr n) ++ "]"
         Matrix m n  -> "[" ++ (getTopExpr m) ++ ", " ++ (getTopExpr n) ++ "]"
 
 -------------------------------------------------------------------------------
--- get String of variable in form id, id[n] or id[m,n]
+-- Get String of variable in form id, id[n] or id[m,n].
 -------------------------------------------------------------------------------
 getVariable :: Variable -> String
 getVariable var = (varId var) ++ (getShapeIndicator $ varShapeIndicator var)
 
 -------------------------------------------------------------------------------
--- print Parameters of procedure
+-- Print Parameters of procedure
 -------------------------------------------------------------------------------
 printParameters :: [Parameter] -> String -> IO ()
 printParameters [] _                     = return ()
 printParameters (param:params) seperator = do
     { putStr seperator
-    ; printPassIndicator $ passingIndicator param
-    ; putStr " "
+    ; printParameterIndicator $ passingIndicator param
+    ; printOneWhiteSpace
     ; printBaseType $ passingType param
-    ; putStr " "
+    ; printOneWhiteSpace
     ; putStr $ passingIdent param
     ; printParameters (params) ", "
     }
@@ -101,7 +104,7 @@ printVariableDeclaration []           = return ()
 printVariableDeclaration (vdecl:vdels) = do
     { printIndent 4
     ; printBaseType $ declarationType vdecl
-    ; putStr " "
+    ; printOneWhiteSpace
     ; putStr $ getVariable $ declarationVariable vdecl
     ; putStr   ";"
     ; putStrLn ""
