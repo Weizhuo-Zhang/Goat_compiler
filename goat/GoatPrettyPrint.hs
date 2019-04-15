@@ -35,6 +35,12 @@ printOneWhiteSpace :: IO ()
 printOneWhiteSpace = putStr " "
 
 -------------------------------------------------------------------------------
+-- Print semicolon, together with the new line character.
+-------------------------------------------------------------------------------
+printSemiColon :: IO ()
+printSemiColon = putStrLn ";"
+
+-------------------------------------------------------------------------------
 -- Print BaseType: bool, float and int.
 -------------------------------------------------------------------------------
 printBaseType :: BaseType -> IO ()
@@ -106,7 +112,7 @@ printVariableDeclaration (variableDeclaration:declarations) = do
     ; printBaseType $ declarationType variableDeclaration
     ; printOneWhiteSpace
     ; putStr $ getVariable $ declarationVariable variableDeclaration
-    ; putStrLn   ";"
+    ; printSemiColon
     ; printVariableDeclaration declarations
     }
 
@@ -121,7 +127,7 @@ printAssignStatement var expr numberOfSpace = do
     ; putStr ":="
     ; printOneWhiteSpace
     ; putStr $ getTopExpr expr
-    ; putStrLn ";"
+    ; printSemiColon
     }
 
 -------------------------------------------------------------------------------
@@ -132,7 +138,7 @@ printReadStatement var numberOfSpace = do { printIndentation numberOfSpace
                                           ; putStr "read"
                                           ; printOneWhiteSpace
                                           ; putStr $ getVariable var
-                                          ; putStrLn ";"
+                                          ; printSemiColon
                                           }
 
 -------------------------------------------------------------------------------
@@ -143,7 +149,7 @@ printWriteStmt expr numberOfSpace = do { printIndentation numberOfSpace
                                        ; putStr "write"
                                        ; printOneWhiteSpace
                                        ; putStr $ getTopExpr expr
-                                       ; putStrLn ";"
+                                       ; printSemiColon
                                        }
 
 -------------------------------------------------------------------------------
@@ -156,7 +162,7 @@ printCallStmt id exprs numberOfSpace = do { printIndentation numberOfSpace
                                    ; putStr "("
                                    ; printExprs exprs ""
                                    ; putStr ")"
-                                   ; putStrLn ";"
+                                   ; printSemiColon
                                    }
 
 -------------------------------------------------------------------------------
