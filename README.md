@@ -26,9 +26,10 @@ Monday 15 April at 23:00
 ### Stage 2
 
 This stage contains 3 parts:
-a. Submit an anonymised copy of the code. (i.e. remove all identity-related information).
-b. Individual: Review tasks will be available through the “Peer Reviewing” menu item on the LMS.
-c. Individual: Deadline for completing double-blind peer reviewing.
+
+- a. Submit an anonymised copy of the code. (i.e. remove all identity-related information).
+- b. Individual: Review tasks will be available through the “Peer Reviewing” menu item on the LMS.
+- c. Individual: Deadline for completing double-blind peer reviewing.
 
 #### Due Date
 
@@ -45,8 +46,9 @@ c. Individual: Deadline for completing double-blind peer reviewing.
 ### Stage 3
 
 This stage contains 2 parts:
-a. Team effort: Submit test data.
-b. Team effort: Submit compiler.
+
+- a. Team effort: Submit test data.
+- b. Team effort: Submit compiler.
 
 #### Due Date
 
