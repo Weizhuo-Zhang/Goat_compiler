@@ -94,21 +94,21 @@ data VariableDeclaration = VariableDeclaration
 data Statement = Assign { assignVal  :: Variable
                         , assignExpr :: Expression
                         }
-               | Read { readVal          :: Variable }
-               | Write { writeExpr        :: Expression }
-               | Call { callIdent :: Identifier
-                      , callExprs :: [Expression]
-                      }
-               | If { ifExpr       :: Expression
-                    , ifStatements :: [Statement]
-                    }
+               | Read   { readVal          :: Variable }
+               | Write  { writeExpr        :: Expression }
+               | Call   { callIdent :: Identifier
+                        , callExprs :: [Expression]
+                        }
+               | If     { ifExpr       :: Expression
+                        , ifStatements :: [Statement]
+                        }
                | IfElse { ifElseExpr        :: Expression
                         , ifElseStatements1 :: [Statement]
                         , ifElseStatements2 :: [Statement]
                         }
-               | While { whileExpr       :: Expression
-                       , whileStatements :: [Statement]
-                       }
+               | While  { whileExpr       :: Expression
+                        , whileStatements :: [Statement]
+                        }
                deriving (Show, Eq)
 
 -------------------------------------------------------------------------------
