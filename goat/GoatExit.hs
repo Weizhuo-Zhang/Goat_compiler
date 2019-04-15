@@ -19,6 +19,9 @@ import System.Exit
 
 -------------------------------- Documentation --------------------------------
 
+-------------------------------------------------------------------------------
+-- Task type of this Goat compiler.
+-------------------------------------------------------------------------------
 data Task = Unit | Exit | Compile | Pprint | Parse deriving Eq
 
 -------------------------------------------------------------------------------
@@ -42,7 +45,7 @@ exitWithSuccess message = do
   exitWith ExitSuccess
 
 -------------------------------------------------------------------------------
--- print error message to stderr and exit
+-- Print error message to stderr and exit
 -------------------------------------------------------------------------------
 exitWithError :: String -> GoatExitCode -> IO Task
 exitWithError message exitCode = do
