@@ -63,7 +63,7 @@ pProg
 --  sequence of statements.
 -----------------------------------------------------------------
 
-pProgBody :: Parser ([Decl],[Stmt])
+pProgBody :: Parser ([Decl],[Statement])
 pProgBody
   = do
       decls <- many pDecl
@@ -92,7 +92,7 @@ pBaseType
 --  read and write statements, and assignments.
 -----------------------------------------------------------------
 
-pStmt, pRead, pWrite, pAsg :: Parser Stmt
+pStmt, pRead, pWrite, pAsg :: Parser Statement
 
 pStmt 
   = choice [pRead, pWrite, pAsg]

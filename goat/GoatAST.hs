@@ -1,160 +1,161 @@
 module GoatAST where
 
-type Ident = String
+-------------------------------- Documentation --------------------------------
 
-data PType
-    = BoolType
-    | IntType
-    | FloatType
-    deriving (Show, Eq)
+-- Authors:
+--   Shizhe Cai (shizhec) - 798125
+--   Weizhuo Zhang (weizhuoz) - 1018329
+--   Mingyang Zhang (mingyangz) - 650242
+--   An Luo (aluo1) - 657605
 
-data Variable
-    = Variable
-    { varId                :: Ident
-    , varSIndicator        :: SIndicator
-    } deriving (Show, Eq)
+-- This file contains the abstract syntax tree for the Goat language.
 
+-- The aim of the project is to implement a compiler for a procedural (C-like)
+-- language called Goat.
 
-data Expr
-    = ExprVar
-        { exprVar          :: Variable }
-    | BoolConst
-        { boolConstVal     :: Bool }
-    | IntConst
-        { intConstVal      :: Int }
-    | FloatConst
-        { floatConstVal    :: Float }
-    | StrConst
-        { strConstVal      :: String }
-    | Add
-        { addLeftExpr      :: Expr
-        , addRightExpr     :: Expr
-        }
-    | Mul
-        { mulLeftExpr      :: Expr
-        , mulRightExpr     :: Expr
-        }
-    | Sub
-        { subLeftExpr      :: Expr
-        , subRightExpr     :: Expr
-        }
-    | Div
-        { divLeftExpr      :: Expr
-        , divRightExpr     :: Expr
-        }
-    | Or
-        { orLeftExpr       :: Expr
-        , orRightExpr      :: Expr
-        }
-    | And
-        { andLeftExpr      :: Expr
-        , andRightExpr     :: Expr
-        }
-    | Eq
-        { eqLeftExpr       :: Expr
-        , eqRightExpr      :: Expr
-        }
-    | NotEq
-        { notEqLeftExpr    :: Expr
-        , notEqRightExpr   :: Expr
-        }
-    | Les
-        { lesLeftExpr      :: Expr
-        , lesRightExpr     :: Expr
-        }
-    | LesEq
-        { lesEqLeftExpr    :: Expr
-        , lesEqRightExpr   :: Expr
-        }
-    | Grt
-        { grtLeftExpr      :: Expr
-        , grtRightExpr     :: Expr
-        }
-    | GrtEq
-        { grtEqLeftExpr    :: Expr
-        , grtEqRightExpr   :: Expr
-        }
-    | UnaryMinus
-        { unaryMinusExpr   :: Expr }
-    | UnaryNot
-        { unaryNotExpr     :: Expr }
-    deriving (Show, Eq)
+-------------------------------- Documentation --------------------------------
 
-data VDecl
-    = VDecl
-    { vdeclType            :: PType
-    , vdeclVar             :: Variable
-    } deriving (Show, Eq)
+-------------------------------------------------------------------------------
+-- Identifier.
+-------------------------------------------------------------------------------
+type Identifier = String
 
-data Stmt
-    = Assign
-        { assignVal        :: Variable
-        , assignExpr       :: Expr
-        }
-    | Read
-        { readVal          :: Variable }
-    | Write
-        { writeExpr        :: Expr }
-    | Call
-        { callIdent        :: Ident
-        , callExprs        :: [Expr]
-        }
-    | If
-        { ifExpr           :: Expr
-        , ifStmts          :: [Stmt]
-        }
-    | IfElse
-        { ifElseExpr       :: Expr
-        , ifElseStmts1     :: [Stmt]
-        , ifElseStmts2     :: [Stmt]
-        }
-    | While
-        { whileExpr        :: Expr
-        , whileStmts       :: [Stmt]
-        }
-    deriving (Show, Eq)
+-------------------------------------------------------------------------------
+-- Base type.
+-------------------------------------------------------------------------------
+data BaseType = BoolType | IntType | FloatType deriving (Show, Eq)
 
-data Body
-    = Body
-    { bodyVarDeclarations  :: [VDecl]
-    , bodyStatements       :: [Stmt]
-    } deriving (Show, Eq)
+-------------------------------------------------------------------------------
+-- Variable.
+-------------------------------------------------------------------------------
+data Variable = Variable { varId             :: Identifier
+                         , varShapeIndicator :: ShapeIndicator
+                         } deriving (Show, Eq)
 
-data PIndicator
-    = VarType
-    | RefType
-    deriving (Show, Eq)
+-------------------------------------------------------------------------------
+-- Expression.
+-------------------------------------------------------------------------------
+data Expression = ExprVar    { exprVar          :: Variable }
+                | BoolConst  { boolConstVal     :: Bool }
+                | IntConst   { intConstVal      :: Int }
+                | FloatConst { floatConstVal    :: Float }
+                | StrConst   { strConstVal      :: String }
+                | Add        { addLeftExpr  :: Expression
+                             , addRightExpr :: Expression
+                             }
+                | Mul        { mulLeftExpr  :: Expression
+                             , mulRightExpr :: Expression
+                             }
+                | Sub        { subLeftExpr  :: Expression
+                             , subRightExpr :: Expression
+                             }
+                | Div        { divLeftExpr  :: Expression
+                             , divRightExpr :: Expression
+                             }
+                | Or         { orLeftExpr  :: Expression
+                             , orRightExpr :: Expression
+                             }
+                | And        { andLeftExpr  :: Expression
+                             , andRightExpr :: Expression
+                             }
+                | Eq         { eqLeftExpr  :: Expression
+                             , eqRightExpr :: Expression
+                             }
+                | NotEq      { notEqLeftExpr  :: Expression
+                             , notEqRightExpr :: Expression
+                             }
+                | Les        { lesLeftExpr  :: Expression
+                             , lesRightExpr :: Expression
+                             }
+                | LesEq      { lesEqLeftExpr  :: Expression
+                             , lesEqRightExpr :: Expression
+                             }
+                | Grt        { grtLeftExpr  :: Expression
+                             , grtRightExpr :: Expression
+                             }
+                | GrtEq      { grtEqLeftExpr  :: Expression
+                             , grtEqRightExpr :: Expression
+                             }
+                | UnaryMinus { unaryMinusExpr :: Expression }
+                | UnaryNot   { unaryNotExpr :: Expression }
+                deriving (Show, Eq)
 
-data SIndicator
-    = Array
-      { arrayExpr          :: Expr }
-    | Matrix
-      { matrixMExpr        :: Expr
-      , matrixNExpr        :: Expr
-      }
-    | NoIndicator
-    deriving (Show, Eq)
+-------------------------------------------------------------------------------
+-- Variable Declaration.
+-------------------------------------------------------------------------------
+data VariableDeclaration = VariableDeclaration
+                           { declarationType     :: BaseType
+                           , declarationVariable :: Variable
+                           } deriving (Show, Eq)
 
-data Parameter
-    = Parameter
-    { passingIndicator     :: PIndicator
-    , passingType          :: PType
-    , passingIdent         :: Ident
-    } deriving (Show, Eq)
+ ------------------------------------------------------------------------------
+ -- Statement types.
+ ------------------------------------------------------------------------------
+data Statement = Assign { assignVal  :: Variable
+                        , assignExpr :: Expression
+                        }
+               | Read   { readVal          :: Variable }
+               | Write  { writeExpr        :: Expression }
+               | Call   { callIdent :: Identifier
+                        , callExprs :: [Expression]
+                        }
+               | If     { ifExpr       :: Expression
+                        , ifStatements :: [Statement]
+                        }
+               | IfElse { ifElseExpr        :: Expression
+                        , ifElseStatements1 :: [Statement]
+                        , ifElseStatements2 :: [Statement]
+                        }
+               | While  { whileExpr       :: Expression
+                        , whileStatements :: [Statement]
+                        }
+               deriving (Show, Eq)
 
-data Header
-    = Header
-    { headerIdent          :: Ident
-    , parameters           :: [Parameter]
-    } deriving (Show, Eq)
+-------------------------------------------------------------------------------
+-- Procedure body.
+-------------------------------------------------------------------------------
+data Body = Body { bodyVarDeclarations :: [VariableDeclaration]
+                 , bodyStatements      :: [Statement]
+                 } deriving (Show, Eq)
 
-data Procedure
-    = Procedure
-    { header               :: Header
-    , body                 :: Body
-    } deriving (Show, Eq)
+-------------------------------------------------------------------------------
+-- Procedure indicator types.
+-------------------------------------------------------------------------------
+data ParameterIndicator = VarType | RefType deriving (Show, Eq)
 
-data GoatProgram
-    = GoatProgram
-    { procedures           :: [Procedure]
-    } deriving (Show, Eq)
+-------------------------------------------------------------------------------
+-- Shape indicator types.
+-------------------------------------------------------------------------------
+data ShapeIndicator = Array  { arrayExpr :: Expression }
+                    | Matrix { matrixMExpr :: Expression
+                             , matrixNExpr :: Expression
+                             }
+                    | NoIndicator
+                    deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Procedure parameter types.
+-------------------------------------------------------------------------------
+data Parameter = Parameter { passingIndicator :: ParameterIndicator
+                           , passingType      :: BaseType
+                           , passingIdent     :: Identifier
+                           } deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Procedure header.
+-------------------------------------------------------------------------------
+data Header = Header { headerIdent :: Identifier
+                     , parameters  :: [Parameter]
+                     } deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Procedure.
+-------------------------------------------------------------------------------
+data Procedure = Procedure { header :: Header
+                           , body   :: Body
+                           } deriving (Show, Eq)
+
+-------------------------------------------------------------------------------
+-- Goat program types.
+-------------------------------------------------------------------------------
+data GoatProgram = GoatProgram { procedures :: [Procedure]} deriving (Show, Eq)

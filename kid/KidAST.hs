@@ -32,17 +32,17 @@ data Decl
   = Decl Ident BaseType
     deriving (Show, Eq)
 
-data Stmt 
+data Statement 
   = Assign Lvalue Expr
   | Read Lvalue
   | Write Expr
   | Call Ident [Expr]
-  | If Expr [Stmt]
-  | IfElse Expr [Stmt] [Stmt]
-  | While Expr [Stmt]
+  | If Expr [Statement]
+  | IfElse Expr [Statement] [Statement]
+  | While Expr [Statement]
     deriving (Show, Eq)
 
 data KidProgram
-  = Program [Decl] [Stmt]
+  = Program [Decl] [Statement]
     deriving (Show, Eq)
 
