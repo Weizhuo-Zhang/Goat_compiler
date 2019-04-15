@@ -376,35 +376,6 @@ printProc (proc:procs) = do { printHeader $ header proc
                             }
 
 -------------------------------------------------------------------------------
--- Check whether the main procedure is parameter-less.
--------------------------------------------------------------------------------
-checkMainParam :: [Parameter] -> IO Task
-checkMainParam [] = return Unit
-checkMainParam _  = do
-  exitWithError "'main()' procedure should be parameter-less." MainWithParam
-
--------------------------------------------------------------------------------
--- Check the number of main procedure.
--------------------------------------------------------------------------------
-checkMainNum :: Int -> IO Task
-checkMainNum numMain
-    | 0 == numMain = do
-        exitWithError "There is no 'main()' procedure." MissingMain
-    | 1 == numMain = return Unit
-    | otherwise = do
-        exitWithError "There is more than one 'main()' procedure" MultipleMain
-
--------------------------------------------------------------------------------
--- Get the number of main procedure.
--------------------------------------------------------------------------------
-countMain :: [Procedure] -> [Procedure]
-countMain [] = []
-countMain (proc:procs)
-    | "main" == (headerIdent $ header proc) = proc : countMain procs
-    | otherwise = countMain procs
-
-
--------------------------------------------------------------------------------
 -- Main entry of prettyPrint module.
 -------------------------------------------------------------------------------
 prettyPrint :: GoatProgram -> IO ()
