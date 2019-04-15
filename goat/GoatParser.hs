@@ -113,9 +113,9 @@ pProcedureHeader = do
 -------------------------------------------------------------------------------
 pParameter :: Parser Parameter
 pParameter = do
-    pIndicator <-  pParameterIndicator
-    parameterType      <-  pParameterType
-    id         <-  identifier
+    pIndicator    <-  pParameterIndicator
+    parameterType <-  pParameterType
+    id            <-  identifier
     return (Parameter pIndicator parameterType id)
     <?> "parameters"
 
@@ -251,24 +251,23 @@ pCall = do
 -------------------------------------------------------------------------------
 pIf :: Parser Statement
 pIf =
-    try( do
-        { reserved "if"
-        ; exp    <- pExpression
-        ; reserved "then"
-        ; stmts  <- many1 pStatement
-        ; reserved "fi"
-        ; return (If exp stmts)
-        })
-    <|> do
-        { reserved "if"
-        ; exp    <- pExpression
-        ; reserved "then"
-        ; stmts1 <- many1 pStatement
-        ; reserved "else"
-        ; stmts2 <- many1 pStatement
-        ; reserved "fi"
-        ; return (IfElse exp stmts1 stmts2)
-        }
+    try(do { reserved "if"
+           ; exp    <- pExpression
+           ; reserved "then"
+           ; stmts  <- many1 pStatement
+           ; reserved "fi"
+           ; return (If exp stmts)
+           }
+        )
+    <|> do { reserved "if"
+           ; exp    <- pExpression
+           ; reserved "then"
+           ; stmts1 <- many1 pStatement
+           ; reserved "else"
+           ; stmts2 <- many1 pStatement
+           ; reserved "fi"
+           ; return (IfElse exp stmts1 stmts2)
+           }
     <?> "If statement"
 
 -------------------------------------------------------------------------------
