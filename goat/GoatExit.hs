@@ -4,12 +4,6 @@ import System.Exit
 
 -------------------------------- Documentation --------------------------------
 
--- Authors:
---   Shizhe Cai (shizhec) - 798125
---   Weizhuo Zhang (weizhuoz) - 1018329
---   Mingyang Zhang (mingyangz) - 650242
---   An Luo (aluo1) - 657605
-
 -- This file contains the exit-related information of the Goat program,
 -- including 2 data types: ExitCode and Task, and 2 functions: exitWithSuccess
 -- and exitWithError.
