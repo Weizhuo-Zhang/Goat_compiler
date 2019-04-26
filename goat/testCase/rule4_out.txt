@@ -1,4 +1,4 @@
-proc main()
+proc main ()
     int i;
     int j;
 begin

@@ -1,4 +1,4 @@
-proc main()
+proc main ()
     int var1;
     bool var2;
     int var3;
