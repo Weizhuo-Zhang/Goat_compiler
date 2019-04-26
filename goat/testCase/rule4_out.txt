@@ -6,7 +6,7 @@ begin
     while n > 0 do
         m := n;
         n := n - 1;
-        if m > 0 do
+        if m > 0 then
             m := m - 1;
         fi
     od
