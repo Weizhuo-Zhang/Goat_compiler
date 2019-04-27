@@ -1,0 +1,13 @@
+proc main ()
+    int i;
+    int j;
+begin
+    read i;
+    while n > 0 do
+        m := n;
+        n := n - 1;
+        if m > 0 then
+            m := m - 1;
+        fi
+    od
+end
