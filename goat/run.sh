@@ -46,22 +46,42 @@ echo "---------------------- rule 9 ----------------------"
 ./Goat -p ./testCase/rule_9.gt > ./testCase/output_rule_9.txt
 diff ./testCase/rule_9_expecting_output.txt ./testCase/output_rule_9.txt
 
-echo "---------------------- rule 10 ----------------------"
+echo "---------------------- rule 10 ---------------------"
 ./Goat -p ./testCase/rule_10.gt > ./testCase/output_rule_10.txt
 diff ./testCase/rule_10_expecting_output.txt ./testCase/output_rule_10.txt
 
-echo "---------------------- rule 11 ----------------------"
+echo "---------------------- rule 11 ---------------------"
 ./Goat -p ./testCase/rule_11.gt > ./testCase/output_rule_11.txt
 diff ./testCase/rule_11_expecting_output.txt ./testCase/output_rule_11.txt
 
-echo "---------------------- comments ----------------------"
+echo "--------------------- comments ---------------------"
 ./Goat -p ./testCase/comments.gt > ./testCase/output_comments.txt
 diff ./testCase/comments_expecting_output.txt ./testCase/output_comments.txt
 
-echo "---------------------- expression with brackets ----------------------"
+echo "------------- expression with brackets -------------"
 ./Goat -p ./testCase/expression_with_brackets.gt > ./testCase/output_expression_with_brackets.txt
 diff ./testCase/expression_with_brackets_expecting_output.txt ./testCase/output_expression_with_brackets.txt
 
-echo "---------------------- matrix whitespace ----------------------"
+echo "---------------- matrix whitespace -----------------"
 ./Goat -p ./testCase/matrix_whitespace.gt > ./testCase/output_matrix_whitespace.txt
 diff ./testCase/matrix_whitespace_expecting_output.txt ./testCase/output_matrix_whitespace.txt
+
+# Generate the expecting output for sample test cases.
+# ./Goat -p ./sampleTestCase/assoc.gt > ./sampleTestCase/assoc.out
+# ./Goat -p ./sampleTestCase/bell.gt > ./sampleTestCase/bell.out
+# ./Goat -p ./sampleTestCase/gcd.gt > ./sampleTestCase/gcd.out
+# ./Goat -p ./sampleTestCase/hail.gt > ./sampleTestCase/hail.out
+# ./Goat -p ./sampleTestCase/matrixmul.gt > ./sampleTestCase/matrixmul.out
+# ./Goat -p ./sampleTestCase/missing_rel.bad.gt > ./sampleTestCase/missing_rel.bad.out
+# ./Goat -p ./sampleTestCase/mode1.bad.gt > ./sampleTestCase/mode1.bad.out
+# ./Goat -p ./sampleTestCase/mode2.bad.gt > ./sampleTestCase/mode2.bad.out
+# ./Goat -p ./sampleTestCase/mode3.bad.gt > ./sampleTestCase/mode3.bad.out
+# ./Goat -p ./sampleTestCase/mode4.bad.gt > ./sampleTestCase/mode4.bad.out
+# ./Goat -p ./sampleTestCase/multivar1.bad.gt > ./sampleTestCase/multivar1.bad.out
+# ./Goat -p ./sampleTestCase/power.gt > ./sampleTestCase/power.out
+# ./Goat -p ./sampleTestCase/q1.gt > ./sampleTestCase/q1.out
+# ./Goat -p ./sampleTestCase/q2.gt > ./sampleTestCase/q2.out
+# ./Goat -p ./sampleTestCase/q3.gt > ./sampleTestCase/q3.out
+# ./Goat -p ./sampleTestCase/q4.gt > ./sampleTestCase/q4.out
+# ./Goat -p ./sampleTestCase/sort.gt > ./sampleTestCase/sort.out
+# ./Goat -p ./sampleTestCase/stddev.gt > ./sampleTestCase/stddev.out
