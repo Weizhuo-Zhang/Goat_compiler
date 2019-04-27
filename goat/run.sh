@@ -66,22 +66,74 @@ echo "---------------- matrix whitespace -----------------"
 ./Goat -p ./testCase/matrix_whitespace.gt > ./testCase/output_matrix_whitespace.txt
 diff ./testCase/matrix_whitespace_expecting_output.txt ./testCase/output_matrix_whitespace.txt
 
-# Generate the expecting output for sample test cases.
-# ./Goat -p ./sampleTestCase/assoc.gt > ./sampleTestCase/assoc.out
-# ./Goat -p ./sampleTestCase/bell.gt > ./sampleTestCase/bell.out
-# ./Goat -p ./sampleTestCase/gcd.gt > ./sampleTestCase/gcd.out
-# ./Goat -p ./sampleTestCase/hail.gt > ./sampleTestCase/hail.out
-# ./Goat -p ./sampleTestCase/matrixmul.gt > ./sampleTestCase/matrixmul.out
-# ./Goat -p ./sampleTestCase/missing_rel.bad.gt > ./sampleTestCase/missing_rel.bad.out
-# ./Goat -p ./sampleTestCase/mode1.bad.gt > ./sampleTestCase/mode1.bad.out
-# ./Goat -p ./sampleTestCase/mode2.bad.gt > ./sampleTestCase/mode2.bad.out
-# ./Goat -p ./sampleTestCase/mode3.bad.gt > ./sampleTestCase/mode3.bad.out
-# ./Goat -p ./sampleTestCase/mode4.bad.gt > ./sampleTestCase/mode4.bad.out
-# ./Goat -p ./sampleTestCase/multivar1.bad.gt > ./sampleTestCase/multivar1.bad.out
-# ./Goat -p ./sampleTestCase/power.gt > ./sampleTestCase/power.out
-# ./Goat -p ./sampleTestCase/q1.gt > ./sampleTestCase/q1.out
-# ./Goat -p ./sampleTestCase/q2.gt > ./sampleTestCase/q2.out
-# ./Goat -p ./sampleTestCase/q3.gt > ./sampleTestCase/q3.out
-# ./Goat -p ./sampleTestCase/q4.gt > ./sampleTestCase/q4.out
-# ./Goat -p ./sampleTestCase/sort.gt > ./sampleTestCase/sort.out
-# ./Goat -p ./sampleTestCase/stddev.gt > ./sampleTestCase/stddev.out
+echo "-------------------- assoc.gt ----------------------"
+./Goat -p ./testCase/assoc.gt > ./testCase/output_assoc.txt
+diff ./testCase/assoc.out ./testCase/output_assoc.txt
+
+echo "-------------------- bell.gt -----------------------"
+./Goat -p ./testCase/bell.gt > ./testCase/output_bell.txt
+diff ./testCase/bell.out ./testCase/output_bell.txt
+
+echo "--------------------- gcd.gt -----------------------"
+./Goat -p ./testCase/gcd.gt > ./testCase/output_gcd.txt
+diff ./testCase/gcd.out ./testCase/output_gcd.txt
+
+echo "--------------------- hail.gt ----------------------"
+./Goat -p ./testCase/hail.gt > ./testCase/output_hail.txt
+diff ./testCase/hail.out ./testCase/output_hail.txt
+
+echo "------------------ matrixmul.gt --------------------"
+./Goat -p ./testCase/matrixmul.gt > ./testCase/output_matrixmul.txt
+diff ./testCase/matrixmul.out ./testCase/output_matrixmul.txt
+
+echo "--------------- missing_rel.bad.gt -----------------"
+./Goat -p ./testCase/missing_rel.bad.gt > ./testCase/output_missing_rel.bad.txt
+diff ./testCase/missing_rel.bad.out ./testCase/output_missing_rel.bad.txt
+
+echo "------------------ mode1.bad.gt --------------------"
+./Goat -p ./testCase/mode1.bad.gt > ./testCase/output_mode1.bad.txt
+diff ./testCase/mode1.bad.out ./testCase/output_mode1.bad.txt
+
+echo "------------------ mode2.bad.gt --------------------"
+./Goat -p ./testCase/mode2.bad.gt > ./testCase/output_mode2.bad.txt
+diff ./testCase/mode2.bad.out ./testCase/output_mode2.bad.txt
+
+echo "------------------ mode3.bad.gt --------------------"
+./Goat -p ./testCase/mode3.bad.gt > ./testCase/output_mode3.bad.txt
+diff ./testCase/mode3.bad.out ./testCase/output_mode3.bad.txt
+
+echo "------------------ mode4.bad.gt --------------------"
+./Goat -p ./testCase/mode4.bad.gt > ./testCase/output_mode4.bad.txt
+diff ./testCase/mode4.bad.out ./testCase/output_mode4.bad.txt
+
+echo "---------------- multivar1.bad.gt ------------------"
+./Goat -p ./testCase/multivar1.bad.gt > ./testCase/output_multivar1.bad.txt
+diff ./testCase/multivar1.bad.out ./testCase/output_multivar1.bad.txt
+
+echo "-------------------- power.gt ----------------------"
+./Goat -p ./testCase/power.gt > ./testCase/output_power.txt
+diff ./testCase/power.out ./testCase/output_power.txt
+
+echo "--------------------- q1.gt ------------------------"
+./Goat -p ./testCase/q1.gt > ./testCase/output_q1.txt
+diff ./testCase/q1.out ./testCase/output_q1.txt
+
+echo "--------------------- q2.gt ------------------------"
+./Goat -p ./testCase/q2.gt > ./testCase/output_q2.txt
+diff ./testCase/q2.out ./testCase/output_q2.txt
+
+echo "--------------------- q3.gt ------------------------"
+./Goat -p ./testCase/q3.gt > ./testCase/output_q3.txt
+diff ./testCase/q3.out ./testCase/output_q3.txt
+
+echo "--------------------- q4.gt ------------------------"
+./Goat -p ./testCase/q4.gt > ./testCase/output_q4.txt
+diff ./testCase/q4.out ./testCase/output_q4.txt
+
+echo "-------------------- sort.gt -----------------------"
+./Goat -p ./testCase/sort.gt > ./testCase/output_sort.txt
+diff ./testCase/sort.out ./testCase/output_sort.txt
+
+echo "------------------- stddev.gt ----------------------"
+./Goat -p ./testCase/stddev.gt > ./testCase/output_stddev.txt
+diff ./testCase/stddev.out ./testCase/output_stddev.txt
