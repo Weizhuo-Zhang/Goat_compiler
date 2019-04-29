@@ -4,7 +4,7 @@ proc main()
 begin
     read m;
     if m > 0 then
-            read n
+            read n;
         while n > 0 do
         n := n - 1;
         od
