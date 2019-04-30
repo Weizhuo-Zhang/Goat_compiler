@@ -183,12 +183,25 @@ pShapeIndicator =
             }
         )
     <|>
-    try (do { intList <- brackets $ sepBy pInt comma
-            ; return (Matrix (intList !! 0) (intList !! 1))
+    try (do { (intM, intN) <- brackets $ pMatrix
+            ; return (Matrix intM intN)
             }
         )
+--    try (do { intList <- brackets $ sepBy pInt comma
+--            ; return (Matrix (intList !! 0) (intList !! 1))
+--            }
+--        )
     <|>  do { return (NoIndicator) }
     <?> "shape indicator"
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+pMatrix :: Parser (Expression, Expression)
+pMatrix = do
+    elemM <- pInt
+    comma
+    elemN <- pInt
+    return (elemM, elemN)
 
 -------------------------------------------------------------------------------
 -- Define statement.
