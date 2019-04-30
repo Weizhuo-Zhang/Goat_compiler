@@ -183,25 +183,29 @@ pShapeIndicator =
             }
         )
     <|>
-    try (do { (intM, intN) <- brackets $ pMatrix
+    try (do { (intM, intN) <- brackets $ pMatrix IntMatrix
             ; return (Matrix intM intN)
             }
         )
---    try (do { intList <- brackets $ sepBy pInt comma
---            ; return (Matrix (intList !! 0) (intList !! 1))
---            }
---        )
     <|>  do { return (NoIndicator) }
     <?> "shape indicator"
 
+
 -------------------------------------------------------------------------------
+-- pMatrix looks for the 2 dimensional matrix
 -------------------------------------------------------------------------------
-pMatrix :: Parser (Expression, Expression)
-pMatrix = do
-    elemM <- pInt
+data MatrixType = IntMatrix | ExpressionMatrix
+pMatrix :: MatrixType -> Parser (Expression, Expression)
+pMatrix IntMatrix = do
+    intM <- pInt
     comma
-    elemN <- pInt
-    return (elemM, elemN)
+    intN <- pInt
+    return (intM, intN)
+pMatrix ExpressionMatrix = do
+    expressionM <- pExpression
+    comma
+    expressionN <- pExpression
+    return (expressionM, expressionN)
 
 -------------------------------------------------------------------------------
 -- Define statement.
@@ -396,8 +400,8 @@ pExpressionShapeIndicator =
             }
         )
     <|>
-    try (do { expressionList <- brackets $ sepBy pExpression comma
-            ; return (Matrix (expressionList !! 0) (expressionList !! 1))
+    try (do { (expressionM, expressionN) <- brackets $ pMatrix ExpressionMatrix
+            ; return (Matrix expressionM expressionN)
             }
         )
     <|>  do { return (NoIndicator) }
