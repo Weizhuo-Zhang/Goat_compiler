@@ -25,3 +25,4 @@ goat/GoatLexer.hs
 goat/Goat
 *.out
 *.swp
+goat/testCase/output_*.txt
