@@ -1,0 +1,3 @@
+[ERROR] Parse error at (line 13, column 14):
+unexpected "n"
+expecting base type indicator

@@ -1,0 +1,20 @@
+proc proc1 ()
+begin
+    write "proc1\n";
+end
+
+proc proc2 ()
+begin
+    write "proc2\n";
+end
+
+proc main ()
+begin
+    write "proc main\n";
+    if true then
+        write "proc main\n";
+    fi
+    if false then
+        write "proc main\n";
+    fi
+end

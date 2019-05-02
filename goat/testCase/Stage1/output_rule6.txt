@@ -1,0 +1,4 @@
+proc main ()
+begin
+    write "rule 6\n";
+end

@@ -1,0 +1,7 @@
+proc main ()
+    int var1;
+    bool var2;
+    int var3;
+begin
+    write "rule 3\n";
+end

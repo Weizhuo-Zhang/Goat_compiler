@@ -1,0 +1,12 @@
+proc main ()
+    int m;
+    int n;
+begin
+    read m;
+    if m > 0 then
+        read n;
+        while n > 0 do
+            n := n - 1;
+        od
+    fi
+end
