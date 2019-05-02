@@ -52,8 +52,11 @@ This stage contains 2 parts:
 
 #### Due Date
 
-- **3a** 17 May at 23:00.
-- **3b** 27 May at 23:00.
+- **3a** 20 May at 23:00.
+- **3b** 29 May at 23:00.
+
+#### Project Specification
+[Project Stage 3 Specification](./Assignment_3.pdf)
 
 ## Running Instruction
 
