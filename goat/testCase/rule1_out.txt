@@ -11,4 +11,10 @@ end
 proc main ()
 begin
     write "proc main\n";
+    if true then
+        write "proc main\n";
+    fi
+    if false then
+        write "proc main\n";
+    fi
 end

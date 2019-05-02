@@ -1,8 +1,0 @@
-proc main ()
-    int m;
-    int n;
-begin
-    write "execution begins\n";
-    read m;
-    n := m;
-end

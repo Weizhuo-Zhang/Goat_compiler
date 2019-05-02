@@ -274,6 +274,13 @@ getConst :: (Show a) => a -> String
 getConst a = show a
 
 -------------------------------------------------------------------------------
+-- Convert bool constant variable to string.
+-------------------------------------------------------------------------------
+getBoolConst :: Bool -> String
+getBoolConst True = "true"
+getBoolConst False = "false"
+
+-------------------------------------------------------------------------------
 -- Get string of result using infix operator.
 -------------------------------------------------------------------------------
 getInfixOpResult :: Expression -> String -> Expression -> String
@@ -305,7 +312,7 @@ getTopExpr :: Expression -> String
 getTopExpr expression =
     case expression of
         ExprVar     variable   -> getVariable variable
-        BoolConst   val        -> getConst val
+        BoolConst   val        -> getBoolConst val
         IntConst    val        -> getConst val
         FloatConst  val        -> getConst val
         StrConst    val        -> "\"" ++ val ++ "\""
