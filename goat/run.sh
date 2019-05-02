@@ -17,31 +17,31 @@ echo "\n\n===================== Stage 1 ======================\n"
 
 echo "---------------------- rule 1 ----------------------"
 ./Goat -p ./testCase/Stage1/rule1.gt > ./testCase/Stage1/GeneratedOutput/output_rule1.txt
-diff ./testCase/Stage1/ExpectingOutput/rule1_out.txt ./testCase/Stage1/GeneratedOutput/output_rule1.txt
+diff ./testCase/Stage1/ExpectingOutput/rule1_expecting_output.txt ./testCase/Stage1/GeneratedOutput/output_rule1.txt
 
 echo "---------------------- rule 2 ----------------------"
 ./Goat -p ./testCase/Stage1/rule2.gt > ./testCase/Stage1/GeneratedOutput/output_rule2.txt
-diff ./testCase/Stage1/ExpectingOutput/rule2_out.txt ./testCase/Stage1/GeneratedOutput/output_rule2.txt
+diff ./testCase/Stage1/ExpectingOutput/rule2_expecting_output.txt ./testCase/Stage1/GeneratedOutput/output_rule2.txt
 
 echo "---------------------- rule 3 ----------------------"
 ./Goat -p ./testCase/Stage1/rule3.gt > ./testCase/Stage1/GeneratedOutput/output_rule3.txt
-diff ./testCase/Stage1/ExpectingOutput/rule3_out.txt ./testCase/Stage1/GeneratedOutput/output_rule3.txt
+diff ./testCase/Stage1/ExpectingOutput/rule3_expecting_output.txt ./testCase/Stage1/GeneratedOutput/output_rule3.txt
 
 echo "---------------------- rule 4 ----------------------"
 ./Goat -p ./testCase/Stage1/rule4.gt > ./testCase/Stage1/GeneratedOutput/output_rule4.txt
-diff ./testCase/Stage1/ExpectingOutput/rule4_out.txt ./testCase/Stage1/GeneratedOutput/output_rule4.txt
+diff ./testCase/Stage1/ExpectingOutput/rule4_expecting_output.txt ./testCase/Stage1/GeneratedOutput/output_rule4.txt
 
 echo "---------------------- rule 6 ----------------------"
 ./Goat -p ./testCase/Stage1/rule6.gt > ./testCase/Stage1/GeneratedOutput/output_rule6.txt
-diff ./testCase/Stage1/ExpectingOutput/rule6_out.txt ./testCase/Stage1/GeneratedOutput/output_rule6.txt
+diff ./testCase/Stage1/ExpectingOutput/rule6_expecting_output.txt ./testCase/Stage1/GeneratedOutput/output_rule6.txt
 
 echo "---------------------- rule 7 ----------------------"
 ./Goat -p ./testCase/Stage1/rule7.gt > ./testCase/Stage1/GeneratedOutput/output_rule7.txt
-diff ./testCase/Stage1/ExpectingOutput/rule7_out.txt ./testCase/Stage1/GeneratedOutput/output_rule7.txt
+diff ./testCase/Stage1/ExpectingOutput/rule7_expecting_output.txt ./testCase/Stage1/GeneratedOutput/output_rule7.txt
 
 echo "---------------------- rule 8 ----------------------"
 ./Goat -p ./testCase/Stage1/rule8.gt > ./testCase/Stage1/GeneratedOutput/output_rule8.txt
-diff ./testCase/Stage1/ExpectingOutput/rule8_out.txt ./testCase/Stage1/GeneratedOutput/output_rule8.txt
+diff ./testCase/Stage1/ExpectingOutput/rule8_expecting_output.txt ./testCase/Stage1/GeneratedOutput/output_rule8.txt
 
 echo "---------------------- rule 9 ----------------------"
 ./Goat -p ./testCase/Stage1/rule_9.gt > ./testCase/Stage1/GeneratedOutput/output_rule_9.txt
