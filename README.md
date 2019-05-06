@@ -47,7 +47,7 @@ This stage contains 3 parts:
 
 This stage contains 2 parts:
 
-- a. Team effort: Submit test data.
+- a. Individual effort: Everyeon nee to submit the test data.
 - b. Team effort: Submit compiler.
 
 #### Due Date
@@ -56,6 +56,7 @@ This stage contains 2 parts:
 - **3b** 29 May at 23:00.
 
 #### Project Specification
+
 [Project Stage 3 Specification](./Assignment_3.pdf)
 
 ## Running Instruction
