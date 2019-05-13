@@ -34,7 +34,7 @@ checkArgs _ [filename]       = return Compile
 checkArgs _ ["-p", filename] = return Pprint
 checkArgs _ ["-a", filename] = return Parse
 checkArgs progname _         = do
-  exitWithError ("Usage: " ++ progname ++ " [-p] filename") WrongUsage
+  exitWithError ("Usage: " ++ progname ++ " [-ap] filename") WrongUsage
 
 -------------------------------------------------------------------------------
 -- Main function of the compiler

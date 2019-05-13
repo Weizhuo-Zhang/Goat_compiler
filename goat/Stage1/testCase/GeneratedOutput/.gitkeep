@@ -1,0 +1,2 @@
+Because the folder "GenerateOutput" in "run.sh" does not exited.
+It cause error in running run.sh.
