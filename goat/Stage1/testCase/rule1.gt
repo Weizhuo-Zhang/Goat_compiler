@@ -17,4 +17,5 @@ begin
     if false then
         write "proc main\n";
     fi
+    a := 3 > 0.5 || !(2 = 1 && true);
 end

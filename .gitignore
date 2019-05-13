@@ -26,4 +26,4 @@ goat/Goat
 *.out
 *.swp
 
-GeneratedOutput/
+goat/Stage1/testCase/GeneratedOutput/*.txt

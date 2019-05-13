@@ -377,6 +377,7 @@ pFloat :: Parser Expression
 pFloat = do { n <- many1 digit;
               char '.';
               m <- many1 digit;
+              whiteSpace;
               return (FloatConst (read (n ++ "." ++m) :: Float))
             }
          <?> "float"
