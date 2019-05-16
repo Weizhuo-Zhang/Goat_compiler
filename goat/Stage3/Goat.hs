@@ -4,6 +4,7 @@ import GoatAST
 import GoatParser
 import GoatPrettyPrint
 import GoatExit
+import Analyze
 import Text.Parsec (runParser)
 import System.Environment (getArgs, getProgName)
 
@@ -47,7 +48,18 @@ main
      task     <- checkArgs progname args
      if task == Compile then
        do
-         exitWithSuccess "Sorry, cannot generate code yet"
+         let [filename] = args
+         input <- readFile filename
+         let output = runParser pMain 0 "" input
+         case output of
+           Right ast -> semanticAnalyse ast
+--            Right ast -> do { semanticAnalyse ast
+--                            ; codeGeneration ast
+--                            }
+           Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
+                           ; return ()
+                           }
+         exitWithSuccess "Compiled Complete"
      else
        if task == Parse then
          do
@@ -66,7 +78,7 @@ main
            -- let output = ast input
            let output = runParser pMain 0 "" input
            case output of
-             Right ast -> prettyPrint ast -- print ast
+             Right ast -> prettyPrint ast -- pretty print ast
              Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
                              ; return ()
                              }
