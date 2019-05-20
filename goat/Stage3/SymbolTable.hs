@@ -1,7 +1,8 @@
 module SymbolTable where
 
 import Data.Map
-import Data.Map.Strict
+import qualified Data.Map.Strict as M
+import GoatAST
 
 -------------------------------- Documentation --------------------------------
 
@@ -17,3 +18,15 @@ import Data.Map.Strict
 -- language called Goat.
 
 -------------------------------- Documentation --------------------------------
+
+type ProgramMap = M.Map Identifier ProcedureTable
+
+type ParameterMap = M.Map Identifier Parameter
+
+type VariableMap = M.Map Identifier VariableDeclaration
+
+data ProcedureTable =
+  ProcedureTable { param :: ParameterMap
+                 , vari:: VariableMap
+                 , statements :: [Statement]
+                 } deriving (Show, Eq)

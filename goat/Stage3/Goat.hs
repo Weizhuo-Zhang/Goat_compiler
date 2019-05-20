@@ -5,6 +5,7 @@ import GoatParser
 import GoatPrettyPrint
 import GoatExit
 import Analyze
+import CodeGenerator
 import Text.Parsec (runParser)
 import System.Environment (getArgs, getProgName)
 
@@ -52,10 +53,10 @@ main
          input <- readFile filename
          let output = runParser pMain 0 "" input
          case output of
-           Right ast -> semanticAnalyse ast
---            Right ast -> do { semanticAnalyse ast
---                            ; codeGeneration ast
---                            }
+           -- Right ast -> semanticAnalyse ast
+           Right ast -> do { semanticAnalyse ast
+                           ; codeGeneration ast
+                           }
            Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
                            ; return ()
                            }
