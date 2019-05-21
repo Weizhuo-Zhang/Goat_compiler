@@ -61,7 +61,7 @@ generateWriteStatement :: Expression -> IO ()
 generateWriteStatement expression = case expression of
   StrConst string -> do { printNewLineIndentation
                         ; putStr "string_const r0, "
-                        ; putStrLn string
+                        ; putStrLn $ "\"" ++ string ++ "\""
                         ; printNewLineIndentation
                         ; putStrLn "call_builtin print_string"
                         }
