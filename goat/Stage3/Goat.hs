@@ -54,7 +54,10 @@ main
          input <- readFile filename
          let output = runParser pMain 0 "" input
          case output of
-           Right ast -> codeGeneration $ semanticAnalyse ast
+           Right ast -> do { checkMainProc ast
+                           ; codeGeneration $ semanticAnalyse ast
+                           ; return ()
+                           }
            Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
                            ; return ()
                            }
@@ -77,7 +80,8 @@ main
              input <- readFile filename
              let output = runParser pMain 0 "" input
              case output of
-               Right ast -> do { let programMap = semanticAnalyse ast
+               Right ast -> do { checkMainProc ast
+                               ; let programMap = semanticAnalyse ast
                                ; putStrLn $ show programMap
                                ; return ()
                                }

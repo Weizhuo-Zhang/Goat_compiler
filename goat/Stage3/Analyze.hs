@@ -87,18 +87,16 @@ countMain (proc:procs)
     | "main" == (headerIdent $ header proc) = proc : countMain procs
     | otherwise = countMain procs
 
+checkMainProc :: GoatProgram -> IO ()
+checkMainProc program = do
+    { let mainList = countMain $ procedures program
+    ; checkMainNum $ length $ mainList
+    ; checkMainParam $ parameters $ header $ head mainList
+    ; return ()
+    }
+
 -------------------------------------------------------------------------------
 -- Main entry of semantic Analyze module.
 -------------------------------------------------------------------------------
 semanticAnalyse :: GoatProgram -> ProgramMap
 semanticAnalyse program = insertProcList $ procedures program
-  -- do
-  --  {
-  --   -- { let mainList = countMain $ procedures program
-  --   -- ; checkMainNum $ length $ mainList
-  --   -- ; checkMainParam $ parameters $ header $ head mainList
-  --   -- ; let programMap = insertProcList $ procedures program
-  --   -- ; analyze programMap
-  --   -- ; putStrLn $ show programMap
-  --   -- ; return programMap
-  --   }
