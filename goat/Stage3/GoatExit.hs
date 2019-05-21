@@ -39,10 +39,17 @@ data GoatExitCode = Success       -- 0
 -------------------------------------------------------------------------------
 -- Print message to stdout, and exit as successful.
 -------------------------------------------------------------------------------
-exitWithSuccess :: String -> IO ()
-exitWithSuccess message = do
+exitWithSuccessWithMessage :: String -> IO ()
+exitWithSuccessWithMessage message = do
   putStrLn (message)
   exitWith ExitSuccess
+
+-------------------------------------------------------------------------------
+-- Exit as successful without printing message to standard output.
+-------------------------------------------------------------------------------
+exitWithSuccess :: IO ()
+exitWithSuccess = exitWith ExitSuccess
+
 
 -------------------------------------------------------------------------------
 -- Print error message to stderr and exit
