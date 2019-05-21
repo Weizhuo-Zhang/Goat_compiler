@@ -2,6 +2,8 @@ module Analyze where
 
 import GoatAST
 import GoatExit
+import qualified Data.Map.Strict as M
+import SymbolTable
 
 -------------------------------- Documentation --------------------------------
 
@@ -21,8 +23,8 @@ import GoatExit
 -------------------------------------------------------------------------------
 -- analyze Procedure
 -------------------------------------------------------------------------------
-analyzeProc :: [Procedure] -> IO ()
-analyzeProc _           = return ()
+analyze :: ProgramMap -> IO Task
+analyze _           = return Unit
 -- analyzeProc (proc:[])    = do { printHeader $ header proc
 --                               ; printBody $ body proc
 --                               }
@@ -31,6 +33,31 @@ analyzeProc _           = return ()
 --                               ; putStrLn "" -- print new line character
 --                               ; printProc (procs)
 --                               }
+
+
+insertProcList :: [Procedure] -> ProgramMap
+insertProcList (proc:[]) =
+  M.insert (headerIdent $ header proc) (insertProcedureTable (header proc) (body proc)) M.empty
+insertProcList (proc:procs) =
+  M.insert (headerIdent $ header proc) (insertProcedureTable (header proc) (body proc)) (insertProcList procs)
+
+insertProcedureTable :: Header -> Body -> ProcedureTable
+insertProcedureTable header body =
+  ProcedureTable (insertParameterMap $ parameters header) (insertVariableMap $ bodyVarDeclarations body) (bodyStatements body)
+
+insertParameterMap :: [Parameter] -> ParameterMap
+insertParameterMap [] = M.empty
+insertParameterMap (param:[]) =
+  M.insert (passingIdent param) param M.empty
+insertParameterMap (param:params) =
+  M.insert (passingIdent param) param (insertParameterMap params)
+
+insertVariableMap :: [VariableDeclaration] -> VariableMap
+insertVariableMap [] = M.empty
+insertVariableMap (bodyVarDecl:[]) =
+  M.insert (varId $ declarationVariable bodyVarDecl) bodyVarDecl M.empty
+insertVariableMap (bodyVarDecl:bodyVarDecls) =
+  M.insert (varId $ declarationVariable bodyVarDecl) bodyVarDecl (insertVariableMap bodyVarDecls)
 
 -------------------------------------------------------------------------------
 ---- Check whether the main procedure is parameter-less.
@@ -63,10 +90,15 @@ countMain (proc:procs)
 -------------------------------------------------------------------------------
 -- Main entry of semantic Analyze module.
 -------------------------------------------------------------------------------
-semanticAnalyse :: GoatProgram -> IO ()
-semanticAnalyse program = do
-    { let mainList = countMain $ procedures program
-    ; checkMainNum $ length $ mainList
-    ; checkMainParam $ parameters $ header $ head mainList
-    ; analyzeProc (procedures program)
-    }
+semanticAnalyse :: GoatProgram -> ProgramMap
+semanticAnalyse program = insertProcList $ procedures program
+  -- do
+  --  {
+  --   -- { let mainList = countMain $ procedures program
+  --   -- ; checkMainNum $ length $ mainList
+  --   -- ; checkMainParam $ parameters $ header $ head mainList
+  --   -- ; let programMap = insertProcList $ procedures program
+  --   -- ; analyze programMap
+  --   -- ; putStrLn $ show programMap
+  --   -- ; return programMap
+  --   }
