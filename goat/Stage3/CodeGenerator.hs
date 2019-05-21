@@ -38,7 +38,7 @@ codeGeneration programMap = do { printNewLineIndentation
 generateMain :: ProgramMap -> IO ()
 generateMain programMap =
   case Map.lookup "main" programMap of
-    Just procedureTable -> do { putStrLn "main_proc:"
+    Just procedureTable -> do { putStrLn "proc_main:"
                               ; generateStatements $ statements procedureTable
                               }
     Nothing -> putStrLn "Main not found"
