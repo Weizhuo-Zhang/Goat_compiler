@@ -34,12 +34,23 @@ analyze _           = return Unit
 --                               ; printProc (procs)
 --                               }
 
+insertProcList :: [Procedure] -> ProgramMap -> ProgramMap
+insertProcList (proc:[]) environment = newEnvironment
+    where newEnvironment = M.insert
+            (headerIdent $ header proc)
+            (insertProcedureTable (header proc) (body proc))
+            environment
+insertProcList (proc:procs) environment = newEnvironment
+    where newEnvironment = M.insert
+            (headerIdent $ header proc)
+            (insertProcedureTable (header proc) (body proc))
+            (insertProcList procs environment)
 
-insertProcList :: [Procedure] -> ProgramMap
-insertProcList (proc:[]) =
-  M.insert (headerIdent $ header proc) (insertProcedureTable (header proc) (body proc)) M.empty
-insertProcList (proc:procs) =
-  M.insert (headerIdent $ header proc) (insertProcedureTable (header proc) (body proc)) (insertProcList procs)
+-- insertProcList :: [Procedure] -> ProgramMap
+-- insertProcList (proc:[]) =
+--   M.insert (headerIdent $ header proc) (insertProcedureTable (header proc) (body proc)) M.empty
+-- insertProcList (proc:procs) =
+--   M.insert (headerIdent $ header proc) (insertProcedureTable (header proc) (body proc)) (insertProcList procs)
 
 insertProcedureTable :: Header -> Body -> ProcedureTable
 insertProcedureTable header body =
@@ -99,4 +110,5 @@ checkMainProc program = do
 -- Main entry of semantic Analyze module.
 -------------------------------------------------------------------------------
 semanticAnalyse :: GoatProgram -> ProgramMap
-semanticAnalyse program = insertProcList $ procedures program
+semanticAnalyse program = insertProcList (procedures program) M.empty
+-- semanticAnalyse program = insertProcList $ procedures program
