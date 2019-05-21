@@ -58,7 +58,7 @@ main
            Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
                            ; return ()
                            }
-         exitWithSuccess "Compiled Complete"
+         -- exitWithSuccess "Compiled Complete"
      else
        if task == Parse then
          do
