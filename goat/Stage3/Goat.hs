@@ -35,6 +35,7 @@ checkArgs _ ['-':_]          = exitWithError "Missing filename" MissingFile
 checkArgs _ [filename]       = return Compile
 checkArgs _ ["-p", filename] = return Pprint
 checkArgs _ ["-a", filename] = return Parse
+checkArgs _ ["-s", filename] = return Analyze
 checkArgs progname _         = do
   exitWithError ("Usage: " ++ progname ++ " [-ap] filename") WrongUsage
 
@@ -53,10 +54,7 @@ main
          input <- readFile filename
          let output = runParser pMain 0 "" input
          case output of
-           -- Right ast -> semanticAnalyse ast
-           Right ast -> do { semanticAnalyse ast
-                           ; codeGeneration ast
-                           }
+           Right ast -> codeGeneration $ semanticAnalyse ast
            Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
                            ; return ()
                            }
@@ -73,13 +71,27 @@ main
                              ; return ()
                              }
        else
-         do
-           let [_, filename] = args
-           input <- readFile filename
-           -- let output = ast input
-           let output = runParser pMain 0 "" input
-           case output of
-             Right ast -> prettyPrint ast -- pretty print ast
-             Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
-                             ; return ()
-                             }
+         if task == Analyze then
+           do
+             let [_, filename] = args
+             input <- readFile filename
+             let output = runParser pMain 0 "" input
+             case output of
+               Right ast -> do { let programMap = semanticAnalyse ast
+                               ; putStrLn $ show programMap
+                               ; return ()
+                               }
+               Left err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
+                               ; return ()
+                               }
+         else
+           do
+             let [_, filename] = args
+             input <- readFile filename
+             -- let output = ast input
+             let output = runParser pMain 0 "" input
+             case output of
+               Right ast -> prettyPrint ast -- pretty print ast
+               Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
+                               ; return ()
+                               }

@@ -22,7 +22,7 @@ import System.Exit
 -------------------------------------------------------------------------------
 -- Task type of this Goat compiler.
 -------------------------------------------------------------------------------
-data Task = Unit | Exit | Compile | Pprint | Parse deriving Eq
+data Task = Unit | Exit | Compile | Pprint | Analyze | Parse deriving Eq
 
 -------------------------------------------------------------------------------
 -- Exit code constant, it starts from 0, increase by 1.

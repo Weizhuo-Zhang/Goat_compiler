@@ -1,6 +1,7 @@
 module CodeGenerator where
 
 import GoatAST
+import GoatExit
 import SymbolTable
 import qualified Data.Map.Strict as Map
 import GoatPrettyPrint
@@ -28,35 +29,41 @@ type SlotNumber = Int
 
 codeGeneration :: ProgramMap -> IO ()
 codeGeneration programMap = do { printNewLineIndentation
-                               ; putStr "call proc_main"
+                               ; putStrLn "call proc_main"
                                ; printNewLineIndentation
-                               ; putStr "halt"
-                               ; case Map.lookup "main" programMap of
-                                    
+                               ; putStrLn "halt"
+                               ; generateMain programMap
                                }
 
-generateMain :: ProcedureTable -> IO ()
-generateMain procedureTable = do { generateStatements (statements procedureTable)
-                                  }
+generateMain :: ProgramMap -> IO ()
+generateMain programMap =
+  case Map.lookup "main" programMap of
+    Just procedureTable -> do { putStrLn "main_proc:"
+                              ; generateStatements $ statements procedureTable
+                              }
+    Nothing -> putStrLn "Main not found"
 
 generateStatements :: [Statement] -> IO ()
 generateStatements [] = return ()
-generateStatements (stat:[]) = do {
-                               ; printNewLineIndentation
-                               ; putStr "return"
-                               }
+generateStatements (stat:[]) = do { generateStatement stat
+                                  ; printNewLineIndentation
+                                  ; putStrLn "return"
+                                  }
+generateStatements (stat:stats) = do { generateStatement stat
+                                     ; generateStatements stats
+                                     }
 
 generateStatement :: Statement -> IO ()
 generateStatement statement = case statement of
-  Write expression -> generateWriteStatement expression
+  Write expression -> do { generateWriteStatement expression }
 
 generateWriteStatement :: Expression -> IO ()
 generateWriteStatement expression = case expression of
   StrConst string -> do { printNewLineIndentation
                         ; putStr "string_const r0, "
-                        ; putStr string
+                        ; putStrLn string
                         ; printNewLineIndentation
-                        ; putStr "call_builtin print_string"
+                        ; putStrLn "call_builtin print_string"
                         }
 
 
@@ -83,4 +90,4 @@ registers = Map.empty
 -- helper functions
 -------------------------------------------------------------------------------
 printNewLineIndentation :: IO ()
-printNewLineIndentation = putStrLn "    "
+printNewLineIndentation = putStr "    "
