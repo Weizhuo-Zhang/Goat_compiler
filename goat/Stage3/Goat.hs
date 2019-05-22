@@ -57,7 +57,10 @@ main
            Right ast -> do { checkMainProc ast
                            ; let programMap = semanticAnalyse ast
                            ; case programMap of
-                                Left err -> return ()
+                                Left err -> do
+                                    { err
+                                    ; return ()
+                                    }
                                 Right result -> do
                                     { codeGeneration result
                                     ; return ()
@@ -88,7 +91,10 @@ main
                Right ast -> do { checkMainProc ast
                                ; let programMap = semanticAnalyse ast
                                ; case programMap of
-                                    Left err -> return ()
+                                    Left err -> do
+                                        { err
+                                        ; return ()
+                                        }
                                     Right result -> do
                                         { putStrLn $ show result
                                         ; return ()

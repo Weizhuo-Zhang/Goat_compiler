@@ -35,24 +35,28 @@ analyze _           = return Unit
 --                               }
 
 insertProcList :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
-insertProcList (proc:[]) environment = do
-    let newEnvironment = M.insert
+insertProcList (proc:[]) environment = Right newEnvironment
+    where newEnvironment = M.insert
             (headerIdent $ header proc)
             (insertProcedureTable (header proc) (body proc))
             environment
-    case (M.member (headerIdent $ header proc) newEnvironment) of
-        True ->
-            Left $ exitWithError "There multiple procedure named" MainWithParam
-        False -> Right newEnvironment
 insertProcList (proc:procs) environment = do
-    let newEnvironment = M.insert
-            (headerIdent $ header proc)
-            (insertProcedureTable (header proc) (body proc))
-            environment
-    case (M.member (headerIdent $ header proc) newEnvironment) of
-        True ->
-            Left $ exitWithError "There multiple procedure named" MainWithParam
-        False -> Right newEnvironment
+    let subEnvironment = insertProcList procs environment
+    case subEnvironment of
+        Left err -> Left err
+        Right result -> do
+            let newEnvironment = M.insert
+                    (headerIdent $ header proc)
+                    (insertProcedureTable (header proc) (body proc))
+                    result
+                procName = headerIdent $ header proc
+            case (M.member procName result) of
+                True ->
+                    Left $ exitWithError
+                                ("There are multiple procedures named " ++
+                                 "\"" ++ procName ++ "\"")
+                                MultipleProc
+                False -> Right newEnvironment
 
 -- insertProcList :: [Procedure] -> ProgramMap -> ProgramMap
 -- insertProcList (proc:[]) environment = newEnvironment
