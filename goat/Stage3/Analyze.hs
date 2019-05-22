@@ -76,12 +76,16 @@ insertProcedureTable procName parameters body = do
                         procName (bodyVarDeclarations body) subParamMap M.empty
             case varMap of
                 Left err -> Left err
-                Right subVarMap ->
-                    Right ( ProcedureTable
-                            subParamMap
-                            subVarMap
-                            (bodyStatements body)
-                          )
+                Right subVarMap -> do
+                    let newStatements = insertStatementList (bodyStatements body)
+                    case newStatements of
+                        Left err -> Left err
+                        Right subStatements ->
+                            Right ( ProcedureTable
+                                    subParamMap
+                                    subVarMap
+                                    subStatements
+                                  )
 
 insertParameterMap ::
     Identifier -> [Parameter] -> ParameterMap -> Either (IO Task) ParameterMap
@@ -142,6 +146,46 @@ insertVariableMap procName (bodyVarDecl:bodyVarDecls) paramMap varMap = do
                                 )
                                 MultipleVar
                         False -> Right $ M.insert varName bodyVarDecl subVarMap
+
+insertStatementList :: [Statement] -> Either (IO Task) [StatementTable]
+insertStatementList (stmt:[]) = do
+    let newStmtTable = checkStatement stmt
+    case newStmtTable of
+        Left err -> Left err
+        Right stmtTable -> Right $ (stmtTable):[]
+insertStatementList (stmt:stmts) = do
+    let newStatements = insertStatementList stmts
+    case newStatements of
+        Left err            -> Left err
+        Right subStatements -> do
+            let newStmtTable = checkStatement stmt
+            case newStmtTable of
+                Left err -> Left err
+                Right stmtTable -> Right $
+                        (stmtTable):subStatements
+
+checkStatement :: Statement -> Either (IO Task) StatementTable
+checkStatement stmt = do
+    case stmt of
+        Write expr -> do
+            let newExpr = checkWriteStmt expr
+            case newExpr of
+                Left err -> Left err
+                Right exprTable -> Right (StatementTable stmt exprTable)
+--        _ -> undefined
+
+checkWriteStmt :: Expression -> Either (IO Task) ExpressionTable
+checkWriteStmt expr = do
+    let newExprTable = checkExpression expr
+    case newExprTable of
+        Left err -> Left err
+        Right exprTable -> Right $ exprTable
+
+checkExpression :: Expression -> Either (IO Task) ExpressionTable
+checkExpression expr = do
+    case expr of
+        StrConst val -> Right (StringTable val)
+--       _ -> undefined
 
 -------------------------------------------------------------------------------
 ---- Check whether the main procedure is parameter-less.
