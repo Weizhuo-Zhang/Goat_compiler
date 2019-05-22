@@ -20,6 +20,22 @@ import SymbolTable
 
 -------------------------------- Documentation --------------------------------
 
+-------------------------------- Utility Code ---------------------------------
+
+-------------------------------------------------------------------------------
+-- Get procedure identifier from procedure.
+-------------------------------------------------------------------------------
+getProcedureIdentifier :: Procedure -> Identifier
+getProcedureIdentifier = headerIdent . header
+
+-------------------------------------------------------------------------------
+-- Get procedure identifier from procedure.
+-------------------------------------------------------------------------------
+getProcedureParameters :: Procedure -> [Parameter]
+getProcedureParameters = parameters . header
+
+-------------------------------- Analyzer Code --------------------------------
+
 -------------------------------------------------------------------------------
 -- analyze Procedure
 -------------------------------------------------------------------------------
@@ -36,18 +52,17 @@ analyze _           = return Unit
 
 insertProcList :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
 insertProcList (proc:[]) procMap = do
-    let procTable =
-            insertProcedureTable procName (parameters (header proc)) (body proc)
+    let procTable = insertProcedureTable proc
     case procTable of
         Left err -> Left err
         Right subProcTable -> Right $ M.insert procName subProcTable procMap
-    where procName = (headerIdent $ header proc)
+    where procName = getProcedureIdentifier proc
 insertProcList (proc:procs) procMap = do
     let newProcMap = insertProcList procs procMap
     case newProcMap of
         Left err -> Left err
         Right subProcMap -> do
-            let procName = headerIdent $ header proc
+            let procName = getProcedureIdentifier proc
             case (M.member procName subProcMap) of
                 True  ->
                     Left $ exitWithError
@@ -56,32 +71,33 @@ insertProcList (proc:procs) procMap = do
                            )
                            MultipleProc
                 False -> do
-                    let procTable =
-                            insertProcedureTable
-                            procName (parameters (header proc)) (body proc)
+                    let procTable = insertProcedureTable proc
                     case procTable of
                         Left err -> Left err
                         Right subProcTable ->
                             Right $ M.insert procName subProcTable subProcMap
 
-insertProcedureTable ::
-    Identifier -> [Parameter] -> Body -> Either (IO Task) ProcedureTable
-insertProcedureTable procName parameters body = do
-    let paramMap = insertParameterMap procName parameters M.empty
-    case paramMap of
-        Left err -> Left err
-        Right subParamMap -> do
-            let varMap =
-                    insertVariableMap
-                        procName (bodyVarDeclarations body) subParamMap M.empty
-            case varMap of
-                Left err -> Left err
-                Right subVarMap ->
-                    Right ( ProcedureTable
-                            subParamMap
-                            subVarMap
-                            (bodyStatements body)
-                          )
+insertProcedureTable :: Procedure -> Either (IO Task) ProcedureTable
+insertProcedureTable procedure =
+  case paramMap of
+          Left err -> Left err
+          Right subParamMap -> do
+              let varMap =
+                      insertVariableMap
+                          procName (bodyVarDeclarations procedureBody) subParamMap M.empty
+              case varMap of
+                  Left err -> Left err
+                  Right subVarMap ->
+                      Right ( ProcedureTable
+                              subParamMap
+                              subVarMap
+                              (bodyStatements procedureBody)
+                            )
+ where paramMap = insertParameterMap procName procedureParameters M.empty
+       procedureBody = (body procedure)
+       procName = getProcedureIdentifier procedure
+       procedureParameters = getProcedureParameters procedure
+
 
 insertParameterMap ::
     Identifier -> [Parameter] -> ParameterMap -> Either (IO Task) ParameterMap
@@ -165,15 +181,15 @@ checkMainNum numMain
 -------------------------------------------------------------------------------
 -- Get the list of main procedure.
 -------------------------------------------------------------------------------
-countMain :: [Procedure] -> [Procedure]
-countMain [] = []
-countMain (proc:procs)
-    | "main" == (headerIdent $ header proc) = proc : countMain procs
-    | otherwise = countMain procs
+getMainProcedureList :: [Procedure] -> [Procedure]
+getMainProcedureList [] = []
+getMainProcedureList (proc:procs)
+    | "main" == (getProcedureIdentifier proc) = proc : getMainProcedureList procs
+    | otherwise = getMainProcedureList procs
 
 checkMainProc :: GoatProgram -> IO ()
 checkMainProc program = do
-    { let mainList = countMain $ procedures program
+    { let mainList = getMainProcedureList $ procedures program
     ; checkMainNum $ length $ mainList
     ; checkMainParam $ parameters $ header $ head mainList
     ; return ()
