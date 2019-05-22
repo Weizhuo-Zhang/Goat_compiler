@@ -55,8 +55,13 @@ main
          let output = runParser pMain 0 "" input
          case output of
            Right ast -> do { checkMainProc ast
-                           ; codeGeneration $ semanticAnalyse ast
-                           ; return ()
+                           ; let programMap = semanticAnalyse ast
+                           ; case programMap of
+                                Left err -> return ()
+                                Right result -> do
+                                    { codeGeneration result
+                                    ; return ()
+                                    }
                            }
            Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
                            ; return ()
@@ -82,8 +87,12 @@ main
              case output of
                Right ast -> do { checkMainProc ast
                                ; let programMap = semanticAnalyse ast
-                               ; putStrLn $ show programMap
-                               ; return ()
+                               ; case programMap of
+                                    Left err -> return ()
+                                    Right result -> do
+                                        { putStrLn $ show result
+                                        ; return ()
+                                        }
                                }
                Left err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
                                ; return ()

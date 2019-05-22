@@ -34,17 +34,37 @@ analyze _           = return Unit
 --                               ; printProc (procs)
 --                               }
 
-insertProcList :: [Procedure] -> ProgramMap -> ProgramMap
-insertProcList (proc:[]) environment = newEnvironment
-    where newEnvironment = M.insert
+insertProcList :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
+insertProcList (proc:[]) environment = do
+    let newEnvironment = M.insert
             (headerIdent $ header proc)
             (insertProcedureTable (header proc) (body proc))
             environment
-insertProcList (proc:procs) environment = newEnvironment
-    where newEnvironment = M.insert
+    case (M.member (headerIdent $ header proc) newEnvironment) of
+        True ->
+            Left $ exitWithError "There multiple procedure named" MainWithParam
+        False -> Right newEnvironment
+insertProcList (proc:procs) environment = do
+    let newEnvironment = M.insert
             (headerIdent $ header proc)
             (insertProcedureTable (header proc) (body proc))
-            (insertProcList procs environment)
+            environment
+    case (M.member (headerIdent $ header proc) newEnvironment) of
+        True ->
+            Left $ exitWithError "There multiple procedure named" MainWithParam
+        False -> Right newEnvironment
+
+-- insertProcList :: [Procedure] -> ProgramMap -> ProgramMap
+-- insertProcList (proc:[]) environment = newEnvironment
+--     where newEnvironment = M.insert
+--             (headerIdent $ header proc)
+--             (insertProcedureTable (header proc) (body proc))
+--             environment
+-- insertProcList (proc:procs) environment = newEnvironment
+--     where newEnvironment = M.insert
+--             (headerIdent $ header proc)
+--             (insertProcedureTable (header proc) (body proc))
+--             (insertProcList procs environment)
 
 -- insertProcList :: [Procedure] -> ProgramMap
 -- insertProcList (proc:[]) =
@@ -109,6 +129,6 @@ checkMainProc program = do
 -------------------------------------------------------------------------------
 -- Main entry of semantic Analyze module.
 -------------------------------------------------------------------------------
-semanticAnalyse :: GoatProgram -> ProgramMap
+semanticAnalyse :: GoatProgram -> Either (IO Task) ProgramMap
 semanticAnalyse program = insertProcList (procedures program) M.empty
 -- semanticAnalyse program = insertProcList $ procedures program
