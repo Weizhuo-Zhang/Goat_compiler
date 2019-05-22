@@ -34,6 +34,18 @@ getProcedureIdentifier = headerIdent . header
 getProcedureParameters :: Procedure -> [Parameter]
 getProcedureParameters = parameters . header
 
+getMultipleVarDeclarationErrorMessage :: Identifier -> Identifier -> String
+getMultipleVarDeclarationErrorMessage varName procName =
+  "There are multiple variable declaration named " ++
+  "\"" ++ varName ++ "\"" ++ " in procedure " ++
+  "\"" ++ procName ++ "\""
+
+exitWithMultipleVarDeclaration :: Identifier -> Identifier -> IO Task
+exitWithMultipleVarDeclaration varName procName =
+  exitWithError
+  (getMultipleVarDeclarationErrorMessage varName procName)
+  MultipleVar
+
 -------------------------------- Analyzer Code --------------------------------
 
 -------------------------------------------------------------------------------
@@ -84,7 +96,7 @@ insertProcedureTable procedure =
           Right subParamMap -> do
               let varMap =
                       insertVariableMap
-                          procName (bodyVarDeclarations procedureBody) subParamMap M.empty
+                          procedureName (bodyVarDeclarations procedureBody) subParamMap M.empty
               case varMap of
                   Left err -> Left err
                   Right subVarMap ->
@@ -93,9 +105,9 @@ insertProcedureTable procedure =
                               subVarMap
                               (bodyStatements procedureBody)
                             )
- where paramMap = insertParameterMap procName procedureParameters M.empty
+ where paramMap = insertParameterMap procedureName procedureParameters M.empty
        procedureBody = (body procedure)
-       procName = getProcedureIdentifier procedure
+       procedureName = getProcedureIdentifier procedure
        procedureParameters = getProcedureParameters procedure
 
 
@@ -111,14 +123,9 @@ insertParameterMap procName (param:params) paramMap = do
         Right subParamMap -> do
             let paramName = (passingIdent param)
             case (M.member paramName subParamMap) of
-                True  -> Left $
-                        exitWithError
-                        ( "There are multiple variable declaration named " ++
-                          "\"" ++ paramName ++ "\"" ++ " in procedure " ++
-                          "\"" ++ procName ++ "\""
-                        )
-                        MultipleVar
+                True  -> Left $ exitWithMultipleVarDeclaration paramName procName
                 False -> Right $ M.insert paramName param subParamMap
+
 
 insertVariableMap ::
     Identifier -> [VariableDeclaration] -> ParameterMap -> VariableMap -> Either (IO Task) VariableMap
@@ -126,37 +133,19 @@ insertVariableMap procName [] paramMap varMap = Right varMap
 insertVariableMap procName (bodyVarDecl:[]) paramMap varMap = do
     let varName = varId $ declarationVariable bodyVarDecl
     case (M.member varName paramMap) of
-        True  -> Left $
-                exitWithError
-                ( "There are multiple variable declaration named " ++
-                  "\"" ++ varName ++ "\"" ++ " in procedure " ++
-                  "\"" ++ procName ++ "\""
-                )
-                MultipleVar
+        True  -> Left $ exitWithMultipleVarDeclaration varName procName
         False -> Right $ M.insert varName bodyVarDecl varMap
 insertVariableMap procName (bodyVarDecl:bodyVarDecls) paramMap varMap = do
     let varName = varId $ declarationVariable bodyVarDecl
     case (M.member varName paramMap) of
-        True  -> Left $
-                exitWithError
-                ( "There are multiple variable declaration named " ++
-                  "\"" ++ varName ++ "\"" ++ " in procedure " ++
-                  "\"" ++ procName ++ "\""
-                )
-                MultipleVar
+        True  -> Left $ exitWithMultipleVarDeclaration varName procName
         False -> do
             let newVarMap = insertVariableMap procName bodyVarDecls paramMap varMap
             case newVarMap of
                 Left err -> Left err
                 Right subVarMap -> do
                     case (M.member varName subVarMap) of
-                        True  -> Left $
-                                exitWithError
-                                ( "There are multiple variable declaration named " ++
-                                  "\"" ++ varName ++ "\"" ++ " in procedure " ++
-                                  "\"" ++ procName ++ "\""
-                                )
-                                MultipleVar
+                        True  -> Left $ exitWithMultipleVarDeclaration varName procName
                         False -> Right $ M.insert varName bodyVarDecl subVarMap
 
 -------------------------------------------------------------------------------
