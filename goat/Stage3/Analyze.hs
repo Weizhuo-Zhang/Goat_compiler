@@ -100,7 +100,7 @@ insertProcedureTable procedure =
               case varMap of
                   Left err -> Left err
                   Right subVarMap -> do
-                      let newStatements = insertStatementList (bodyStatements body)
+                      let newStatements = insertStatementList (bodyStatements procedureBody)
                       case newStatements of
                           Left err -> Left err
                           Right subStatements ->
@@ -113,7 +113,7 @@ insertProcedureTable procedure =
        procedureBody = (body procedure)
        procedureName = getProcedureIdentifier procedure
        procedureParameters = getProcedureParameters procedure
-       
+
 insertParameterMap ::
     Identifier -> [Parameter] -> ParameterMap -> Either (IO Task) ParameterMap
 insertParameterMap procName [] paramMap = Right paramMap
