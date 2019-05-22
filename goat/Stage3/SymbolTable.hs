@@ -25,8 +25,7 @@ type ParameterMap = M.Map Identifier Parameter
 
 type VariableMap = M.Map Identifier VariableDeclaration
 
-data ProcedureTable =
-  ProcedureTable { param :: ParameterMap
-                 , vari :: VariableMap
-                 , statements :: [Statement]
-                 } deriving (Show, Eq)
+data ProcedureTable = ProcedureTable { param :: ParameterMap
+                                     , vari :: VariableMap
+                                     , statements :: [Statement]
+                                     } deriving (Show, Eq)
