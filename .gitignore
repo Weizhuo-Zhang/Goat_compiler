@@ -27,3 +27,5 @@ goat/Goat
 *.swp
 
 goat/Stage1/testCase/GeneratedOutput/*.txt
+goat/Stage3/oz
+

@@ -43,7 +43,7 @@ generateMain programMap =
                               }
     Nothing -> putStrLn "Main not found"
 
-generateStatements :: [Statement] -> IO ()
+generateStatements :: [StatementTable] -> IO ()
 generateStatements [] = return ()
 generateStatements (stat:[]) = do { generateStatement stat
                                   ; printNewLineIndentation
@@ -53,13 +53,17 @@ generateStatements (stat:stats) = do { generateStatement stat
                                      ; generateStatements stats
                                      }
 
-generateStatement :: Statement -> IO ()
-generateStatement statement = case statement of
-  Write expression -> do { generateWriteStatement expression }
+generateStatement :: StatementTable -> IO ()
+generateStatement statementTable = do
+    let stmt = statement statementTable
+        exprTable = expressionTable statementTable
+    case stmt of
+        Write expression -> do { generateWriteStatement exprTable }
 
-generateWriteStatement :: Expression -> IO ()
-generateWriteStatement expression = case expression of
-  StrConst string -> do { printNewLineIndentation
+generateWriteStatement :: ExpressionTable -> IO ()
+generateWriteStatement exprTable =
+    case exprTable of
+        StringTable string -> do { printNewLineIndentation
                         ; putStr "string_const r0, "
                         ; putStrLn $ "\"" ++ string ++ "\""
                         ; printNewLineIndentation

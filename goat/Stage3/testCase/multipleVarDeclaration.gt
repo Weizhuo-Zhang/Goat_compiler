@@ -1,0 +1,8 @@
+#  The obligatory hello-world program in Goat
+
+proc main()
+  int x;
+  int x;
+begin
+    write "Hello, world!\n";
+end
