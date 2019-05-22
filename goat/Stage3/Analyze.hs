@@ -35,57 +35,66 @@ analyze _           = return Unit
 --                               }
 
 insertProcList :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
-insertProcList (proc:[]) environment = Right newEnvironment
-    where newEnvironment = M.insert
-            (headerIdent $ header proc)
-            (insertProcedureTable (header proc) (body proc))
-            environment
-insertProcList (proc:procs) environment = do
-    let subEnvironment = insertProcList procs environment
-    case subEnvironment of
+insertProcList (proc:[]) procMap = do
+    let procTable =
+            insertProcedureTable procName (parameters (header proc)) (body proc)
+    case procTable of
         Left err -> Left err
-        Right result -> do
-            let newEnvironment = M.insert
-                    (headerIdent $ header proc)
-                    (insertProcedureTable (header proc) (body proc))
-                    result
-                procName = headerIdent $ header proc
-            case (M.member procName result) of
-                True ->
-                    Left $ exitWithError
-                                ("There are multiple procedures named " ++
-                                 "\"" ++ procName ++ "\"")
-                                MultipleProc
-                False -> Right newEnvironment
+        Right subProcTable -> Right $ M.insert procName subProcTable procMap
+    where procName = (headerIdent $ header proc)
+insertProcList (proc:procs) procMap = do
+    let newProcMap = insertProcList procs procMap
+    case newProcMap of
+        Left err -> Left err
+        Right subProcMap -> do
+            let procName = headerIdent $ header proc
+            case (M.member procName subProcMap) of
+                True  -> Left $
+                        exitWithError
+                        ( "There are multiple procedures named " ++
+                          "\"" ++ procName ++ "\"")
+                        MultipleProc
+                False -> do
+                        let procTable =
+                                insertProcedureTable
+                                    procName (parameters (header proc)) (body proc)
+                        case procTable of
+                            Left err -> Left err
+                            Right subProcTable ->
+                                    Right $ M.insert procName subProcTable subProcMap
 
--- insertProcList :: [Procedure] -> ProgramMap -> ProgramMap
--- insertProcList (proc:[]) environment = newEnvironment
---     where newEnvironment = M.insert
---             (headerIdent $ header proc)
---             (insertProcedureTable (header proc) (body proc))
---             environment
--- insertProcList (proc:procs) environment = newEnvironment
---     where newEnvironment = M.insert
---             (headerIdent $ header proc)
---             (insertProcedureTable (header proc) (body proc))
---             (insertProcList procs environment)
+insertProcedureTable ::
+    Identifier -> [Parameter] -> Body -> Either (IO Task) ProcedureTable
+insertProcedureTable procName parameters body = do
+    let paramMap = insertParameterMap procName parameters M.empty
+    case paramMap of
+        Left err -> Left err
+        Right subParamMap -> Right (
+                            ProcedureTable
+                            subParamMap
+                            (insertVariableMap $ bodyVarDeclarations body)
+                            (bodyStatements body))
 
--- insertProcList :: [Procedure] -> ProgramMap
--- insertProcList (proc:[]) =
---   M.insert (headerIdent $ header proc) (insertProcedureTable (header proc) (body proc)) M.empty
--- insertProcList (proc:procs) =
---   M.insert (headerIdent $ header proc) (insertProcedureTable (header proc) (body proc)) (insertProcList procs)
-
-insertProcedureTable :: Header -> Body -> ProcedureTable
-insertProcedureTable header body =
-  ProcedureTable (insertParameterMap $ parameters header) (insertVariableMap $ bodyVarDeclarations body) (bodyStatements body)
-
-insertParameterMap :: [Parameter] -> ParameterMap
-insertParameterMap [] = M.empty
-insertParameterMap (param:[]) =
-  M.insert (passingIdent param) param M.empty
-insertParameterMap (param:params) =
-  M.insert (passingIdent param) param (insertParameterMap params)
+insertParameterMap ::
+    Identifier -> [Parameter] -> ParameterMap -> Either (IO Task) ParameterMap
+insertParameterMap procName [] paramMap = Right paramMap
+insertParameterMap procName (param:[]) paramMap =
+    Right $ M.insert (passingIdent param) param paramMap
+insertParameterMap procName (param:params) paramMap = do
+    let newParamMap = insertParameterMap procName params paramMap
+    case newParamMap of
+        Left err -> Left err
+        Right subParamMap -> do
+            let paramName = (passingIdent param)
+            case (M.member paramName subParamMap) of
+                True  -> Left $
+                        exitWithError
+                        ( "There are multiple variable declaration named " ++
+                          "\"" ++ paramName ++ "\"" ++ " in procedure " ++
+                          "\"" ++ procName ++ "\"")
+                        MultipleVar
+                False -> Right $
+                        M.insert paramName param subParamMap
 
 insertVariableMap :: [VariableDeclaration] -> VariableMap
 insertVariableMap [] = M.empty

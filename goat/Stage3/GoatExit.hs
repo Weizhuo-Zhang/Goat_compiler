@@ -35,6 +35,7 @@ data GoatExitCode = Success       -- 0
                   | MainWithParam -- 5
                   | ParseError    -- 6
                   | MultipleProc  -- 7
+                  | MultipleVar   -- 8
                   deriving Enum
 
 -------------------------------------------------------------------------------

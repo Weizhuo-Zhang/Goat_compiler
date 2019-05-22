@@ -27,6 +27,6 @@ type VariableMap = M.Map Identifier VariableDeclaration
 
 data ProcedureTable =
   ProcedureTable { param :: ParameterMap
-                 , vari:: VariableMap
+                 , vari :: VariableMap
                  , statements :: [Statement]
                  } deriving (Show, Eq)
