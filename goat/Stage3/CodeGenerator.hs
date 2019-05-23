@@ -39,7 +39,7 @@ generateMain :: ProgramMap -> IO ()
 generateMain programMap =
   case Map.lookup "main" programMap of
     Just procedureTable -> do { putStrLn "proc_main:"
-                              ; generateStatements $ statements procedureTable
+                              ; generateStatements $ statementTable procedureTable
                               }
     Nothing -> putStrLn "Main not found"
 
@@ -59,6 +59,7 @@ generateStatement statementTable = do
         exprTable = expressionTable statementTable
     case stmt of
         Write expression -> do { generateWriteStatement exprTable }
+        Read expression -> do { generateReadStatement exprTable }
 
 generateWriteStatement :: ExpressionTable -> IO ()
 generateWriteStatement exprTable =
@@ -69,6 +70,9 @@ generateWriteStatement exprTable =
                         ; printNewLineIndentation
                         ; putStrLn "call_builtin print_string"
                         }
+
+generateReadStatement :: ExpressionTable -> IO ()
+generateReadStatement exprTable = do {}
 
 
 -------------------------------------------------------------------------------
