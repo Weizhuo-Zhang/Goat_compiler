@@ -27,15 +27,17 @@ data Task = Unit | Exit | Compile | Pprint | Analyze | Parse deriving Eq
 -------------------------------------------------------------------------------
 -- Exit code constant, it starts from 0, increase by 1.
 -------------------------------------------------------------------------------
-data GoatExitCode = Success       -- 0
-                  | MissingFile   -- 1
-                  | WrongUsage    -- 2
-                  | MissingMain   -- 3
-                  | MultipleMain  -- 4
-                  | MainWithParam -- 5
-                  | ParseError    -- 6
-                  | MultipleProc  -- 7
-                  | MultipleVar   -- 8
+data GoatExitCode = Success          -- 0
+                  | MissingFile      -- 1
+                  | WrongUsage       -- 2
+                  | MissingMain      -- 3
+                  | MultipleMain     -- 4
+                  | MainWithParam    -- 5
+                  | ParseError       -- 6
+                  | MultipleProc     -- 7
+                  | MultipleVar      -- 8
+                  | IfCondError      -- 9
+                  | LogicOpTypeError -- 10
                   deriving Enum
 
 -------------------------------------------------------------------------------

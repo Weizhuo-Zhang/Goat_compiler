@@ -34,8 +34,15 @@ data StatementTable = StatementTable { statement :: Statement
                                      , expressionTable :: ExpressionTable
                                      } deriving (Show, Eq)
 
-data ExpressionTable = ExpressionTable { expression     :: Expression
-                                       , expressionType :: BaseType
+data ExpressionTable = SingleExprTable { expression     :: ExpressionTable
+                                       , singleExprType :: BaseType
                                        }
+                     | DoubleExprTable { lExpression     :: ExpressionTable
+                                       , rExpression     :: ExpressionTable
+                                       , doubleExprType  :: BaseType
+                                       }
+                     | BoolTable       { boolVal   :: Bool }
+                     | IntTable        { intVal    :: Int }
+                     | FloatTable      { floatVal  :: Float }
                      | StringTable     { stringVal :: String }
                      deriving (Show, Eq)
