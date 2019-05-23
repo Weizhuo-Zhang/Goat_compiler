@@ -23,20 +23,22 @@ import           SymbolTable
 
 -------------------------------- Utility Code ---------------------------------
 -------------------------------------------------------------------------------
--- lookup parameter Map, It must have a base type
+-- lookup parameter Map
 -------------------------------------------------------------------------------
-lookupBaseTypeParamMap :: Identifier -> M.Map Identifier Parameter -> BaseType
+lookupBaseTypeParamMap :: Identifier -> M.Map Identifier Parameter -> Either (IO Task) BaseType
 lookupBaseTypeParamMap varName paramMap =
-      case (M.lookup varName paramMap) of
-        Just variable -> passingType variable
+    case M.lookup varName paramMap of
+      Just parameter -> passingType parameter
+      Nothing        -> exitWithUndefinedVariable varName
 
 -------------------------------------------------------------------------------
--- lookup variable Map, It must have a base type
+-- lookup variable Map
 -------------------------------------------------------------------------------
-lookupBaseTypeVarMap :: Identifier -> M.Map Identifier VariableDeclaration -> BaseType
+lookupBaseTypeVarMap :: Identifier -> M.Map Identifier VariableDeclaration -> Either (IO Task) BaseType
 lookupBaseTypeVarMap varName varMap =
-      case M.lookup varName varMap of
+    case M.lookup varName varMap of
         Just variable -> declarationType variable
+        Nothing       -> exitWithUndefinedVariable varName
 
 -------------------------------------------------------------------------------
 -- Get variable id
@@ -106,11 +108,6 @@ exitWithUndefinedVariable varName =
 exitWithReadIncorrect :: IO Task
 exitWithReadIncorrect =
   exitWithError "Cannot read into non-variable" ReadIncorrect
-
-exitWithTypeError :: Identifier -> IO Task
-exitWithTypeError procName =
-  exitWithError ("There is a Type Error in the Statment in proc: " ++
-                "\"" ++ procName ++ "\"") UnmatchedType
 -------------------------------- Analyzer Code --------------------------------
 
 -------------------------------------------------------------------------------
@@ -259,7 +256,7 @@ checkStatement procName stmt paramMap varMap =
             Right exprTable -> do
               let stmtTablesEither = insertStatementList procName stmts paramMap varMap
               case stmtTablesEither of
-                Left err -> Left err
+                Left err         -> Left err
                 Right stmtTables -> Right (IfTable exprTable stmtTables)
         IfElse expr stmts1 stmts2 -> do
           let exprEither = checkConsition procName expr paramMap varMap
@@ -282,7 +279,7 @@ checkStatement procName stmt paramMap varMap =
             Right exprTable -> do
               let stmtTablesEither = insertStatementList procName stmts paramMap varMap
               case stmtTablesEither of
-                Left err -> Left err
+                Left err         -> Left err
                 Right stmtTables -> Right (WhileTable exprTable stmtTables)
         -- TODO
         -- Assign vae expr
@@ -312,17 +309,17 @@ checkConsition procName expr paramMap varMap = do
     Left err -> Left err
     Right exprTable -> do
       case exprTable of
-        BoolTable _ -> Right exprTable
-        OrTable _ _ _ -> Right exprTable
-        AndTable _ _ _ -> Right exprTable
-        NotTable _ _ -> Right exprTable
-        EqTable _ _ _ -> Right exprTable
+        BoolTable _      -> Right exprTable
+        OrTable _ _ _    -> Right exprTable
+        AndTable _ _ _   -> Right exprTable
+        NotTable _ _     -> Right exprTable
+        EqTable _ _ _    -> Right exprTable
         NotEqTable _ _ _ -> Right exprTable
-        LesTable _ _ _  -> Right exprTable
-        LesEqTable _ _ _  -> Right exprTable
-        GrtTable _ _ _ -> Right exprTable
+        LesTable _ _ _   -> Right exprTable
+        LesEqTable _ _ _ -> Right exprTable
+        GrtTable _ _ _   -> Right exprTable
         GrtEqTable _ _ _ -> Right exprTable
-        otherwise -> Left errorExit
+        otherwise        -> Left errorExit
 
 checkExpression :: Identifier -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkExpression procName expr paramMap varMap = do
@@ -354,17 +351,17 @@ checkExpression procName expr paramMap varMap = do
       Or lExpr rExpr -> do
         let exprTableEither = checkLogicExpression procName "||" lExpr rExpr paramMap varMap
         case exprTableEither of
-          Left err -> Left err
+          Left err        -> Left err
           Right exprTable -> Right exprTable
       And lExpr rExpr -> do
         let exprTableEither = checkLogicExpression procName "&&" lExpr rExpr paramMap varMap
         case exprTableEither of
-          Left err -> Left err
+          Left err        -> Left err
           Right exprTable -> Right exprTable
       UnaryNot expr -> do
         let exprTableEither = checkLogicSubExpression procName "!" expr paramMap varMap
         case exprTableEither of
-          Left err -> Left err
+          Left err        -> Left err
           Right exprTable -> Right (NotTable exprTable BoolType)
 -- TODO
 --      Eq lExpr rExpr -> do

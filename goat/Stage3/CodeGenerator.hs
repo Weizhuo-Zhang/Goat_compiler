@@ -171,6 +171,9 @@ generateExpression exprTable registerNum =
 
 
 
+generateReadStatement :: ExpressionTable -> IO ()
+generateReadStatement exprTable = do {}
+
 
 updateLabel :: [Int] -> [Int]
 updateLabel (x:[]) = (x+1):[]
