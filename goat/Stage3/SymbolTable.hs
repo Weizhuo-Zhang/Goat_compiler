@@ -25,9 +25,9 @@ type ParameterMap = M.Map Identifier Parameter
 
 type VariableMap = M.Map Identifier VariableDeclaration
 
-data ProcedureTable = ProcedureTable { param :: ParameterMap
-                                     , vari :: VariableMap
-                                     , statements :: [StatementTable]
+data ProcedureTable = ProcedureTable { parameterMap :: ParameterMap
+                                     , variableMap :: VariableMap
+                                     , statementTable :: [StatementTable]
                                      } deriving (Show, Eq)
 
 data StatementTable = StatementTable { statement :: Statement
@@ -38,4 +38,7 @@ data ExpressionTable = ExpressionTable { expression     :: Expression
                                        , expressionType :: BaseType
                                        }
                      | StringTable     { stringVal :: String }
+                     | IntTable        { intVal    :: Int }
+                     | FloatTable      { floatVal  :: Float }
+                     | BoolTable       { boolVal   :: Bool }
                      deriving (Show, Eq)

@@ -21,6 +21,29 @@ import SymbolTable
 -------------------------------- Documentation --------------------------------
 
 -------------------------------- Utility Code ---------------------------------
+-------------------------------------------------------------------------------
+-- lookup parameter Map
+-------------------------------------------------------------------------------
+lookupBaseTypeParamMap :: Identifier -> M.Map Identifier Parameter -> Either (IO Task) BaseType
+lookupBaseTypeParamMap varName paramMap =
+    case M.lookup varName paramMap of
+      Just parameter -> passingType parameter
+      Nothing -> exitWithUndefinedVariable varName
+
+-------------------------------------------------------------------------------
+-- lookup variable Map
+-------------------------------------------------------------------------------
+lookupBaseTypeVarMap :: Identifier -> M.Map Identifier VariableDeclaration -> Either (IO Task) BaseType
+lookupBaseTypeVarMap varName varMap =
+    case M.lookup varName varMap of
+        Just variable -> declarationType variable
+        Nothing -> exitWithUndefinedVariable varName
+
+-------------------------------------------------------------------------------
+-- Get variable id
+-------------------------------------------------------------------------------
+getVariableId :: Variable -> Identifier
+getVariableId = varId
 
 -------------------------------------------------------------------------------
 -- Get procedure identifier from procedure.
@@ -46,6 +69,21 @@ exitWithMultipleVarDeclaration varName procName =
   (getMultipleVarDeclarationErrorMessage varName procName)
   MultipleVar
 
+getUndefinedVariableErrorMessage :: Identifier -> String
+getUndefinedVariableErrorMessage varName =
+  "There is a undefined variable named " ++
+  "\"" ++ varName ++ "\"" ++
+  " in the statement"
+
+exitWithUndefinedVariable :: Identifier -> IO Task
+exitWithUndefinedVariable varName =
+  exitWithError
+  (getUndefinedVariableErrorMessage varName)
+  UndefinedVar
+
+exitWithReadIncorrect :: IO Task
+exitWithReadIncorrect =
+  exitWithError "Cannot read into non-variable" ReadIncorrect
 -------------------------------- Analyzer Code --------------------------------
 
 -------------------------------------------------------------------------------
@@ -100,7 +138,7 @@ insertProcedureTable procedure =
               case varMap of
                   Left err -> Left err
                   Right subVarMap -> do
-                      let newStatements = insertStatementList (bodyStatements procedureBody)
+                      let newStatements = insertStatementList (bodyStatements procedureBody) subParamMap subVarMap
                       case newStatements of
                           Left err -> Left err
                           Right subStatements ->
@@ -151,45 +189,66 @@ insertVariableMap procName (bodyVarDecl:bodyVarDecls) paramMap varMap = do
                         True  -> Left $ exitWithMultipleVarDeclaration varName procName
                         False -> Right $ M.insert varName bodyVarDecl subVarMap
 
-insertStatementList :: [Statement] -> Either (IO Task) [StatementTable]
-insertStatementList (stmt:[]) = do
-    let newStmtTable = checkStatement stmt
+insertStatementList :: [Statement] -> ParameterMap -> VariableMap -> Either (IO Task) [StatementTable]
+insertStatementList (stmt:[]) paramMap varMap = do
+    let newStmtTable = checkStatement stmt paramMap varMap
     case newStmtTable of
         Left err -> Left err
         Right stmtTable -> Right $ (stmtTable):[]
-insertStatementList (stmt:stmts) = do
-    let newStatements = insertStatementList stmts
+insertStatementList (stmt:stmts) paramMap varMap = do
+    let newStatements = insertStatementList stmts paramMap varMap
     case newStatements of
         Left err            -> Left err
         Right subStatements -> do
-            let newStmtTable = checkStatement stmt
+            let newStmtTable = checkStatement stmt paramMap varMap
             case newStmtTable of
                 Left err -> Left err
                 Right stmtTable -> Right $
                         (stmtTable):subStatements
 
-checkStatement :: Statement -> Either (IO Task) StatementTable
-checkStatement stmt = do
+checkStatement :: Statement -> ParameterMap -> VariableMap -> Either (IO Task) StatementTable
+checkStatement stmt paramMap varMap =
     case stmt of
         Write expr -> do
-            let newExpr = checkWriteStmt expr
+            let newExpr = checkWriteStmt expr paramMap varMap
+            case newExpr of
+                Left err -> Left err
+                Right exprTable -> Right (StatementTable stmt exprTable)
+        Read expr -> do
+            let newExpr = checkReadStmt expr paramMap varMap
             case newExpr of
                 Left err -> Left err
                 Right exprTable -> Right (StatementTable stmt exprTable)
 --        _ -> undefined
 
-checkWriteStmt :: Expression -> Either (IO Task) ExpressionTable
-checkWriteStmt expr = do
-    let newExprTable = checkExpression expr
-    case newExprTable of
-        Left err -> Left err
-        Right exprTable -> Right $ exprTable
-
-checkExpression :: Expression -> Either (IO Task) ExpressionTable
-checkExpression expr = do
+checkWriteStmt :: Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
+checkWriteStmt expr paramMap varMap =
     case expr of
-        StrConst val -> Right (StringTable val)
---       _ -> undefined
+      StrConst val -> Right (StringTable val)
+      IntConst val -> Right (IntTable val)
+      FloatConst val -> Right (FloatTable val)
+      BoolConst val -> Right (BoolTable val)
+      ExprVar val -> checkVariable val paramMap varMap
+
+checkReadStmt :: Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
+checkReadStmt expr paramMap varMap =
+    case expr of
+      ExprVar val -> checkVariable val paramMap varMap
+      otherwise -> exitWithReadIncorrect
+
+
+checkVariable :: Variable -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
+checkExpression var paramMap varMap = do
+  case (M.member id paramMap) of
+      True -> Right (Expression (ExprVar val) paramBaseType)
+      False -> do
+          case (M.member id varMap) of
+              True -> Right (Expression (ExprVar val) varBaseType)
+              False -> Left exitWithUndefinedVariable
+          where id = varId val
+                varBaseType = lookupBaseTypeVarMap id varMap
+  where id = varId val
+        baseType = lookupBaseTypeParamMap id paramMap
 
 -------------------------------------------------------------------------------
 ---- Check whether the main procedure is parameter-less.
