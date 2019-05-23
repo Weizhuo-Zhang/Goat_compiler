@@ -193,16 +193,21 @@ checkStatement :: Identifier -> Statement -> Either (IO Task) StatementTable
 checkStatement procName stmt = do
   case stmt of
     Write expr -> do
-      let newExpr = checkWriteStmt procName expr
-      case newExpr of
+      let exprEither = checkWriteStmt procName expr
+      case exprEither of
         Left err -> Left err
-        Right exprTable -> Right (StatementTable stmt exprTable)
+        Right exprTable -> Right (WriteTable exprTable)
     If expr stmts -> do
-      let newExpr = checkIfConsition procName expr
-      case newExpr of
+      let exprEither = checkIfConsition procName expr
+          stmtTablesEither = insertStatementList procName stmts
+      case exprEither of
         Left err -> Left err
-        Right exprTable -> Right (StatementTable stmt exprTable)
+        Right exprTable -> do
+          case stmtTablesEither of
+            Left err -> Left err
+            Right stmtTables -> Right (IfTable exprTable stmtTables)
 --        _ -> undefined
+
 
 -- TODO: Complete the type matching in write statement
 checkWriteStmt :: Identifier -> Expression -> Either (IO Task) ExpressionTable
@@ -225,10 +230,12 @@ checkIfConsition procName expr = do
           case exprType of
             BoolType -> Right exprTable
             _    -> Left errorExit
-        DoubleExprTable lExpr rExpr exprType -> do
-          case exprType of
-            BoolType -> Right exprTable
-            _    -> Left errorExit
+        OrTable lExpr rExpr exprType -> Right exprTable
+        AndTable lExpr rExpr exprType -> Right exprTable
+--        DoubleExprTable lExpr rExpr exprType -> do
+--          case exprType of
+--            BoolType -> Right exprTable
+--            _    -> Left errorExit
         _ -> Left errorExit
 
 checkExpression :: Identifier -> Expression -> Either (IO Task) ExpressionTable
@@ -267,8 +274,10 @@ checkLogicExpression procName operator lExpr rExpr = do
       let rExprTableEither = checkLogicSubExpression procName operator rExpr
       case rExprTableEither of
         Left err -> Left err
-        Right rExprTable ->
-          Right (DoubleExprTable lExprTable rExprTable BoolType)
+        Right rExprTable -> do
+          case operator of
+            "||" -> Right (OrTable lExprTable rExprTable BoolType)
+            "&&" -> Right (AndTable lExprTable rExprTable BoolType)
 
 checkLogicSubExpression ::
   Identifier -> String -> Expression -> Either (IO Task) ExpressionTable

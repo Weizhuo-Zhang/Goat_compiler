@@ -30,19 +30,29 @@ data ProcedureTable = ProcedureTable { param :: ParameterMap
                                      , statements :: [StatementTable]
                                      } deriving (Show, Eq)
 
-data StatementTable = StatementTable { statement :: Statement
-                                     , expressionTable :: ExpressionTable
+data StatementTable = WriteTable     { writeExprTable :: ExpressionTable }
+                    | IfTable        { ifExprTable  :: ExpressionTable
+                                     , ifStmtsTable :: [StatementTable]
                                      } deriving (Show, Eq)
 
+-- SingleExprTable is for ExprVar, UnaryNot and UnaryMinus
+-- DoubleExprTable is for Add, Sub, Mul, Div
+--                        Or,  And
+--                        Eq,  NotEq, Les, LesEq, Grt, GrtEq
 data ExpressionTable = SingleExprTable { expression     :: ExpressionTable
                                        , singleExprType :: BaseType
-                                       }
-                     | DoubleExprTable { lExpression     :: ExpressionTable
-                                       , rExpression     :: ExpressionTable
-                                       , doubleExprType  :: BaseType
                                        }
                      | BoolTable       { boolVal   :: Bool }
                      | IntTable        { intVal    :: Int }
                      | FloatTable      { floatVal  :: Float }
                      | StringTable     { stringVal :: String }
+                     | OrTable         { orLeftExprTable  :: ExpressionTable
+                                       , orRightExprTable :: ExpressionTable
+                                       , orType           :: BaseType
+                                       }
+                     | AndTable        { andLeftExprTable  :: ExpressionTable
+                                       , andRightExprTable :: ExpressionTable
+                                       , andType           :: BaseType
+                                       }
+
                      deriving (Show, Eq)
