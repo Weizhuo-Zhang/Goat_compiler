@@ -4,6 +4,7 @@ import GoatAST
 import GoatExit
 import qualified Data.Map.Strict as M
 import SymbolTable
+import Data.Maybe
 
 -------------------------------- Documentation --------------------------------
 
@@ -22,22 +23,20 @@ import SymbolTable
 
 -------------------------------- Utility Code ---------------------------------
 -------------------------------------------------------------------------------
--- lookup parameter Map
+-- lookup parameter Map, It must have a base type
 -------------------------------------------------------------------------------
-lookupBaseTypeParamMap :: Identifier -> M.Map Identifier Parameter -> Either (IO Task) BaseType
+lookupBaseTypeParamMap :: Identifier -> M.Map Identifier Parameter -> BaseType
 lookupBaseTypeParamMap varName paramMap =
-    case M.lookup varName paramMap of
-      Just parameter -> passingType parameter
-      Nothing -> exitWithUndefinedVariable varName
+      case (M.lookup varName paramMap) of
+        Just variable -> passingType variable
 
 -------------------------------------------------------------------------------
--- lookup variable Map
+-- lookup variable Map, It must have a base type
 -------------------------------------------------------------------------------
-lookupBaseTypeVarMap :: Identifier -> M.Map Identifier VariableDeclaration -> Either (IO Task) BaseType
+lookupBaseTypeVarMap :: Identifier -> M.Map Identifier VariableDeclaration -> BaseType
 lookupBaseTypeVarMap varName varMap =
-    case M.lookup varName varMap of
+      case M.lookup varName varMap of
         Just variable -> declarationType variable
-        Nothing -> exitWithUndefinedVariable varName
 
 -------------------------------------------------------------------------------
 -- Get variable id
@@ -214,8 +213,8 @@ checkStatement stmt paramMap varMap =
             case newExpr of
                 Left err -> Left err
                 Right exprTable -> Right (StatementTable stmt exprTable)
-        Read expr -> do
-            let newExpr = checkReadStmt expr paramMap varMap
+        Read var -> do
+            let newExpr = checkReadStmt var paramMap varMap
             case newExpr of
                 Left err -> Left err
                 Right exprTable -> Right (StatementTable stmt exprTable)
@@ -230,25 +229,25 @@ checkWriteStmt expr paramMap varMap =
       BoolConst val -> Right (BoolTable val)
       ExprVar val -> checkVariable val paramMap varMap
 
-checkReadStmt :: Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
-checkReadStmt expr paramMap varMap =
-    case expr of
-      ExprVar val -> checkVariable val paramMap varMap
-      otherwise -> exitWithReadIncorrect
+checkReadStmt :: Variable -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
+checkReadStmt var paramMap varMap =
+    case (checkVariable var paramMap varMap) of
+      Right exprTable -> Right exprTable
+      Left err -> Left err
 
 
 checkVariable :: Variable -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
-checkExpression var paramMap varMap = do
+checkVariable var paramMap varMap = do
   case (M.member id paramMap) of
-      True -> Right (Expression (ExprVar val) paramBaseType)
+      True -> Right (ExpressionTable (ExprVar var) paramBaseType)
       False -> do
           case (M.member id varMap) of
-              True -> Right (Expression (ExprVar val) varBaseType)
-              False -> Left exitWithUndefinedVariable
-          where id = varId val
+              True -> Right (ExpressionTable (ExprVar var) varBaseType)
+              False -> Left $ exitWithUndefinedVariable id
+          where id = varId var
                 varBaseType = lookupBaseTypeVarMap id varMap
-  where id = varId val
-        baseType = lookupBaseTypeParamMap id paramMap
+  where id = varId var
+        paramBaseType = lookupBaseTypeParamMap id paramMap
 
 -------------------------------------------------------------------------------
 ---- Check whether the main procedure is parameter-less.

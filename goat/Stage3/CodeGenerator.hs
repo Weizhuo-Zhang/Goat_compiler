@@ -59,7 +59,7 @@ generateStatement statementTable = do
         exprTable = expressionTable statementTable
     case stmt of
         Write expression -> do { generateWriteStatement exprTable }
-        Read expression -> do { generateReadStatement exprTable }
+        -- Read expression -> do { generateReadStatement exprTable }
 
 generateWriteStatement :: ExpressionTable -> IO ()
 generateWriteStatement exprTable =
@@ -71,8 +71,9 @@ generateWriteStatement exprTable =
                         ; putStrLn "call_builtin print_string"
                         }
 
-generateReadStatement :: ExpressionTable -> IO ()
-generateReadStatement exprTable = do {}
+
+-- generateReadStatement :: ExpressionTable -> IO ()
+-- generateReadStatement exprTable = do {}
 
 
 -------------------------------------------------------------------------------
