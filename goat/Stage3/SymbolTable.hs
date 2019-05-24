@@ -30,9 +30,16 @@ data ProcedureTable = ProcedureTable { param :: ParameterMap
                                      , statements :: [StatementTable]
                                      } deriving (Show, Eq)
 
-data StatementTable = WriteTable     { writeExprTable :: ExpressionTable }
-                    | IfTable        { ifExprTable  :: ExpressionTable
-                                     , ifStmtsTable :: [StatementTable]
+data StatementTable = WriteTable     { writeExprTable    :: ExpressionTable }
+                    | IfTable        { ifExprTable       :: ExpressionTable
+                                     , ifStmtTables      :: [StatementTable]
+                                     }
+                    | IfElseTable    { ifElseExprTable   :: ExpressionTable
+                                     , ifElseStmtTables1 :: [StatementTable]
+                                     , ifElseStmtTables2 :: [StatementTable]
+                                     }
+                    | WhileTable     { whileExprTable    :: ExpressionTable
+                                     , whileStmtTables   :: [StatementTable]
                                      } deriving (Show, Eq)
 
 -- SingleExprTable is for ExprVar, UnaryNot and UnaryMinus
@@ -54,5 +61,4 @@ data ExpressionTable = SingleExprTable { expression     :: ExpressionTable
                                        , andRightExprTable :: ExpressionTable
                                        , andType           :: BaseType
                                        }
-
                      deriving (Show, Eq)

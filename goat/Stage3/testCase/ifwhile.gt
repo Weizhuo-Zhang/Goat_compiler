@@ -1,0 +1,64 @@
+# Used to test if if-else while statements
+
+proc main()
+begin
+    write "Hello, world!\n";
+    if true then
+        write "true 1\n";
+    fi
+
+    if false then
+        write "#####################\n";
+    fi
+
+    if true || false then
+        write "true 2\n";
+    fi
+
+    if true || true then
+        write "true 3\n";
+    fi
+
+    if false || true then
+        write "true 4\n";
+    fi
+
+    if false || false then
+        write "#############\n";
+    fi
+
+    if true && false then
+        write "*****************\n";
+    fi
+
+    if true && true then
+        write "true 5\n";
+        if true || false then
+            write "true 6\n";
+        fi
+    fi
+
+    if false && true then
+        write "))))))))))))))))))))00\n";
+    fi
+
+    if false && false then
+        write "&&&&&&&&&&&&&&&&&&&&&\n";
+    fi
+
+    if false then
+        write "#########l#2222222222\n";
+    else
+        write "true 7\n";
+    fi
+
+    if true then
+        write "true 8\n";
+    else
+        write "#####4444444444444444\n";
+    fi
+
+    while false do
+        write "while false do44444444444444\n";
+    od
+end

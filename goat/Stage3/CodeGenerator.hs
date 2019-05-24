@@ -51,7 +51,6 @@ generateStatements :: String -> [Int] -> [StatementTable] -> IO ()
 generateStatements _ _ [] = return ()
 generateStatements procName label (stat:[]) = do
   generateStatement procName (updateLabel label) stat
-
 generateStatements procName label (stat:stats) = do
   { generateStatement procName (updateLabel label) stat
   ; generateStatements procName (updateLabel label) stats
@@ -59,11 +58,15 @@ generateStatements procName label (stat:stats) = do
 
 generateStatement :: String -> [Int] -> StatementTable -> IO ()
 generateStatement procName label statementTable = do
-    case statementTable of
-        WriteTable exprTable -> do { generateWriteStatement exprTable }
-        -- TODO
-        IfTable exprTable stmtTables -> do
-            { generateIfStatement procName label exprTable stmtTables}
+  case statementTable of
+    WriteTable exprTable -> do { generateWriteStatement exprTable }
+    -- TODO
+    IfTable exprTable stmtTables ->
+      generateIfStatement procName label exprTable stmtTables
+    IfElseTable exprTable stmtTables1 stmtTables2 ->
+      generateIfElseStatement procName label exprTable stmtTables1 stmtTables2
+    WhileTable exprTable stmtTables ->
+      generateWhileStatement procName label exprTable stmtTables
 
 generateWriteStatement :: ExpressionTable -> IO ()
 generateWriteStatement exprTable =
@@ -83,17 +86,59 @@ showLabel :: [Int] -> String
 showLabel (x:[]) = show(x)
 showLabel (x:xs) = show(x) ++ "_" ++ showLabel(xs)
 
--- TODO
-generateIfStatement :: String -> [Int] -> ExpressionTable -> [StatementTable] -> IO ()
+generateIfStatement ::
+  String -> [Int] -> ExpressionTable -> [StatementTable] -> IO ()
 generateIfStatement procName label exprTable stmts = do
   { let label_a = procName ++ "_" ++ (showLabel label) ++ "_a"
   ; let label_b = procName ++ "_" ++ (showLabel label) ++ "_b"
+  -- check condition
   ; generateExpressionTable exprTable
   ; printLine ("branch_on_true r0, " ++ label_a)
   ; printLine ("branch_uncond " ++ label_b)
+  -- If statements
   ; putStrLn (label_a ++ ":")
-  ; generateStatements procName (label ++ [0]) stmts
+  ; generateStatements procName (label ++ [0] ++ [0]) stmts
+  -- end of this statements
   ; putStrLn (label_b ++ ":")
+  }
+
+generateIfElseStatement ::
+  String -> [Int] -> ExpressionTable -> [StatementTable] -> [StatementTable]
+  -> IO ()
+generateIfElseStatement procName label exprTable stmts1 stmts2 = do
+  { let label_a = procName ++ "_" ++ (showLabel label) ++ "_a"
+  ; let label_b = procName ++ "_" ++ (showLabel label) ++ "_b"
+  ; generateExpressionTable exprTable
+  -- Else statements
+  ; printLine ("branch_on_false r0, " ++ label_a)
+  -- If statements
+  ; generateStatements procName (label ++ [1] ++ [0]) stmts1
+  ; printLine ("branch_uncond " ++ label_b)
+  -- Else statements
+  ; putStrLn (label_a ++ ":")
+  ; generateStatements procName (label ++ [2] ++ [0]) stmts2
+  -- fi The end of If-Else
+  ; putStrLn (label_b ++ ":")
+  }
+
+generateWhileStatement ::
+  String -> [Int] -> ExpressionTable -> [StatementTable] -> IO ()
+generateWhileStatement procName label exprTable stmts = do
+  { let label_a = procName ++ "_" ++ (showLabel label) ++ "_a"
+  ; let label_b = procName ++ "_" ++ (showLabel label) ++ "_b"
+  ; let label_c = procName ++ "_" ++ (showLabel label) ++ "_c"
+  -- check condition
+  ; putStrLn (label_a ++ ":")
+  ; generateExpressionTable exprTable
+  ; printLine ("branch_on_true r0, " ++ label_b)
+  ; printLine ("branch_uncond " ++ label_c)
+  -- while statements
+  ; putStrLn (label_b ++ ":")
+  ; generateStatements procName (label ++ [3] ++ [0]) stmts
+  -- check condition again
+  ; printLine ("branch_uncond " ++ label_a)
+  -- end of this while loop
+  ; putStrLn (label_c ++ ":")
   }
 
 -- TODO

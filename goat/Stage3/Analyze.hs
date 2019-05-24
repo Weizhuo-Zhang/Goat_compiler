@@ -46,15 +46,15 @@ exitWithMultipleVarDeclaration varName procName =
   (getMultipleVarDeclarationErrorMessage varName procName)
   MultipleVar
 
-getIfConditionTypeErrorMessage :: Identifier -> String
-getIfConditionTypeErrorMessage procName =
+getConditionTypeErrorMessage :: Identifier -> String
+getConditionTypeErrorMessage procName =
   "If condition type error! The type must be bool. In procedure " ++
   "\"" ++ procName ++ "\""
 
-exitWithIfConditionTypeError :: Identifier -> IO Task
-exitWithIfConditionTypeError procName =
+exitWithConditionTypeError :: Identifier -> IO Task
+exitWithConditionTypeError procName =
   exitWithError
-  (getIfConditionTypeErrorMessage procName)
+  (getConditionTypeErrorMessage procName)
   IfCondError
 
 getLogicExprTypeErrorMessage :: Identifier -> String -> String
@@ -198,14 +198,37 @@ checkStatement procName stmt = do
         Left err -> Left err
         Right exprTable -> Right (WriteTable exprTable)
     If expr stmts -> do
-      let exprEither = checkIfConsition procName expr
-          stmtTablesEither = insertStatementList procName stmts
+      let exprEither = checkConsition procName expr
       case exprEither of
         Left err -> Left err
         Right exprTable -> do
+          let stmtTablesEither = insertStatementList procName stmts
           case stmtTablesEither of
             Left err -> Left err
             Right stmtTables -> Right (IfTable exprTable stmtTables)
+    IfElse expr stmts1 stmts2 -> do
+      let exprEither = checkConsition procName expr
+      case exprEither of
+        Left err -> Left err
+        Right exprTable -> do
+          let stmtTablesEither1 = insertStatementList procName stmts1
+          case stmtTablesEither1 of
+            Left err -> Left err
+            Right stmtTables1 -> do
+              let stmtTablesEither2 = insertStatementList procName stmts2
+              case stmtTablesEither2 of
+                Left err -> Left err
+                Right stmtTables2 -> do
+                  Right (IfElseTable exprTable stmtTables1 stmtTables2)
+    While expr stmts -> do
+      let exprEither = checkConsition procName expr
+      case exprEither of
+        Left err -> Left err
+        Right exprTable -> do
+          let stmtTablesEither = insertStatementList procName stmts
+          case stmtTablesEither of
+            Left err -> Left err
+            Right stmtTables -> Right (WhileTable exprTable stmtTables)
 --        _ -> undefined
 
 
@@ -217,25 +240,25 @@ checkWriteStmt procName expr = do
     Left err -> Left err
     Right exprTable -> Right $ exprTable
 
-checkIfConsition :: Identifier -> Expression -> Either (IO Task) ExpressionTable
-checkIfConsition procName expr = do
+checkConsition :: Identifier -> Expression -> Either (IO Task) ExpressionTable
+checkConsition procName expr = do
   let newExprTable = checkExpression procName expr
-      errorExit = exitWithIfConditionTypeError procName
+      errorExit = exitWithConditionTypeError procName
   case newExprTable of
     Left err -> Left err
     Right exprTable -> do
       case exprTable of
         BoolTable val -> Right exprTable
+        -- TODO Might not used anymore
         SingleExprTable expr exprType -> do
           case exprType of
             BoolType -> Right exprTable
             _    -> Left errorExit
         OrTable lExpr rExpr exprType -> Right exprTable
         AndTable lExpr rExpr exprType -> Right exprTable
---        DoubleExprTable lExpr rExpr exprType -> do
---          case exprType of
---            BoolType -> Right exprTable
---            _    -> Left errorExit
+        -- TODO
+        -- NotTable
+        -- Eq NotEq Les LesEq Grt GrtEq
         _ -> Left errorExit
 
 checkExpression :: Identifier -> Expression -> Either (IO Task) ExpressionTable

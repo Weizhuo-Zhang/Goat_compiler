@@ -3,46 +3,4 @@
 proc main()
 begin
     write "Hello, world!\n";
-    if true then
-        write "true 1\n";
-    fi
-
-    if false then
-        write "#####################\n";
-    fi
-
-    if true || false then
-        write "true 2\n";
-    fi
-
-    if true || true then
-        write "true 3\n";
-    fi
-
-    if false || true then
-        write "true 4\n";
-    fi
-
-    if false || false then
-        write "#############\n";
-    fi
-
-    if true && false then
-        write "*****************\n";
-    fi
-
-    if true && true then
-        write "true 5\n";
-        if true || false then
-            write "true 6\n";
-        fi
-    fi
-
-    if false && true then
-        write "))))))))))))))))))))00\n";
-    fi
-
-    if false && false then
-        write "&&&&&&&&&&&&&&&&&&&&&\n";
-    fi
 end
