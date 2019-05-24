@@ -40,30 +40,30 @@ generateMain programMap =
   case Map.lookup "main" programMap of
     Just procedureTable -> do
       { putStrLn (procName ++ ":")
-      ; generateStatements procName 0 (statements procedureTable)
+      ; generateStatements procName [0] (statements procedureTable)
+      ; printNewLineIndentation
+      ; putStrLn "return"
       }
     Nothing -> putStrLn "Main not found"
   where procName = "proc_main"
 
-generateStatements :: String -> Int -> [StatementTable] -> IO ()
+generateStatements :: String -> [Int] -> [StatementTable] -> IO ()
 generateStatements _ _ [] = return ()
 generateStatements procName label (stat:[]) = do
-  { generateStatement procName label+1 stat
-  ; printNewLineIndentation
-  ; putStrLn "return"
-  }
+  generateStatement procName (updateLabel label) stat
+
 generateStatements procName label (stat:stats) = do
-  { generateStatement procName label+1 stat
-  ; generateStatements procName label+1 stats
+  { generateStatement procName (updateLabel label) stat
+  ; generateStatements procName (updateLabel label) stats
   }
 
-generateStatement :: String -> Int -> StatementTable -> IO ()
+generateStatement :: String -> [Int] -> StatementTable -> IO ()
 generateStatement procName label statementTable = do
     case statementTable of
         WriteTable exprTable -> do { generateWriteStatement exprTable }
         -- TODO
         IfTable exprTable stmtTables -> do
-            { generateIfStatement procName (label+2) exprTable stmtTables}
+            { generateIfStatement procName label exprTable stmtTables}
 
 generateWriteStatement :: ExpressionTable -> IO ()
 generateWriteStatement exprTable =
@@ -75,18 +75,25 @@ generateWriteStatement exprTable =
                         ; putStrLn "call_builtin print_string"
                         }
 
+updateLabel :: [Int] -> [Int]
+updateLabel (x:[]) = (x+1):[]
+updateLabel (x:xs) = x:(updateLabel xs)
+
+showLabel :: [Int] -> String
+showLabel (x:[]) = show(x)
+showLabel (x:xs) = show(x) ++ "_" ++ showLabel(xs)
+
 -- TODO
-generateIfStatement :: String -> Int -> ExpressionTable -> [StatementTable] -> IO ()
+generateIfStatement :: String -> [Int] -> ExpressionTable -> [StatementTable] -> IO ()
 generateIfStatement procName label exprTable stmts = do
-  { let label_num = label Map.! procName
-  ; let label_0 = procName ++ "_" ++ show(label_num - 1)
-  ; let label_1 = procName ++ "_" ++ show(label_num)
+  { let label_a = procName ++ "_" ++ (showLabel label) ++ "_a"
+  ; let label_b = procName ++ "_" ++ (showLabel label) ++ "_b"
   ; generateExpressionTable exprTable
-  ; printLine ("branch_on_true, r0, " ++ label_0)
-  ; printLine ("branch_uncond, " ++ label_1)
-  ; putStrLn (label_0 ++ ":")
-  ; generateStatements procName label stmts
-  ; putStrLn (label_1 ++ ":")
+  ; printLine ("branch_on_true r0, " ++ label_a)
+  ; printLine ("branch_uncond " ++ label_b)
+  ; putStrLn (label_a ++ ":")
+  ; generateStatements procName (label ++ [0]) stmts
+  ; putStrLn (label_b ++ ":")
   }
 
 -- TODO
@@ -129,8 +136,8 @@ generateAndExpression lExpr rExpr exprType = do
 convertBoolToInt :: Bool -> String
 convertBoolToInt boolVal =
   case boolVal of
-    True  -> show 0
-    False -> show 1
+    True  -> show 1
+    False -> show 0
 
 printLine :: String -> IO ()
 printLine string = do
