@@ -38,6 +38,7 @@ data GoatExitCode = Success       -- 0
                   | MultipleVar   -- 8
                   | UndefinedVar  -- 9
                   | ReadIncorrect -- 10
+                  | UnmatchedType -- 11
                   deriving Enum
 
 -------------------------------------------------------------------------------

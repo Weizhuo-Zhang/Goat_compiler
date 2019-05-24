@@ -34,11 +34,27 @@ data StatementTable = StatementTable { statement :: Statement
                                      , expressionTable :: ExpressionTable
                                      } deriving (Show, Eq)
 
-data ExpressionTable = ExpressionTable { expression     :: Expression
-                                       , expressionType :: BaseType
+data ExpressionTable = VariableTable   { variableVal    :: Variable
+                                       , variableType   :: BaseType
                                        }
                      | StringTable     { stringVal :: String }
                      | IntTable        { intVal    :: Int }
                      | FloatTable      { floatVal  :: Float }
                      | BoolTable       { boolVal   :: Bool }
+                     | AddTable        { addLeftVal :: ExpressionTable
+                                       , addRightVal :: ExpressionTable
+                                       , addType :: BaseType
+                                       }
+                     | SubTable        { subLeftVal :: ExpressionTable
+                                       , subRightVal :: ExpressionTable
+                                       , subType :: BaseType
+                                       }
+                     | MulTable        { mulLeftVal :: ExpressionTable
+                                       , mulRightVal :: ExpressionTable
+                                       , mulType :: BaseType
+                                       }
+                     | DivTable        { divLeftVal :: ExpressionTable
+                                       , divRightVal :: ExpressionTable
+                                       , divType :: BaseType
+                                       }
                      deriving (Show, Eq)
