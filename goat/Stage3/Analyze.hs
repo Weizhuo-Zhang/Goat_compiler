@@ -23,20 +23,20 @@ import           SymbolTable
 
 -------------------------------- Utility Code ---------------------------------
 -------------------------------------------------------------------------------
--- lookup parameter Map
+-- lookup parameter Map, It must have a base type
 -------------------------------------------------------------------------------
-lookupBaseTypeParamMap :: Identifier -> M.Map Identifier Parameter -> Either (IO Task) BaseType
+lookupBaseTypeParamMap :: Identifier -> M.Map Identifier Parameter -> BaseType
 lookupBaseTypeParamMap varName paramMap =
     case M.lookup varName paramMap of
       Just parameter -> passingType parameter
       Nothing        -> exitWithUndefinedVariable varName
 
 -------------------------------------------------------------------------------
--- lookup variable Map
+-- lookup variable Map, It must have a base type
 -------------------------------------------------------------------------------
-lookupBaseTypeVarMap :: Identifier -> M.Map Identifier VariableDeclaration -> Either (IO Task) BaseType
+lookupBaseTypeVarMap :: Identifier -> M.Map Identifier VariableDeclaration -> BaseType
 lookupBaseTypeVarMap varName varMap =
-    case M.lookup varName varMap of
+      case M.lookup varName varMap of
         Just variable -> declarationType variable
         Nothing       -> exitWithUndefinedVariable varName
 

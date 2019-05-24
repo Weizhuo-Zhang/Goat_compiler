@@ -1,11 +1,11 @@
 module CodeGenerator where
 
-import GoatAST
-import GoatExit
-import SymbolTable
-import qualified Data.Map.Strict as Map
-import GoatPrettyPrint
-import Control.Monad.State
+import           Control.Monad.State
+import qualified Data.Map.Strict     as Map
+import           GoatAST
+import           GoatExit
+import           GoatPrettyPrint
+import           SymbolTable
 -------------------------------- Documentation --------------------------------
 
 -- Authors:
@@ -171,8 +171,9 @@ generateExpression exprTable registerNum =
 
 
 
-generateReadStatement :: ExpressionTable -> IO ()
-generateReadStatement exprTable = do {}
+
+-- generateReadStatement :: ExpressionTable -> IO ()
+-- generateReadStatement exprTable = do {}
 
 
 updateLabel :: [Int] -> [Int]
@@ -330,9 +331,9 @@ printNewLineIndentation = putStr "    "
 getExprType :: ExpressionTable -> BaseType
 getExprType exprTable =
      case exprTable of
-          IntTable _ -> IntType
-          FloatTable _ -> FloatType
-          BoolTable _ -> BoolType
+          IntTable _            -> IntType
+          FloatTable _          -> FloatType
+          BoolTable _           -> BoolType
           AddTable _ _ baseType -> baseType
           SubTable _ _ baseType -> baseType
           MulTable _ _ baseType -> baseType
