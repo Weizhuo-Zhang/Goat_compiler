@@ -108,6 +108,11 @@ exitWithUndefinedVariable varName =
 exitWithReadIncorrect :: IO Task
 exitWithReadIncorrect =
   exitWithError "Cannot read into non-variable" ReadIncorrect
+
+exitWithTypeError :: Identifier -> IO Task
+exitWithTypeError procName =
+  exitWithError ("There is a Type Error in the Statment in proc: " ++
+                "\"" ++ procName ++ "\"") UnmatchedType
 -------------------------------- Analyzer Code --------------------------------
 
 -------------------------------------------------------------------------------
