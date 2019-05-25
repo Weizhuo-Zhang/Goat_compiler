@@ -41,12 +41,6 @@ lookupBaseTypeVarMap varName varMap =
         Nothing       -> exitWithUndefinedVariable varName
 
 -------------------------------------------------------------------------------
--- Get variable id
--------------------------------------------------------------------------------
-getVariableId :: Variable -> Identifier
-getVariableId = varId
-
--------------------------------------------------------------------------------
 -- Get procedure identifier from procedure.
 -------------------------------------------------------------------------------
 getProcedureIdentifier :: Procedure -> Identifier
@@ -250,8 +244,8 @@ checkStatement procName stmt paramMap varMap =
                 Right exprTable -> Right (ReadTable exprTable)
         Assign var expression -> do
           -- Assignment statement, e.g. a := 1
-          let newExpr = checkVariable procName var paramMap varMap
-          case newExpr of
+          let eitherVariableTable = checkVariable procName var paramMap varMap
+          case eitherVariableTable of
               Left err        -> Left err
               Right exprTable -> Right (AssignTable exprTable)
         If expr stmts -> do
@@ -334,20 +328,20 @@ checkExpression procName expr paramMap varMap = do
       FloatConst val -> Right (FloatTable val)
       StrConst   val -> Right (StringTable val)
       Add lExpr rExpr -> do
-        let checkTable = checkOperationExpression procName "+" lExpr rExpr paramMap varMap
-        case checkTable of
-            Right exprTable -> Right $ exprTable
-            Left err        -> Left err
+          let checkTable = checkOperationExpression procName "+" lExpr rExpr paramMap varMap
+          case checkTable of
+              Right exprTable -> Right $ exprTable
+              Left err        -> Left err
       Sub lExpr rExpr -> do
-        let checkTable = checkOperationExpression procName "-" lExpr rExpr paramMap varMap
-        case checkTable of
-            Right exprTable -> Right $ exprTable
-            Left err        -> Left err
+          let checkTable = checkOperationExpression procName "-" lExpr rExpr paramMap varMap
+          case checkTable of
+              Right exprTable -> Right $ exprTable
+              Left err        -> Left err
       Mul lExpr rExpr -> do
-        let checkTable = checkOperationExpression procName "*" lExpr rExpr paramMap varMap
-        case checkTable of
-            Right exprTable -> Right $ exprTable
-            Left err        -> Left err
+          let checkTable = checkOperationExpression procName "*" lExpr rExpr paramMap varMap
+          case checkTable of
+              Right exprTable -> Right $ exprTable
+              Left err        -> Left err
       Div lExpr rExpr -> do
         let checkTable = checkOperationExpression procName "/" lExpr rExpr paramMap varMap
         case checkTable of
