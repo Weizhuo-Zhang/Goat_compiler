@@ -59,7 +59,7 @@ generateStatement statementTable = do
         exprTable = expressionTable statementTable
     case stmt of
         Write expression -> do { generateWriteStatement exprTable }
-        -- Read expression -> do { generateReadStatement exprTable }
+        -- Read variable -> do { generateReadStatement exprTable }
 
 generateWriteStatement :: ExpressionTable -> IO ()
 generateWriteStatement exprTable =
@@ -70,12 +70,42 @@ generateWriteStatement exprTable =
                         ; printNewLineIndentation
                         ; putStrLn "call_builtin print_string"
                         }
+        IntTable int -> do { printNewLineIndentation
+                           ; putStrLn $ "int_const r0, " ++
+                             (show $ int)
+                           ; printNewLineIndentation
+                           ; putStrLn "call_builtin print_int"
+                           }
+        FloatTable float -> do { printNewLineIndentation
+                               ; putStrLn $ "real_const r0, " ++
+                                 (show $ float)
+                               ; printNewLineIndentation
+                               ; putStrLn "call_builtin print_real"
+                               }
+        BoolTable bool -> do
+            case bool of
+                True -> do { printNewLineIndentation
+                           ; putStrLn $ "int_const r0, 1"
+                           ; printNewLineIndentation
+                           ; putStrLn "call_builtin print_bool"
+                           }
+                False -> do { printNewLineIndentation
+                            ; putStrLn $ "int_const r0, 0"
+                            ; printNewLineIndentation
+                            ; putStrLn "call_builtin print_bool"
+                            }
+        VariableTable var varType -> return ()
+        -- otherwise -> generateExpression exprTable 0
 
 
 -- generateReadStatement :: ExpressionTable -> IO ()
 -- generateReadStatement exprTable = do {}
 
-
+-- generateExpression :: ExpressionTable -> Int -> IO ()
+-- generateExpression exprTable registerNum =
+--     case exprTable of
+--         AddTable  -> expression
+--       otherwise -> expression
 -------------------------------------------------------------------------------
 -- Register
 -------------------------------------------------------------------------------
