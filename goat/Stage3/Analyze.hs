@@ -39,12 +39,6 @@ lookupBaseTypeVarMap varName varMap =
         Just variable -> declarationType variable
 
 -------------------------------------------------------------------------------
--- Get variable id
--------------------------------------------------------------------------------
-getVariableId :: Variable -> Identifier
-getVariableId = varId
-
--------------------------------------------------------------------------------
 -- Get procedure identifier from procedure.
 -------------------------------------------------------------------------------
 getProcedureIdentifier :: Procedure -> Identifier
@@ -225,10 +219,14 @@ checkStatement procName stmt paramMap varMap =
                 Right exprTable -> Right (StatementTable stmt exprTable)
         Assign var expression -> do
           -- Assignment statement, e.g. a := 1
-          let newExpr = checkVariable procName var paramMap varMap
-          case newExpr of
+          let eitherVariableTable = checkVariable procName var paramMap varMap
+          case eitherVariableTable of
               Left err        -> Left err
-              Right exprTable -> Right (StatementTable stmt exprTable)
+              Right variableTable -> do
+                  let eitherExpressionTable = checkExpression procName expression paramMap varMap
+                  case eitherExpressionTable of
+                      Left err -> Left err
+                      Right expressionTable  -> Right (StatementTable stmt (AssignTable variableTable expressionTable))
 --        _ -> undefined
 
 checkWriteStmt :: Identifier -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
@@ -248,31 +246,31 @@ checkReadStmt procName var paramMap varMap = do
 checkExpression :: Identifier -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkExpression procName expr paramMap varMap = do
     case expr of
+      ExprVar    var -> checkVariable procName var paramMap varMap
       BoolConst  val         -> Right (BoolTable val)
       IntConst   val         -> Right (IntTable val)
       FloatConst val         -> Right (FloatTable val)
       StrConst   val         -> Right (StringTable val)
-      ExprVar    var -> checkVariable procName var paramMap varMap
       Add lExpr rExpr -> do
-        let checkTable = checkOperationExpression procName "+" lExpr rExpr paramMap varMap
-        case checkTable of
-            Right exprTable -> Right $ exprTable
-            Left err        -> Left err
+          let checkTable = checkOperationExpression procName "+" lExpr rExpr paramMap varMap
+          case checkTable of
+              Right exprTable -> Right $ exprTable
+              Left err        -> Left err
       Sub lExpr rExpr -> do
-        let checkTable = checkOperationExpression procName "-" lExpr rExpr paramMap varMap
-        case checkTable of
-            Right exprTable -> Right $ exprTable
-            Left err        -> Left err
+          let checkTable = checkOperationExpression procName "-" lExpr rExpr paramMap varMap
+          case checkTable of
+              Right exprTable -> Right $ exprTable
+              Left err        -> Left err
       Mul lExpr rExpr -> do
-        let checkTable = checkOperationExpression procName "*" lExpr rExpr paramMap varMap
-        case checkTable of
-            Right exprTable -> Right $ exprTable
-            Left err        -> Left err
+          let checkTable = checkOperationExpression procName "*" lExpr rExpr paramMap varMap
+          case checkTable of
+              Right exprTable -> Right $ exprTable
+              Left err        -> Left err
       Div lExpr rExpr -> do
-        let checkTable = checkOperationExpression procName "/" lExpr rExpr paramMap varMap
-        case checkTable of
-            Right exprTable -> Right $ exprTable
-            Left err        -> Left err
+          let checkTable = checkOperationExpression procName "/" lExpr rExpr paramMap varMap
+          case checkTable of
+              Right exprTable -> Right $ exprTable
+              Left err        -> Left err
 
 checkVariable :: Identifier -> Variable -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkVariable procName var paramMap varMap = do
