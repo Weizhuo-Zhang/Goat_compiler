@@ -25,17 +25,36 @@ type ParameterMap = M.Map Identifier Parameter
 
 type VariableMap = M.Map Identifier VariableDeclaration
 
-data ProcedureTable = ProcedureTable { param :: ParameterMap
-                                     , vari :: VariableMap
-                                     , statements :: [StatementTable]
+data ProcedureTable = ProcedureTable { parameterMap :: ParameterMap
+                                     , variableMap :: VariableMap
+                                     , statementTable :: [StatementTable]
                                      } deriving (Show, Eq)
 
 data StatementTable = StatementTable { statement :: Statement
                                      , expressionTable :: ExpressionTable
                                      } deriving (Show, Eq)
 
-data ExpressionTable = ExpressionTable { expression     :: Expression
-                                       , expressionType :: BaseType
+data ExpressionTable = VariableTable   { variable       :: Variable
+                                       , variableType   :: BaseType
                                        }
                      | StringTable     { stringVal :: String }
+                     | IntTable        { intVal    :: Int }
+                     | FloatTable      { floatVal  :: Float }
+                     | BoolTable       { boolVal   :: Bool }
+                     | AddTable        { addLeftVal :: ExpressionTable
+                                       , addRightVal :: ExpressionTable
+                                       , addType :: BaseType
+                                       }
+                     | SubTable        { subLeftVal :: ExpressionTable
+                                       , subRightVal :: ExpressionTable
+                                       , subType :: BaseType
+                                       }
+                     | MulTable        { mulLeftVal :: ExpressionTable
+                                       , mulRightVal :: ExpressionTable
+                                       , mulType :: BaseType
+                                       }
+                     | DivTable        { divLeftVal :: ExpressionTable
+                                       , divRightVal :: ExpressionTable
+                                       , divType :: BaseType
+                                       }
                      deriving (Show, Eq)
