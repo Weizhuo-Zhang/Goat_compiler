@@ -370,6 +370,7 @@ getExpressionTableType procName leftExprTablt rightExprTable = do
            SubTable _ _ rSubType -> chooseType procName lDivType rSubType
            MulTable _ _ rMulType -> chooseType procName lDivType rMulType
            DivTable _ _ rDivType -> chooseType procName lDivType rDivType
+      -- TODO Unary Minus
 
 
 chooseType :: Identifier -> BaseType -> BaseType -> Either (IO Task) BaseType
