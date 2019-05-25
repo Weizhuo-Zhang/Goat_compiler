@@ -1,9 +1,9 @@
 module GoatPrettyPrint where
 
 import           GoatAST
+import           GoatConstant
 import           GoatExit
 import           System.Exit
-
 -------------------------------- Documentation --------------------------------
 
 -- Authors:
@@ -328,7 +328,7 @@ getTopExpr expression =
         LesEq lExpr rExpr      -> getInfixOpResult  lExpr " <= " rExpr
         Grt   lExpr rExpr      -> getInfixOpResult  lExpr " > "  rExpr
         GrtEq lExpr rExpr      -> getInfixOpResult  lExpr " >= " rExpr
-        UnaryMinus  expression -> getPrefixOpResult expression "-"
+        UnaryMinus  expression -> getPrefixOpResult expression minusSymbol
         UnaryNot    expression -> getPrefixOpResult expression "!"
 
 -------------------------------------------------------------------------------

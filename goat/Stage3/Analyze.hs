@@ -3,6 +3,7 @@ module Analyze where
 import qualified Data.Map.Strict as M
 import           Data.Maybe
 import           GoatAST
+import           GoatConstant
 import           GoatExit
 import           SymbolTable
 
@@ -324,22 +325,22 @@ checkExpression procName expr paramMap varMap = do
       FloatConst val -> Right (FloatTable val)
       StrConst   val -> Right (StringTable val)
       Add lExpr rExpr -> do
-          let eitherAddExpression = checkOperationExpression procName "+" lExpr rExpr paramMap varMap
+          let eitherAddExpression = checkOperationExpression procName addSymbol lExpr rExpr paramMap varMap
           case eitherAddExpression of
               Left err            -> Left err
               Right addExpression -> Right addExpression
       Sub lExpr rExpr -> do
-          let eitherSubExpression = checkOperationExpression procName "-" lExpr rExpr paramMap varMap
+          let eitherSubExpression = checkOperationExpression procName minusSymbol lExpr rExpr paramMap varMap
           case eitherSubExpression of
               Left err            -> Left err
               Right subExpression -> Right subExpression
       Mul lExpr rExpr -> do
-          let eitherMulExpression = checkOperationExpression procName "*" lExpr rExpr paramMap varMap
+          let eitherMulExpression = checkOperationExpression procName timesSymbol lExpr rExpr paramMap varMap
           case eitherMulExpression of
               Left err            -> Left err
               Right mulExpression -> Right mulExpression
       Div lExpr rExpr -> do
-          let eitherDivExpression = checkOperationExpression procName "/" lExpr rExpr paramMap varMap
+          let eitherDivExpression = checkOperationExpression procName divSymbol lExpr rExpr paramMap varMap
           case eitherDivExpression of
               Left err            -> Left err
               Right divExpression -> Right divExpression
@@ -491,12 +492,11 @@ checkOperationExpression procName operator lExpr rExpr paramMap varMap = do
                          Right baseType -> Right $ insertExpressionTableByOperator operator leftExprTable rightExprTable baseType
 
 insertExpressionTableByOperator :: String -> ExpressionTable -> ExpressionTable -> BaseType -> ExpressionTable
-insertExpressionTableByOperator operator lExpressionTable rExpressionTable baseType =
-    case operator of
-        "+" -> AddTable lExpressionTable rExpressionTable baseType
-        "-" -> SubTable lExpressionTable rExpressionTable baseType
-        "*" -> MulTable lExpressionTable rExpressionTable baseType
-        "/" -> DivTable lExpressionTable rExpressionTable baseType
+insertExpressionTableByOperator operator lExpressionTable rExpressionTable baseType
+  | operator == addSymbol   = AddTable lExpressionTable rExpressionTable baseType
+  | operator == minusSymbol = SubTable lExpressionTable rExpressionTable baseType
+  | operator == timesSymbol = MulTable lExpressionTable rExpressionTable baseType
+  | operator == divSymbol   = DivTable lExpressionTable rExpressionTable baseType
 
 getExpressionTableType :: Identifier -> ExpressionTable -> ExpressionTable -> Either (IO Task) BaseType
 getExpressionTableType procName leftExprTablt rightExprTable = do

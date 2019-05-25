@@ -2,6 +2,7 @@ module GoatParser where
 
 import           Data.Functor.Identity (Identity)
 import           GoatAST
+import           GoatConstant
 import           Text.Parsec
 import           Text.Parsec.Expr
 import           Text.Parsec.Language  (emptyDef)
@@ -71,8 +72,8 @@ myReservedWords = ["begin", "bool",  "call", "do",  "else",  "end",  "false"
 -- Define reserved operator
 -------------------------------------------------------------------------------
 myOperators :: [String]
-myOperators = ["+", "-", "*", "<", ">", "<=", ">=", "=", "!=", "||", "&&" ,"!"
-              ,"/", ":="]
+myOperators = [addSymbol, minusSymbol, timesSymbol, "<", ">", "<=", ">=", "=", "!=", "||", "&&" ,"!"
+              ,divSymbol, ":="]
 
 -------------------------------------------------------------------------------
 -- This is the top-most parsing function. It looks for a program which contains
@@ -331,9 +332,9 @@ pNumber = try (do pFloat) <|> do pInt
 -- at the bottom has the lowest precedence.
 -------------------------------------------------------------------------------
 table :: [[Operator String Int Identity Expression]]
-table = [[prefix   "-" UnaryMinus]
-        ,[binary   "*" Mul, binary   "/"  Div]
-        ,[binary   "+" Add, binary   "-"  Sub]
+table = [[prefix   minusSymbol UnaryMinus]
+        ,[binary   timesSymbol Mul, binary   divSymbol  Div]
+        ,[binary   addSymbol Add, binary   minusSymbol  Sub]
         ,[relation "=" Eq,  relation "!=" NotEq
         , relation "<" Les, relation "<=" LesEq
         , relation ">" Grt, relation ">=" GrtEq]
