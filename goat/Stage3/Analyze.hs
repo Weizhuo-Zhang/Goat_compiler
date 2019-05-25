@@ -223,9 +223,8 @@ insertStatementList procName (stmt:stmts) paramMap varMap = do
         Right subStatements -> do
             let newStmtTable = checkStatement procName stmt paramMap varMap
             case newStmtTable of
-                Left err -> Left err
-                Right stmtTable -> Right $
-                        (stmtTable):subStatements
+                Left err        -> Left err
+                Right stmtTable -> Right $ (stmtTable):subStatements
 
 checkStatement :: Identifier -> Statement -> ParameterMap -> VariableMap -> Either (IO Task) StatementTable
 checkStatement procName stmt paramMap varMap =
@@ -279,7 +278,6 @@ checkStatement procName stmt paramMap varMap =
                 Left err         -> Left err
                 Right stmtTables -> Right (WhileTable exprTable stmtTables)
         -- TODO
-        -- Assign vae expr
         -- Read val
         -- Call ident expr
 
@@ -326,40 +324,40 @@ checkExpression procName expr paramMap varMap = do
       FloatConst val -> Right (FloatTable val)
       StrConst   val -> Right (StringTable val)
       Add lExpr rExpr -> do
-          let checkTable = checkOperationExpression procName "+" lExpr rExpr paramMap varMap
-          case checkTable of
-              Right exprTable -> Right $ exprTable
-              Left err        -> Left err
+          let eitherAddExpression = checkOperationExpression procName "+" lExpr rExpr paramMap varMap
+          case eitherAddExpression of
+              Left err            -> Left err
+              Right addExpression -> Right addExpression
       Sub lExpr rExpr -> do
-          let checkTable = checkOperationExpression procName "-" lExpr rExpr paramMap varMap
-          case checkTable of
-              Right exprTable -> Right $ exprTable
-              Left err        -> Left err
+          let eitherSubExpression = checkOperationExpression procName "-" lExpr rExpr paramMap varMap
+          case eitherSubExpression of
+              Left err            -> Left err
+              Right subExpression -> Right subExpression
       Mul lExpr rExpr -> do
-          let checkTable = checkOperationExpression procName "*" lExpr rExpr paramMap varMap
-          case checkTable of
-              Right exprTable -> Right $ exprTable
-              Left err        -> Left err
+          let eitherMulExpression = checkOperationExpression procName "*" lExpr rExpr paramMap varMap
+          case eitherMulExpression of
+              Left err            -> Left err
+              Right mulExpression -> Right mulExpression
       Div lExpr rExpr -> do
-        let checkTable = checkOperationExpression procName "/" lExpr rExpr paramMap varMap
-        case checkTable of
-            Right exprTable -> Right $ exprTable
-            Left err        -> Left err
+          let eitherDivExpression = checkOperationExpression procName "/" lExpr rExpr paramMap varMap
+          case eitherDivExpression of
+              Left err            -> Left err
+              Right divExpression -> Right divExpression
       Or lExpr rExpr -> do
-        let exprTableEither = checkLogicExpression procName "||" lExpr rExpr paramMap varMap
-        case exprTableEither of
-          Left err        -> Left err
-          Right exprTable -> Right exprTable
+          let eitherOrExpression = checkLogicExpression procName "||" lExpr rExpr paramMap varMap
+          case eitherOrExpression of
+              Left err           -> Left err
+              Right orExpression -> Right orExpression
       And lExpr rExpr -> do
-        let exprTableEither = checkLogicExpression procName "&&" lExpr rExpr paramMap varMap
-        case exprTableEither of
-          Left err        -> Left err
-          Right exprTable -> Right exprTable
+          let eitherAndExpression = checkLogicExpression procName "&&" lExpr rExpr paramMap varMap
+          case eitherAndExpression of
+              Left err            -> Left err
+              Right andExpression -> Right andExpression
       UnaryNot expr -> do
-        let exprTableEither = checkLogicSubExpression procName "!" expr paramMap varMap
-        case exprTableEither of
-          Left err        -> Left err
-          Right exprTable -> Right (NotTable exprTable BoolType)
+          let eitherUnaryNotExpression = checkLogicSubExpression procName "!" expr paramMap varMap
+          case eitherUnaryNotExpression of
+              Left err                 -> Left err
+              Right unaryNotExpression -> Right (NotTable unaryNotExpression BoolType)
 -- TODO
 --      Eq lExpr rExpr -> do
 --        let exprTableEither = checkCompareExpression procName "=" lExpr rExpr
