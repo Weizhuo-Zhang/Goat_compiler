@@ -29,7 +29,6 @@ lookupBaseTypeParamMap :: Identifier -> M.Map Identifier Parameter -> BaseType
 lookupBaseTypeParamMap varName paramMap =
     case M.lookup varName paramMap of
       Just parameter -> passingType parameter
-      Nothing        -> exitWithUndefinedVariable varName
 
 -------------------------------------------------------------------------------
 -- lookup variable Map, It must have a base type
@@ -38,7 +37,6 @@ lookupBaseTypeVarMap :: Identifier -> M.Map Identifier VariableDeclaration -> Ba
 lookupBaseTypeVarMap varName varMap =
       case M.lookup varName varMap of
         Just variable -> declarationType variable
-        Nothing       -> exitWithUndefinedVariable varName
 
 -------------------------------------------------------------------------------
 -- Get procedure identifier from procedure.
