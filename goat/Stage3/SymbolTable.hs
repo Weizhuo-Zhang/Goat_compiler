@@ -31,6 +31,8 @@ data ProcedureTable = ProcedureTable { parameterMap :: ParameterMap
                                      } deriving (Show, Eq)
 
 data StatementTable = WriteTable     { writeExprTable    :: ExpressionTable }
+                    | ReadTable      { readExprTable     :: ExpressionTable }
+                    | AssignTable    { assignExprTable   :: ExpressionTable}
                     | IfTable        { ifExprTable       :: ExpressionTable
                                      , ifStmtTables      :: [StatementTable]
                                      }

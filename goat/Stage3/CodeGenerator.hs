@@ -40,7 +40,7 @@ generateMain programMap =
   case Map.lookup "main" programMap of
     Just procedureTable -> do
       { putStrLn (procName ++ ":")
-      ; generateStatements procName [0] (statements procedureTable)
+      ; generateStatements procName [0] (statementTable procedureTable)
       ; printNewLineIndentation
       ; putStrLn "return"
       }

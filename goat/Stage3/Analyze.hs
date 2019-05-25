@@ -245,42 +245,42 @@ checkStatement procName stmt paramMap varMap =
             let newExpr = checkReadStmt procName var paramMap varMap
             case newExpr of
                 Left err        -> Left err
-                Right exprTable -> Right (StatementTable stmt exprTable)
+                Right exprTable -> Right (ReadTable exprTable)
         Assign var expression -> do
           -- Assignment statement, e.g. a := 1
           let newExpr = checkVariable procName var paramMap varMap
           case newExpr of
               Left err        -> Left err
-              Right exprTable -> Right (StatementTable stmt exprTable)
+              Right exprTable -> Right (AssignTable exprTable)
         If expr stmts -> do
-          let exprEither = checkConsition procName expr
+          let exprEither = checkConsition procName expr paramMap varMap
           case exprEither of
             Left err -> Left err
             Right exprTable -> do
-              let stmtTablesEither = insertStatementList procName stmts
+              let stmtTablesEither = insertStatementList procName stmts paramMap varMap
               case stmtTablesEither of
                 Left err -> Left err
                 Right stmtTables -> Right (IfTable exprTable stmtTables)
         IfElse expr stmts1 stmts2 -> do
-          let exprEither = checkConsition procName expr
+          let exprEither = checkConsition procName expr paramMap varMap
           case exprEither of
             Left err -> Left err
             Right exprTable -> do
-              let stmtTablesEither1 = insertStatementList procName stmts1
+              let stmtTablesEither1 = insertStatementList procName stmts1 paramMap varMap
               case stmtTablesEither1 of
                 Left err -> Left err
                 Right stmtTables1 -> do
-                  let stmtTablesEither2 = insertStatementList procName stmts2
+                  let stmtTablesEither2 = insertStatementList procName stmts2 paramMap varMap
                   case stmtTablesEither2 of
                     Left err -> Left err
                     Right stmtTables2 -> do
                       Right (IfElseTable exprTable stmtTables1 stmtTables2)
         While expr stmts -> do
-          let exprEither = checkConsition procName expr
+          let exprEither = checkConsition procName expr paramMap varMap
           case exprEither of
             Left err -> Left err
             Right exprTable -> do
-              let stmtTablesEither = insertStatementList procName stmts
+              let stmtTablesEither = insertStatementList procName stmts paramMap varMap
               case stmtTablesEither of
                 Left err -> Left err
                 Right stmtTables -> Right (WhileTable exprTable stmtTables)
@@ -304,9 +304,9 @@ checkReadStmt procName var paramMap varMap = do
       Right exprTable -> Right $ exprTable
       Left err        -> Left err
 
-checkConsition :: Identifier -> Expression -> Either (IO Task) ExpressionTable
-checkConsition procName expr = do
-  let newExprTable = checkExpression procName expr
+checkConsition :: Identifier -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
+checkConsition procName expr paramMap varMap = do
+  let newExprTable = checkExpression procName expr paramMap varMap
       errorExit = exitWithConditionTypeError procName
   case newExprTable of
     Left err -> Left err
@@ -352,22 +352,23 @@ checkExpression procName expr paramMap varMap = do
             Right exprTable -> Right $ exprTable
             Left err        -> Left err
       Or lExpr rExpr -> do
-        let exprTableEither = checkLogicExpression procName "||" lExpr rExpr
+        let exprTableEither = checkLogicExpression procName "||" lExpr rExpr paramMap varMap
         case exprTableEither of
           Left err -> Left err
           Right exprTable -> Right exprTable
       And lExpr rExpr -> do
-        let exprTableEither = checkLogicExpression procName "&&" lExpr rExpr
+        let exprTableEither = checkLogicExpression procName "&&" lExpr rExpr paramMap varMap
         case exprTableEither of
           Left err -> Left err
           Right exprTable -> Right exprTable
       UnaryNot expr -> do
-        let exprTableEither = checkLogicSubExpression procName "!" expr
+        let exprTableEither = checkLogicSubExpression procName "!" expr paramMap varMap
         case exprTableEither of
           Left err -> Left err
           Right exprTable -> Right (NotTable exprTable BoolType)
-      Eq lExpr rExpr -> do
-        let exprTableEither = checkCompareExpression procName "=" lExpr rExpr
+-- TODO
+--      Eq lExpr rExpr -> do
+--        let exprTableEither = checkCompareExpression procName "=" lExpr rExpr
 
 -- TODO
 --    NotEq lExpr rExpr      ->
@@ -382,13 +383,13 @@ checkExpression procName expr paramMap varMap = do
 --      let exprTableEither = checkCompareExpression procName ">=" lExpr rExpr
 
 checkLogicExpression ::
-  Identifier -> String -> Expression -> Expression -> Either (IO Task) ExpressionTable
-checkLogicExpression procName operator lExpr rExpr = do
-  let lExprTableEither = checkLogicSubExpression procName operator lExpr
+  Identifier -> String -> Expression -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
+checkLogicExpression procName operator lExpr rExpr paramMap varMap = do
+  let lExprTableEither = checkLogicSubExpression procName operator lExpr paramMap varMap
   case lExprTableEither of
     Left err -> Left err
     Right lExprTable -> do
-      let rExprTableEither = checkLogicSubExpression procName operator rExpr
+      let rExprTableEither = checkLogicSubExpression procName operator rExpr paramMap varMap
       case rExprTableEither of
         Left err -> Left err
         Right rExprTable -> do
@@ -397,9 +398,9 @@ checkLogicExpression procName operator lExpr rExpr = do
             "&&" -> Right (AndTable lExprTable rExprTable BoolType)
 
 checkLogicSubExpression ::
-  Identifier -> String -> Expression -> Either (IO Task) ExpressionTable
-checkLogicSubExpression procName operator expr = do
-  let exprTableEither = checkExpression procName expr
+  Identifier -> String -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
+checkLogicSubExpression procName operator expr paramMap varMap = do
+  let exprTableEither = checkExpression procName expr paramMap varMap
       errorExit = exitWithLogicExprTypeError procName operator
   case exprTableEither of
     Left err -> Left err
@@ -418,33 +419,35 @@ checkLogicSubExpression procName operator expr = do
         NotTable _ exprType      -> checkBoolType exprTable exprType errorExit
         otherwise -> Left errorExit
 
-checkCompareExpression ::
-  Identifier -> String -> Expression -> Expression -> Either (IO Task) ExpressionTable
-checkCompareExpression procName operator lExpr rExpr = do
-  let lExprTableEither = checkCompareSubExpression procName operator lExpr
-  case lExprTableEither of
-    Left err -> Left err
-    Right lExprTable -> do
-      let rExprTableEither = checkCompareSubExpression procName operator rExpr
-      case rExprTableEither of
-        Left err -> Left err
-        Right rExprTable -> do
-          case operator of
-            "="  -> Right (EqTable    lExprTable rExprTable BoolType)
-            "!=" -> Right (NotEqTable lExprTable rExprTable BoolType)
-            "<"  -> Right (LesTable   lExprTable rExprTable BoolType)
-            "<=" -> Right (LesEqTable lExprTable rExprTable BoolType)
-            ">"  -> Right (GrtTable   lExprTable rExprTable BoolType)
-            ">=" -> Right (GrtEqTable lExprTable rExprTable BoolType)
+-- TODO Zwz
+--checkCompareExpression ::
+--  Identifier -> String -> Expression -> Expression -> Either (IO Task) ExpressionTable
+--checkCompareExpression procName operator lExpr rExpr = do
+--  let lExprTableEither = checkCompareSubExpression procName operator lExpr
+--  case lExprTableEither of
+--    Left err -> Left err
+--    Right lExprTable -> do
+--      let rExprTableEither = checkCompareSubExpression procName operator rExpr
+--      case rExprTableEither of
+--        Left err -> Left err
+--        Right rExprTable -> do
+--          case operator of
+--            "="  -> Right (EqTable    lExprTable rExprTable BoolType)
+--            "!=" -> Right (NotEqTable lExprTable rExprTable BoolType)
+--            "<"  -> Right (LesTable   lExprTable rExprTable BoolType)
+--            "<=" -> Right (LesEqTable lExprTable rExprTable BoolType)
+--            ">"  -> Right (GrtTable   lExprTable rExprTable BoolType)
+--            ">=" -> Right (GrtEqTable lExprTable rExprTable BoolType)
 
-checkCompareSubExpression ::
-  Identifier -> String -> Expression -> Either (IO Task) ExpressionTable
-checkCompareSubExpression procName operator expr = do
-  let exprTableEither = checkExpression procName expr
-  case exprTableEither of
-    Left err -> Left err
-    Right exprTable -> do
-      case exprTable of
+-- TODO Zwz
+-- checkCompareSubExpression ::
+--   Identifier -> String -> Expression -> Either (IO Task) ExpressionTable
+-- checkCompareSubExpression procName operator expr = do
+--   let exprTableEither = checkExpression procName expr
+--   case exprTableEither of
+--     Left err -> Left err
+--     Right exprTable -> do
+--       case exprTable of
 --        VariableTable _ exprType -> checkBoolType exprTable exprType errorExit
 --        BoolTable _              -> Right exprTable
 --        OrTable _ _ exprType     -> checkBoolType exprTable exprType errorExit
