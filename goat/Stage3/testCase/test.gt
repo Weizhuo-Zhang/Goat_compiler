@@ -1,4 +1,7 @@
 proc main()
 begin
-  write true + 1;
+  write true;
+  write 1.157;
+  write 10;
+  write "fuck you";
 end

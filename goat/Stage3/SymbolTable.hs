@@ -34,7 +34,7 @@ data StatementTable = StatementTable { statement :: Statement
                                      , expressionTable :: ExpressionTable
                                      } deriving (Show, Eq)
 
-data ExpressionTable = VariableTable   { variableVal    :: Variable
+data ExpressionTable = VariableTable   { variable       :: Variable
                                        , variableType   :: BaseType
                                        }
                      | StringTable     { stringVal :: String }
