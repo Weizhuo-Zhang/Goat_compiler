@@ -32,26 +32,47 @@ codeGeneration programMap = do { printNewLineIndentation
                                ; putStrLn "call proc_main"
                                ; printNewLineIndentation
                                ; putStrLn "halt"
-                               ; generateMain programMap
+                               ; let procedures = Map.keys programMap
+                               ; generateProcedureList procedures programMap
                                }
 
-generateMain :: ProgramMap -> IO ()
-generateMain programMap =
-  case Map.lookup "main" programMap of
-    Just procedureTable -> do { putStrLn "proc_main:"
-                              ; generateStatements $ statementTable procedureTable
-                              }
-    Nothing -> putStrLn "Main not found"
-
-generateStatements :: [StatementTable] -> IO ()
-generateStatements [] = return ()
-generateStatements (stat:[]) = do { generateStatement stat
+generateProcedureList :: [String] -> ProgramMap -> IO ()
+generateProcedureList (procedure:[]) programMap =
+    case Map.lookup procedure programMap of
+        Just procedureTable -> do { putStrLn $ procedure ++ ":"
+                                  ; generateProcedure procedure procedureTable
                                   ; printNewLineIndentation
                                   ; putStrLn "return"
                                   }
-generateStatements (stat:stats) = do { generateStatement stat
-                                     ; generateStatements stats
-                                     }
+
+generateProcedureList (procedure:procedures) programMap =
+    case Map.lookup procedure programMap of
+        Just procedureTable -> do { putStrLn $ procedure ++ ":"
+                                  ; generateProcedure procedure procedureTable
+                                  ; printNewLineIndentation
+                                  ; putStrLn "return"
+                                  ; generateProcedureList procedures programMap
+                                  }
+
+generateProcedure :: Identifier -> ProcedureTable -> IO ()
+generateProcedure procName (ProcedureTable paramMap varMap statements) = do
+    let parameterNumber = Map.size paramMap
+        variableNumber = Map.size varMap
+        totalVarNumber = parameterNumber + variableNumber
+    printNewLineIndentation
+    putStrLn $ "push_stack_frame " ++ (show totalVarNumber)
+    let stackMap = insertStackMap paramMap varMap
+    generateStatements statements stackMap
+    putStrLn $ "pop_stack_frame " ++ (show totalVarNumber)
+
+
+
+generateStatements :: [StatementTable] -> StackMap -> IO ()
+generateStatements [] stackMap = return ()
+generateStatements (stat:[]) stackMap = do { generateStatement stat }
+generateStatements (stat:stats) stackMap = do { generateStatement stat
+                                              ; generateStatements stats stackMap
+                                              }
 
 generateStatement :: StatementTable -> IO ()
 generateStatement statementTable = do
@@ -220,3 +241,15 @@ generateIntToFloat lExpr rExpr registerNum = do
                                  ; putStrLn $ "int_to_real r" ++ (show $ registerNum+1)
                                    ++ ", r" ++ (show $ registerNum+1)
                                  }
+
+insertStackMap :: ParameterMap -> VariableMap -> StackMap
+insertStackMap paramMap varMap = do
+    let paramList = Map.keys paramMap
+        varList = Map.keys varMap
+        stackList = paramList ++ varList
+    subinsertStackMap stackList 0
+
+
+subinsertStackMap :: [String] -> Int -> StackMap
+subinsertStackMap (name:[]) index = Map.insert name index Map.empty
+subinsertStackMap (name:names) index = Map.insert name index (subinsertStackMap names $ index+1)
