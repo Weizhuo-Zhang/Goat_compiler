@@ -25,8 +25,10 @@ type ParameterMap = M.Map Identifier Parameter
 
 type VariableMap = M.Map Identifier VariableDeclaration
 
-data ProcedureTable = ProcedureTable { parameterMap   :: ParameterMap
-                                     , variableMap    :: VariableMap
+type StackMap = M.Map Identifier Int
+
+data ProcedureTable = ProcedureTable { parameterMap :: ParameterMap
+                                     , variableMap :: VariableMap
                                      , statementTable :: [StatementTable]
                                      } deriving (Show, Eq)
 

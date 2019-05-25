@@ -32,40 +32,64 @@ codeGeneration programMap = do { printNewLineIndentation
                                ; putStrLn "call proc_main"
                                ; printNewLineIndentation
                                ; putStrLn "halt"
-                               ; generateMain programMap
+                               ; let procedures = Map.keys programMap
+                               ; generateProcedureList procedures programMap
                                }
 
-generateMain :: ProgramMap -> IO ()
-generateMain programMap =
-  case Map.lookup "main" programMap of
-    Just procedureTable -> do
-      { putStrLn (procName ++ ":")
-      ; generateStatements procName [0] (statementTable procedureTable)
-      ; printNewLineIndentation
-      ; putStrLn "return"
-      }
-    Nothing -> putStrLn "Main not found"
-  where procName = "proc_main"
+generateProcedureList :: [String] -> ProgramMap -> IO ()
+generateProcedureList (procedure:[]) programMap =
+    case Map.lookup procedure programMap of
+        Just procedureTable -> do { putStrLn $ "proc_" ++ procedure ++ ":"
+                                  ; generateProcedure procedure procedureTable
+                                  ; printNewLineIndentation
+                                  ; putStrLn "return"
+                                  }
 
-generateStatements :: String -> [Int] -> [StatementTable] -> IO ()
-generateStatements _ _ [] = return ()
-generateStatements procName label (stat:[]) = do
-  generateStatement procName (updateLabel label) stat
-generateStatements procName label (stat:stats) = do
-  { generateStatement procName (updateLabel label) stat
-  ; generateStatements procName (updateLabel label) stats
-  }
+generateProcedureList (procedure:procedures) programMap =
+    case Map.lookup procedure programMap of
+        Just procedureTable -> do { putStrLn $ procedure ++ ":"
+                                  ; generateProcedure procedure procedureTable
+                                  ; printNewLineIndentation
+                                  ; putStrLn "return"
+                                  ; generateProcedureList procedures programMap
+                                  }
 
-generateStatement :: String -> [Int] -> StatementTable -> IO ()
-generateStatement procName label statementTable = do
+generateProcedure :: Identifier -> ProcedureTable -> IO ()
+generateProcedure procName (ProcedureTable paramMap varMap statements) = do
+    let parameterNumber = Map.size paramMap
+        variableNumber = Map.size varMap
+        totalVarNumber = parameterNumber + variableNumber
+    case totalVarNumber of
+        0 -> putStr ""
+        otherwise -> printLine $ "push_stack_frame " ++ (show totalVarNumber)
+    let stackMap = insertStackMap paramMap varMap
+    generateStatements procName [0] statements stackMap
+    case totalVarNumber of
+        0 -> putStr ""
+        otherwise -> printLine $ "pop_stack_frame " ++ (show totalVarNumber)
+
+
+
+
+generateStatements :: String -> [Int] -> [StatementTable] -> StackMap -> IO ()
+generateStatements _ _ [] _  = return ()
+generateStatements procName label (stat:[]) stackMap = do
+    generateStatement procName (updateLabel label) stat stackMap
+generateStatements procName label (stat:stats) stackMap = do
+    { generateStatement procName (updateLabel label) stat stackMap
+    ; generateStatements procName (updateLabel label) stats stackMap
+    }
+
+generateStatement :: String -> [Int] -> StatementTable -> StackMap -> IO ()
+generateStatement procName label statementTable stackMap = do
   case statementTable of
     WriteTable exprTable -> do { generateWriteStatement exprTable }
     IfTable exprTable stmtTables ->
-      generateIfStatement procName label exprTable stmtTables
+      generateIfStatement procName label exprTable stmtTables stackMap
     IfElseTable exprTable stmtTables1 stmtTables2 ->
-      generateIfElseStatement procName label exprTable stmtTables1 stmtTables2
+      generateIfElseStatement procName label exprTable stmtTables1 stmtTables2 stackMap
     WhileTable exprTable stmtTables ->
-      generateWhileStatement procName label exprTable stmtTables
+      generateWhileStatement procName label exprTable stmtTables stackMap
     -- TODO
     -- AssignTable
     -- ReadTable
@@ -186,8 +210,8 @@ showLabel (x:[]) = show(x)
 showLabel (x:xs) = show(x) ++ "_" ++ showLabel(xs)
 
 generateIfStatement ::
-  String -> [Int] -> ExpressionTable -> [StatementTable] -> IO ()
-generateIfStatement procName label exprTable stmts = do
+  String -> [Int] -> ExpressionTable -> [StatementTable] -> StackMap -> IO ()
+generateIfStatement procName label exprTable stmts stackMap = do
   { let label_a = procName ++ "_" ++ (showLabel label) ++ "_a"
   ; let label_b = procName ++ "_" ++ (showLabel label) ++ "_b"
   -- check condition
@@ -196,33 +220,33 @@ generateIfStatement procName label exprTable stmts = do
   ; printLine ("branch_uncond " ++ label_b)
   -- If statements
   ; putStrLn (label_a ++ ":")
-  ; generateStatements procName (label ++ [0] ++ [0]) stmts
+  ; generateStatements procName (label ++ [0] ++ [0]) stmts stackMap
   -- end of this statements
   ; putStrLn (label_b ++ ":")
   }
 
 generateIfElseStatement ::
   String -> [Int] -> ExpressionTable -> [StatementTable] -> [StatementTable]
-  -> IO ()
-generateIfElseStatement procName label exprTable stmts1 stmts2 = do
+  -> StackMap -> IO ()
+generateIfElseStatement procName label exprTable stmts1 stmts2 stackMap = do
   { let label_a = procName ++ "_" ++ (showLabel label) ++ "_a"
   ; let label_b = procName ++ "_" ++ (showLabel label) ++ "_b"
   ; generateExpressionTable exprTable
   -- Else statements
   ; printLine ("branch_on_false r0, " ++ label_a)
   -- If statements
-  ; generateStatements procName (label ++ [1] ++ [0]) stmts1
+  ; generateStatements procName (label ++ [1] ++ [0]) stmts1 stackMap
   ; printLine ("branch_uncond " ++ label_b)
   -- Else statements
   ; putStrLn (label_a ++ ":")
-  ; generateStatements procName (label ++ [2] ++ [0]) stmts2
+  ; generateStatements procName (label ++ [2] ++ [0]) stmts2 stackMap
   -- fi The end of If-Else
   ; putStrLn (label_b ++ ":")
   }
 
 generateWhileStatement ::
-  String -> [Int] -> ExpressionTable -> [StatementTable] -> IO ()
-generateWhileStatement procName label exprTable stmts = do
+  String -> [Int] -> ExpressionTable -> [StatementTable] -> StackMap -> IO ()
+generateWhileStatement procName label exprTable stmts stackMap = do
   { let label_a = procName ++ "_" ++ (showLabel label) ++ "_a"
   ; let label_b = procName ++ "_" ++ (showLabel label) ++ "_b"
   ; let label_c = procName ++ "_" ++ (showLabel label) ++ "_c"
@@ -233,7 +257,7 @@ generateWhileStatement procName label exprTable stmts = do
   ; printLine ("branch_uncond " ++ label_c)
   -- while statements
   ; putStrLn (label_b ++ ":")
-  ; generateStatements procName (label ++ [3] ++ [0]) stmts
+  ; generateStatements procName (label ++ [3] ++ [0]) stmts stackMap
   -- check condition again
   ; printLine ("branch_uncond " ++ label_a)
   -- end of this while loop
@@ -361,3 +385,15 @@ generateIntToFloat lExpr rExpr registerNum = do
                                  ; putStrLn $ "int_to_real r" ++ (show $ registerNum+1)
                                    ++ ", r" ++ (show $ registerNum+1)
                                  }
+
+insertStackMap :: ParameterMap -> VariableMap -> StackMap
+insertStackMap paramMap varMap = do
+    let paramList = Map.keys paramMap
+        varList = Map.keys varMap
+        stackList = paramList ++ varList
+    subinsertStackMap stackList 0
+
+
+subinsertStackMap :: [String] -> Int -> StackMap
+subinsertStackMap (name:[]) index = Map.insert name index Map.empty
+subinsertStackMap (name:names) index = Map.insert name index (subinsertStackMap names $ index+1)

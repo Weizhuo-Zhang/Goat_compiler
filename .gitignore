@@ -25,6 +25,7 @@ goat/GoatLexer.hs
 goat/Goat
 *.out
 *.swp
+oz/oz
 
 oz/oz
 goat/Stage1/testCase/GeneratedOutput/*.txt
