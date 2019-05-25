@@ -1,8 +1,8 @@
 module SymbolTable where
 
-import Data.Map
+import           Data.Map
 import qualified Data.Map.Strict as M
-import GoatAST
+import           GoatAST
 
 -------------------------------- Documentation --------------------------------
 
@@ -25,36 +25,39 @@ type ParameterMap = M.Map Identifier Parameter
 
 type VariableMap = M.Map Identifier VariableDeclaration
 
-data ProcedureTable = ProcedureTable { parameterMap :: ParameterMap
-                                     , variableMap :: VariableMap
+data ProcedureTable = ProcedureTable { parameterMap   :: ParameterMap
+                                     , variableMap    :: VariableMap
                                      , statementTable :: [StatementTable]
                                      } deriving (Show, Eq)
 
-data StatementTable = StatementTable { statement :: Statement
+data StatementTable = StatementTable { statement       :: Statement
                                      , expressionTable :: ExpressionTable
                                      } deriving (Show, Eq)
 
-data ExpressionTable = VariableTable   { variable       :: Variable
-                                       , variableType   :: BaseType
+data ExpressionTable = VariableTable   { variable     :: Variable
+                                       , variableType :: BaseType
                                        }
-                     | StringTable     { stringVal :: String }
+                     | BoolTable       { boolVal   :: Bool }
                      | IntTable        { intVal    :: Int }
                      | FloatTable      { floatVal  :: Float }
-                     | BoolTable       { boolVal   :: Bool }
-                     | AddTable        { addLeftVal :: ExpressionTable
+                     | StringTable     { stringVal :: String }
+                     | AddTable        { addLeftVal  :: ExpressionTable
                                        , addRightVal :: ExpressionTable
-                                       , addType :: BaseType
+                                       , addType     :: BaseType
                                        }
-                     | SubTable        { subLeftVal :: ExpressionTable
-                                       , subRightVal :: ExpressionTable
-                                       , subType :: BaseType
-                                       }
-                     | MulTable        { mulLeftVal :: ExpressionTable
+                     | MulTable        { mulLeftVal  :: ExpressionTable
                                        , mulRightVal :: ExpressionTable
-                                       , mulType :: BaseType
+                                       , mulType     :: BaseType
                                        }
-                     | DivTable        { divLeftVal :: ExpressionTable
+                     | SubTable        { subLeftVal  :: ExpressionTable
+                                       , subRightVal :: ExpressionTable
+                                       , subType     :: BaseType
+                                       }
+                     | DivTable        { divLeftVal  :: ExpressionTable
                                        , divRightVal :: ExpressionTable
-                                       , divType :: BaseType
+                                       , divType     :: BaseType
+                                       }
+                     | AssignTable     { assignVar        :: VariableTable
+                                       , assignExpression :: ExpressionTable
                                        }
                      deriving (Show, Eq)
