@@ -87,11 +87,11 @@ generateWriteStatement exprTable =
                            ; putStrLn "call_builtin print_int"
                            }
         FloatTable val -> do { printNewLineIndentation
-                               ; putStrLn $ "real_const r0, " ++
-                                 (show $ val)
-                               ; printNewLineIndentation
-                               ; putStrLn "call_builtin print_real"
-                               }
+                             ; putStrLn $ "real_const r0, " ++
+                               (show $ val)
+                             ; printNewLineIndentation
+                             ; putStrLn "call_builtin print_real"
+                             }
         BoolTable bool -> do
             case bool of
                 True -> do { printNewLineIndentation
@@ -106,6 +106,7 @@ generateWriteStatement exprTable =
                             }
         VariableTable var varType -> return ()
         otherwise -> do
+           -- Expression
            let exprType = getExprType exprTable
            generateExpression exprTable 0
            case exprType of
