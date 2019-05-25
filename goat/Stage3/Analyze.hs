@@ -223,6 +223,12 @@ checkStatement procName stmt paramMap varMap =
             case newExpr of
                 Left err -> Left err
                 Right exprTable -> Right (StatementTable stmt exprTable)
+        Assign var expression -> do
+          -- Assignment statement, e.g. a := 1
+          let newExpr = checkVariable procName var paramMap varMap
+          case newExpr of
+              Left err -> Left err
+              Right exprTable -> Right (StatementTable stmt exprTable)
 --        _ -> undefined
 
 checkWriteStmt :: Identifier -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
@@ -246,7 +252,7 @@ checkExpression procName expr paramMap varMap = do
       IntConst   val         -> Right (IntTable val)
       FloatConst val         -> Right (FloatTable val)
       StrConst   val         -> Right (StringTable val)
-      ExprVar var -> checkVariable procName var paramMap varMap
+      ExprVar    var -> checkVariable procName var paramMap varMap
       Add lExpr rExpr -> do
         let checkTable = checkOperationExpression procName "+" lExpr rExpr paramMap varMap
         case checkTable of
@@ -268,7 +274,6 @@ checkExpression procName expr paramMap varMap = do
             Right exprTable -> Right $ exprTable
             Left err -> Left err
 
-
 checkVariable :: Identifier -> Variable -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkVariable procName var paramMap varMap = do
   case (M.member id paramMap) of
@@ -277,8 +282,7 @@ checkVariable procName var paramMap varMap = do
           case (M.member id varMap) of
               True -> Right (VariableTable var varBaseType)
               False -> Left $ exitWithUndefinedVariable id
-          where id = varId var
-                varBaseType = lookupBaseTypeVarMap id varMap
+          where varBaseType = lookupBaseTypeVarMap id varMap
   where id = varId var
         paramBaseType = lookupBaseTypeParamMap id paramMap
 
@@ -320,57 +324,23 @@ getExpressionTableType procName leftExprTablt rightExprTable = do
            DivTable _ _ rDivType -> Right rDivType
        FloatTable _ -> Right FloatType
        BoolTable _ -> Left $ exitWithTypeError procName
-       VariableTable _ lVarType -> do
-         case rightExprTable of
-           IntTable _ -> Right lVarType
-           FloatTable _ -> Right FloatType
-           BoolTable _ -> Left $ exitWithTypeError procName
-           VariableTable _ rVarType -> chooseType procName lVarType rVarType
-           AddTable _ _ rAddType -> chooseType procName lVarType rAddType
-           SubTable _ _ rSubType -> chooseType procName lVarType rSubType
-           MulTable _ _ rMulType -> chooseType procName lVarType rMulType
-           DivTable _ _ rDivType -> chooseType procName lVarType rDivType
-       AddTable _ _ lAddType -> do
-         case rightExprTable of
-           IntTable _ -> Right lAddType
-           FloatTable _ -> Right FloatType
-           BoolTable _ -> Left $ exitWithTypeError procName
-           VariableTable _ rVarType -> chooseType procName lAddType rVarType
-           AddTable _ _ rAddType -> chooseType procName lAddType rAddType
-           SubTable _ _ rSubType -> chooseType procName lAddType rSubType
-           MulTable _ _ rMulType -> chooseType procName lAddType rMulType
-           DivTable _ _ rDivType -> chooseType procName lAddType rDivType
-       SubTable _ _ lSubType -> do
-         case rightExprTable of
-           IntTable _ -> Right lSubType
-           FloatTable _ -> Right FloatType
-           BoolTable _ -> Left $ exitWithTypeError procName
-           VariableTable _ rVarType -> chooseType procName lSubType rVarType
-           AddTable _ _ rAddType -> chooseType procName lSubType rAddType
-           SubTable _ _ rSubType -> chooseType procName lSubType rSubType
-           MulTable _ _ rMulType -> chooseType procName lSubType rMulType
-           DivTable _ _ rDivType -> chooseType procName lSubType rDivType
-       MulTable _ _ lMulType -> do
-         case rightExprTable of
-           IntTable _ -> Right lMulType
-           FloatTable _ -> Right FloatType
-           BoolTable _ -> Left $ exitWithTypeError procName
-           VariableTable _ rVarType -> chooseType procName lMulType rVarType
-           AddTable _ _ rAddType -> chooseType procName lMulType rAddType
-           SubTable _ _ rSubType -> chooseType procName lMulType rSubType
-           MulTable _ _ rMulType -> chooseType procName lMulType rMulType
-           DivTable _ _ rDivType -> chooseType procName lMulType rDivType
-       DivTable _ _ lDivType -> do
-         case rightExprTable of
-           IntTable _ -> Right lDivType
-           FloatTable _ -> Right FloatType
-           BoolTable _ -> Left $ exitWithTypeError procName
-           VariableTable _ rVarType -> chooseType procName lDivType rVarType
-           AddTable _ _ rAddType -> chooseType procName lDivType rAddType
-           SubTable _ _ rSubType -> chooseType procName lDivType rSubType
-           MulTable _ _ rMulType -> chooseType procName lDivType rMulType
-           DivTable _ _ rDivType -> chooseType procName lDivType rDivType
+       VariableTable _ lVarType -> getSubExpressionTableType procName lVarType rightExprTable
+       AddTable _ _ lAddType -> getSubExpressionTableType procName lAddType rightExprTable
+       SubTable _ _ lSubType -> getSubExpressionTableType procName lSubType rightExprTable
+       MulTable _ _ lMulType -> getSubExpressionTableType procName lMulType rightExprTable
+       DivTable _ _ lDivType -> getSubExpressionTableType procName lDivType rightExprTable
 
+getSubExpressionTableType :: Identifier -> BaseType -> ExpressionTable -> Either (IO Task) BaseType
+getSubExpressionTableType procName baseType expressionTable = do
+ case expressionTable of
+   IntTable _ -> Right baseType
+   FloatTable _ -> Right FloatType
+   BoolTable _ -> Left $ exitWithTypeError procName
+   VariableTable _ rVarType -> chooseType procName baseType rVarType
+   AddTable _ _ rAddType -> chooseType procName baseType rAddType
+   SubTable _ _ rSubType -> chooseType procName baseType rSubType
+   MulTable _ _ rMulType -> chooseType procName baseType rMulType
+   DivTable _ _ rDivType -> chooseType procName baseType rDivType
 
 chooseType :: Identifier -> BaseType -> BaseType -> Either (IO Task) BaseType
 chooseType _ IntType IntType = Right IntType
