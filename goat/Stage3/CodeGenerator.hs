@@ -1,11 +1,11 @@
 module CodeGenerator where
 
-import GoatAST
-import GoatExit
-import SymbolTable
-import qualified Data.Map.Strict as Map
-import GoatPrettyPrint
-import Control.Monad.State
+import           Control.Monad.State
+import qualified Data.Map.Strict     as Map
+import           GoatAST
+import           GoatExit
+import           GoatPrettyPrint
+import           SymbolTable
 -------------------------------- Documentation --------------------------------
 
 -- Authors:
@@ -87,11 +87,11 @@ generateWriteStatement exprTable =
                            ; putStrLn "call_builtin print_int"
                            }
         FloatTable val -> do { printNewLineIndentation
-                               ; putStrLn $ "real_const r0, " ++
-                                 (show $ val)
-                               ; printNewLineIndentation
-                               ; putStrLn "call_builtin print_real"
-                               }
+                             ; putStrLn $ "real_const r0, " ++
+                               (show $ val)
+                             ; printNewLineIndentation
+                             ; putStrLn "call_builtin print_real"
+                             }
         BoolTable bool -> do
             case bool of
                 True -> do { printNewLineIndentation
@@ -106,6 +106,7 @@ generateWriteStatement exprTable =
                             }
         VariableTable var varType -> return ()
         otherwise -> do
+           -- Expression
            let exprType = getExprType exprTable
            generateExpression exprTable 0
            case exprType of
@@ -170,6 +171,10 @@ generateExpression exprTable registerNum =
 
 
 
+
+
+-- generateReadStatement :: ExpressionTable -> IO ()
+-- generateReadStatement exprTable = do {}
 
 
 updateLabel :: [Int] -> [Int]
@@ -327,9 +332,9 @@ printNewLineIndentation = putStr "    "
 getExprType :: ExpressionTable -> BaseType
 getExprType exprTable =
      case exprTable of
-          IntTable _ -> IntType
-          FloatTable _ -> FloatType
-          BoolTable _ -> BoolType
+          IntTable _            -> IntType
+          FloatTable _          -> FloatType
+          BoolTable _           -> BoolType
           AddTable _ _ baseType -> baseType
           SubTable _ _ baseType -> baseType
           MulTable _ _ baseType -> baseType

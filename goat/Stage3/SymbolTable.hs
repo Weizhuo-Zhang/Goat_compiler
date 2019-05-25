@@ -1,8 +1,8 @@
 module SymbolTable where
 
-import Data.Map
+import           Data.Map
 import qualified Data.Map.Strict as M
-import GoatAST
+import           GoatAST
 
 -------------------------------- Documentation --------------------------------
 
@@ -25,23 +25,23 @@ type ParameterMap = M.Map Identifier Parameter
 
 type VariableMap = M.Map Identifier VariableDeclaration
 
-data ProcedureTable = ProcedureTable { parameterMap :: ParameterMap
-                                     , variableMap :: VariableMap
+data ProcedureTable = ProcedureTable { parameterMap   :: ParameterMap
+                                     , variableMap    :: VariableMap
                                      , statementTable :: [StatementTable]
                                      } deriving (Show, Eq)
 
 data StatementTable = WriteTable     { writeExprTable    :: ExpressionTable }
                     | ReadTable      { readExprTable     :: ExpressionTable }
                     | AssignTable    { assignExprTable   :: ExpressionTable}
-                    | IfTable        { ifExprTable       :: ExpressionTable
-                                     , ifStmtTables      :: [StatementTable]
+                    | IfTable        { ifExprTable  :: ExpressionTable
+                                     , ifStmtTables :: [StatementTable]
                                      }
                     | IfElseTable    { ifElseExprTable   :: ExpressionTable
                                      , ifElseStmtTables1 :: [StatementTable]
                                      , ifElseStmtTables2 :: [StatementTable]
                                      }
-                    | WhileTable     { whileExprTable    :: ExpressionTable
-                                     , whileStmtTables   :: [StatementTable]
+                    | WhileTable     { whileExprTable  :: ExpressionTable
+                                     , whileStmtTables :: [StatementTable]
                                      } deriving (Show, Eq)
 
 data ExpressionTable = VariableTable   { variable     :: Variable
@@ -51,54 +51,54 @@ data ExpressionTable = VariableTable   { variable     :: Variable
                      | IntTable        { intVal    :: Int }
                      | FloatTable      { floatVal  :: Float }
                      | StringTable     { stringVal :: String }
-                     | AddTable        { addLeftVal :: ExpressionTable
+                     | AddTable        { addLeftVal  :: ExpressionTable
                                        , addRightVal :: ExpressionTable
-                                       , addType :: BaseType
+                                       , addType     :: BaseType
                                        }
-                     | SubTable        { subLeftVal :: ExpressionTable
+                     | SubTable        { subLeftVal  :: ExpressionTable
                                        , subRightVal :: ExpressionTable
-                                       , subType :: BaseType
+                                       , subType     :: BaseType
                                        }
-                     | MulTable        { mulLeftVal :: ExpressionTable
+                     | MulTable        { mulLeftVal  :: ExpressionTable
                                        , mulRightVal :: ExpressionTable
-                                       , mulType :: BaseType
+                                       , mulType     :: BaseType
                                        }
-                     | DivTable        { divLeftVal :: ExpressionTable
+                     | DivTable        { divLeftVal  :: ExpressionTable
                                        , divRightVal :: ExpressionTable
-                                       , divType :: BaseType
+                                       , divType     :: BaseType
                                        }
-                     | OrTable         { orLeftExprTable   :: ExpressionTable
-                                       , orRightExprTable  :: ExpressionTable
-                                       , orType            :: BaseType
+                     | OrTable         { orLeftExprTable  :: ExpressionTable
+                                       , orRightExprTable :: ExpressionTable
+                                       , orType           :: BaseType
                                        }
                      | AndTable        { andLeftExprTable  :: ExpressionTable
                                        , andRightExprTable :: ExpressionTable
                                        , andType           :: BaseType
                                        }
-                     | EqTable         { eqLeftExpr        :: ExpressionTable
-                                       , eqRightExpr       :: ExpressionTable
-                                       , eqType            :: BaseType
+                     | EqTable         { eqLeftExpr  :: ExpressionTable
+                                       , eqRightExpr :: ExpressionTable
+                                       , eqType      :: BaseType
                                        }
-                     | NotEqTable      { notEqLeftExpr     :: ExpressionTable
-                                       , notEqRightExpr    :: ExpressionTable
-                                       , notEqType         :: BaseType
+                     | NotEqTable      { notEqLeftExpr  :: ExpressionTable
+                                       , notEqRightExpr :: ExpressionTable
+                                       , notEqType      :: BaseType
                                        }
-                     | LesTable        { lesLeftExpr       :: ExpressionTable
-                                       , lesRightExpr      :: ExpressionTable
-                                       , lesType           :: BaseType
+                     | LesTable        { lesLeftExpr  :: ExpressionTable
+                                       , lesRightExpr :: ExpressionTable
+                                       , lesType      :: BaseType
                                        }
-                     | LesEqTable      { lesEqLeftExpr     :: ExpressionTable
-                                       , lesEqRightExpr    :: ExpressionTable
-                                       , lesEqType         :: BaseType
+                     | LesEqTable      { lesEqLeftExpr  :: ExpressionTable
+                                       , lesEqRightExpr :: ExpressionTable
+                                       , lesEqType      :: BaseType
                                        }
-                     | GrtTable        { grtLeftExpr       :: ExpressionTable
-                                       , grtRightExpr      :: ExpressionTable
-                                       , grtType           :: BaseType
+                     | GrtTable        { grtLeftExpr  :: ExpressionTable
+                                       , grtRightExpr :: ExpressionTable
+                                       , grtType      :: BaseType
                                        }
-                     | GrtEqTable      { grtEqLeftExpr     :: ExpressionTable
-                                       , grtEqRightExpr    :: ExpressionTable
-                                       , grtEqType         :: BaseType
+                     | GrtEqTable      { grtEqLeftExpr  :: ExpressionTable
+                                       , grtEqRightExpr :: ExpressionTable
+                                       , grtEqType      :: BaseType
                                        }
-                     | NotTable        { notExprTable      :: ExpressionTable
-                                       , notType           :: BaseType
+                     | NotTable        { notExprTable :: ExpressionTable
+                                       , notType      :: BaseType
                                        } deriving (Show, Eq)

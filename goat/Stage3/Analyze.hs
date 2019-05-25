@@ -27,8 +27,8 @@ import           SymbolTable
 -------------------------------------------------------------------------------
 lookupBaseTypeParamMap :: Identifier -> M.Map Identifier Parameter -> BaseType
 lookupBaseTypeParamMap varName paramMap =
-      case (M.lookup varName paramMap) of
-        Just variable -> passingType variable
+    case M.lookup varName paramMap of
+      Just parameter -> passingType parameter
 
 -------------------------------------------------------------------------------
 -- lookup variable Map, It must have a base type
@@ -37,12 +37,6 @@ lookupBaseTypeVarMap :: Identifier -> M.Map Identifier VariableDeclaration -> Ba
 lookupBaseTypeVarMap varName varMap =
       case M.lookup varName varMap of
         Just variable -> declarationType variable
-
--------------------------------------------------------------------------------
--- Get variable id
--------------------------------------------------------------------------------
-getVariableId :: Variable -> Identifier
-getVariableId = varId
 
 -------------------------------------------------------------------------------
 -- Get procedure identifier from procedure.
@@ -237,19 +231,19 @@ checkStatement :: Identifier -> Statement -> ParameterMap -> VariableMap -> Eith
 checkStatement procName stmt paramMap varMap =
     case stmt of
         Write expr -> do
-            let newExpr = checkWriteStmt procName expr paramMap varMap
-            case newExpr of
+            let eitherWriteStatement = checkWriteStmt procName expr paramMap varMap
+            case eitherWriteStatement of
                 Left err        -> Left err
                 Right exprTable -> Right (WriteTable exprTable)
         Read var -> do
-            let newExpr = checkReadStmt procName var paramMap varMap
-            case newExpr of
+            let eitherReadStatement = checkReadStmt procName var paramMap varMap
+            case eitherReadStatement of
                 Left err        -> Left err
                 Right exprTable -> Right (ReadTable exprTable)
         Assign var expression -> do
           -- Assignment statement, e.g. a := 1
-          let newExpr = checkVariable procName var paramMap varMap
-          case newExpr of
+          let eitherVariableTable = checkVariable procName var paramMap varMap
+          case eitherVariableTable of
               Left err        -> Left err
               Right exprTable -> Right (AssignTable exprTable)
         If expr stmts -> do
@@ -259,7 +253,7 @@ checkStatement procName stmt paramMap varMap =
             Right exprTable -> do
               let stmtTablesEither = insertStatementList procName stmts paramMap varMap
               case stmtTablesEither of
-                Left err -> Left err
+                Left err         -> Left err
                 Right stmtTables -> Right (IfTable exprTable stmtTables)
         IfElse expr stmts1 stmts2 -> do
           let exprEither = checkConsition procName expr paramMap varMap
@@ -282,7 +276,7 @@ checkStatement procName stmt paramMap varMap =
             Right exprTable -> do
               let stmtTablesEither = insertStatementList procName stmts paramMap varMap
               case stmtTablesEither of
-                Left err -> Left err
+                Left err         -> Left err
                 Right stmtTables -> Right (WhileTable exprTable stmtTables)
         -- TODO
         -- Assign vae expr
@@ -312,17 +306,17 @@ checkConsition procName expr paramMap varMap = do
     Left err -> Left err
     Right exprTable -> do
       case exprTable of
-        BoolTable _ -> Right exprTable
-        OrTable _ _ _ -> Right exprTable
-        AndTable _ _ _ -> Right exprTable
-        NotTable _ _ -> Right exprTable
-        EqTable _ _ _ -> Right exprTable
+        BoolTable _      -> Right exprTable
+        OrTable _ _ _    -> Right exprTable
+        AndTable _ _ _   -> Right exprTable
+        NotTable _ _     -> Right exprTable
+        EqTable _ _ _    -> Right exprTable
         NotEqTable _ _ _ -> Right exprTable
-        LesTable _ _ _  -> Right exprTable
-        LesEqTable _ _ _  -> Right exprTable
-        GrtTable _ _ _ -> Right exprTable
+        LesTable _ _ _   -> Right exprTable
+        LesEqTable _ _ _ -> Right exprTable
+        GrtTable _ _ _   -> Right exprTable
         GrtEqTable _ _ _ -> Right exprTable
-        otherwise -> Left errorExit
+        otherwise        -> Left errorExit
 
 checkExpression :: Identifier -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkExpression procName expr paramMap varMap = do
@@ -332,20 +326,20 @@ checkExpression procName expr paramMap varMap = do
       FloatConst val -> Right (FloatTable val)
       StrConst   val -> Right (StringTable val)
       Add lExpr rExpr -> do
-        let checkTable = checkOperationExpression procName "+" lExpr rExpr paramMap varMap
-        case checkTable of
-            Right exprTable -> Right $ exprTable
-            Left err        -> Left err
+          let checkTable = checkOperationExpression procName "+" lExpr rExpr paramMap varMap
+          case checkTable of
+              Right exprTable -> Right $ exprTable
+              Left err        -> Left err
       Sub lExpr rExpr -> do
-        let checkTable = checkOperationExpression procName "-" lExpr rExpr paramMap varMap
-        case checkTable of
-            Right exprTable -> Right $ exprTable
-            Left err        -> Left err
+          let checkTable = checkOperationExpression procName "-" lExpr rExpr paramMap varMap
+          case checkTable of
+              Right exprTable -> Right $ exprTable
+              Left err        -> Left err
       Mul lExpr rExpr -> do
-        let checkTable = checkOperationExpression procName "*" lExpr rExpr paramMap varMap
-        case checkTable of
-            Right exprTable -> Right $ exprTable
-            Left err        -> Left err
+          let checkTable = checkOperationExpression procName "*" lExpr rExpr paramMap varMap
+          case checkTable of
+              Right exprTable -> Right $ exprTable
+              Left err        -> Left err
       Div lExpr rExpr -> do
         let checkTable = checkOperationExpression procName "/" lExpr rExpr paramMap varMap
         case checkTable of
@@ -354,17 +348,17 @@ checkExpression procName expr paramMap varMap = do
       Or lExpr rExpr -> do
         let exprTableEither = checkLogicExpression procName "||" lExpr rExpr paramMap varMap
         case exprTableEither of
-          Left err -> Left err
+          Left err        -> Left err
           Right exprTable -> Right exprTable
       And lExpr rExpr -> do
         let exprTableEither = checkLogicExpression procName "&&" lExpr rExpr paramMap varMap
         case exprTableEither of
-          Left err -> Left err
+          Left err        -> Left err
           Right exprTable -> Right exprTable
       UnaryNot expr -> do
         let exprTableEither = checkLogicSubExpression procName "!" expr paramMap varMap
         case exprTableEither of
-          Left err -> Left err
+          Left err        -> Left err
           Right exprTable -> Right (NotTable exprTable BoolType)
 -- TODO
 --      Eq lExpr rExpr -> do
@@ -473,15 +467,15 @@ checkBoolType exprTable exprType errorExit =
 
 checkVariable :: Identifier -> Variable -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkVariable procName var paramMap varMap = do
-  case (M.member id paramMap) of
-      True -> Right (VariableTable var paramBaseType)
-      False -> do
-          case (M.member id varMap) of
-              True  -> Right (VariableTable var varBaseType)
-              False -> Left $ exitWithUndefinedVariable id
-          where varBaseType = lookupBaseTypeVarMap id varMap
-  where id = varId var
-        paramBaseType = lookupBaseTypeParamMap id paramMap
+    case (M.member id paramMap) of
+        True -> Right (VariableTable var paramBaseType)
+        False -> do
+            case (M.member id varMap) of
+                True  -> Right (VariableTable var varBaseType)
+                False -> Left $ exitWithUndefinedVariable id
+            where varBaseType = lookupBaseTypeVarMap id varMap
+    where id = varId var
+          paramBaseType = lookupBaseTypeParamMap id paramMap
 
 checkOperationExpression :: Identifier -> String -> Expression -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkOperationExpression procName operator lExpr rExpr paramMap varMap = do
@@ -489,14 +483,14 @@ checkOperationExpression procName operator lExpr rExpr paramMap varMap = do
     case leftExprTableEither of
         Left err -> Left err
         Right leftExprTable -> do
-          let rightExprTableEither = checkExpression procName rExpr paramMap varMap
-          case rightExprTableEither of
-               Left err -> Left err
-               Right rightExprTable -> do
-                 let baseTypeEither = getExpressionTableType procName leftExprTable rightExprTable
-                 case baseTypeEither of
-                     Left err -> Left err
-                     Right baseType -> Right $ insertExpressionTableByOperator operator leftExprTable rightExprTable baseType
+            let rightExprTableEither = checkExpression procName rExpr paramMap varMap
+            case rightExprTableEither of
+                 Left err -> Left err
+                 Right rightExprTable -> do
+                     let baseTypeEither = getExpressionTableType procName leftExprTable rightExprTable
+                     case baseTypeEither of
+                         Left err -> Left err
+                         Right baseType -> Right $ insertExpressionTableByOperator operator leftExprTable rightExprTable baseType
 
 insertExpressionTableByOperator :: String -> ExpressionTable -> ExpressionTable -> BaseType -> ExpressionTable
 insertExpressionTableByOperator operator lExpressionTable rExpressionTable baseType =

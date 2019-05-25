@@ -1,6 +1,6 @@
 module GoatExit where
 
-import System.Exit
+import           System.Exit
 
 -------------------------------- Documentation --------------------------------
 

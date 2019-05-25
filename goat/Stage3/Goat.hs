@@ -1,13 +1,13 @@
 module Main where
 
-import GoatAST
-import GoatParser
-import GoatPrettyPrint
-import GoatExit
-import Analyze
-import CodeGenerator
-import Text.Parsec (runParser)
-import System.Environment (getArgs, getProgName)
+import           Analyze
+import           CodeGenerator
+import           GoatAST
+import           GoatExit
+import           GoatParser
+import           GoatPrettyPrint
+import           System.Environment (getArgs, getProgName)
+import           Text.Parsec        (runParser)
 
 -------------------------------- Documentation --------------------------------
 
