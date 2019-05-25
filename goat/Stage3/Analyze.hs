@@ -329,6 +329,7 @@ getExpressionTableType procName leftExprTablt rightExprTable = do
        SubTable _ _ lSubType -> getSubExpressionTableType procName lSubType rightExprTable
        MulTable _ _ lMulType -> getSubExpressionTableType procName lMulType rightExprTable
        DivTable _ _ lDivType -> getSubExpressionTableType procName lDivType rightExprTable
+       ---- TODO Unary Minus
 
 getSubExpressionTableType :: Identifier -> BaseType -> ExpressionTable -> Either (IO Task) BaseType
 getSubExpressionTableType procName baseType expressionTable = do
