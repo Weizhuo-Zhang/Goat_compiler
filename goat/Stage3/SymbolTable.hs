@@ -46,19 +46,45 @@ data StatementTable = WriteTable     { writeExprTable    :: ExpressionTable }
 -- DoubleExprTable is for Add, Sub, Mul, Div
 --                        Or,  And
 --                        Eq,  NotEq, Les, LesEq, Grt, GrtEq
-data ExpressionTable = SingleExprTable { expression     :: ExpressionTable
-                                       , singleExprType :: BaseType
+data ExpressionTable = VariableTable   { variable     :: Variable
+                                       , variableType :: BaseType
                                        }
                      | BoolTable       { boolVal   :: Bool }
                      | IntTable        { intVal    :: Int }
                      | FloatTable      { floatVal  :: Float }
                      | StringTable     { stringVal :: String }
-                     | OrTable         { orLeftExprTable  :: ExpressionTable
-                                       , orRightExprTable :: ExpressionTable
-                                       , orType           :: BaseType
+                     | OrTable         { orLeftExprTable   :: ExpressionTable
+                                       , orRightExprTable  :: ExpressionTable
+                                       , orType            :: BaseType
                                        }
                      | AndTable        { andLeftExprTable  :: ExpressionTable
                                        , andRightExprTable :: ExpressionTable
                                        , andType           :: BaseType
                                        }
-                     deriving (Show, Eq)
+                     | EqTable         { eqLeftExpr        :: ExpressionTable
+                                       , eqRightExpr       :: ExpressionTable
+                                       , eqType            :: BaseType
+                                       }
+                     | NotEqTable      { notEqLeftExpr     :: ExpressionTable
+                                       , notEqRightExpr    :: ExpressionTable
+                                       , notEqType         :: BaseType
+                                       }
+                     | LesTable        { lesLeftExpr       :: ExpressionTable
+                                       , lesRightExpr      :: ExpressionTable
+                                       , lesType           :: BaseType
+                                       }
+                     | LesEqTable      { lesEqLeftExpr     :: ExpressionTable
+                                       , lesEqRightExpr    :: ExpressionTable
+                                       , lesEqType         :: BaseType
+                                       }
+                     | GrtTable        { grtLeftExpr       :: ExpressionTable
+                                       , grtRightExpr      :: ExpressionTable
+                                       , grtType           :: BaseType
+                                       }
+                     | GrtEqTable      { grtEqLeftExpr     :: ExpressionTable
+                                       , grtEqRightExpr    :: ExpressionTable
+                                       , grtEqType         :: BaseType
+                                       }
+                     | NotTable        { notExprTable      :: ExpressionTable
+                                       , notType           :: BaseType
+                                       } deriving (Show, Eq)

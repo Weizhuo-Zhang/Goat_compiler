@@ -229,6 +229,10 @@ checkStatement procName stmt = do
           case stmtTablesEither of
             Left err -> Left err
             Right stmtTables -> Right (WhileTable exprTable stmtTables)
+    -- TODO
+    -- Assign vae expr
+    -- Read val
+    -- Call ident expr
 --        _ -> undefined
 
 
@@ -248,36 +252,40 @@ checkConsition procName expr = do
     Left err -> Left err
     Right exprTable -> do
       case exprTable of
-        BoolTable val -> Right exprTable
-        -- TODO Might not used anymore
-        SingleExprTable expr exprType -> do
-          case exprType of
-            BoolType -> Right exprTable
-            _    -> Left errorExit
-        OrTable lExpr rExpr exprType -> Right exprTable
-        AndTable lExpr rExpr exprType -> Right exprTable
-        -- TODO
-        -- NotTable
-        -- Eq NotEq Les LesEq Grt GrtEq
-        _ -> Left errorExit
+        BoolTable _ -> Right exprTable
+        OrTable _ _ _ -> Right exprTable
+        AndTable _ _ _ -> Right exprTable
+        NotTable _ _ -> Right exprTable
+        EqTable _ _ _ -> Right exprTable
+        NotEqTable _ _ _ -> Right exprTable
+        LesTable _ _ _  -> Right exprTable
+        LesEqTable _ _ _  -> Right exprTable
+        GrtTable _ _ _ -> Right exprTable
+        GrtEqTable _ _ _ -> Right exprTable
+        otherwise -> Left errorExit
 
 checkExpression :: Identifier -> Expression -> Either (IO Task) ExpressionTable
 checkExpression procName expr = do
   case expr of
-    BoolConst  val         -> Right (BoolTable val)
-    IntConst   val         -> Right (IntTable val)
-    FloatConst val         -> Right (FloatTable val)
-    StrConst   val         -> Right (StringTable val)
-    Or    lExpr rExpr      -> do
-        let exprTableEither = checkLogicExpression procName "||" lExpr rExpr
-        case exprTableEither of
-            Left err -> Left err
-            Right exprTable -> Right exprTable
-    And   lExpr rExpr      -> do
-        let exprTableEither = checkLogicExpression procName "&&" lExpr rExpr
-        case exprTableEither of
-            Left err -> Left err
-            Right exprTable -> Right exprTable
+    BoolConst  val -> Right (BoolTable val)
+    IntConst   val -> Right (IntTable val)
+    FloatConst val -> Right (FloatTable val)
+    StrConst   val -> Right (StringTable val)
+    Or lExpr rExpr -> do
+      let exprTableEither = checkLogicExpression procName "||" lExpr rExpr
+      case exprTableEither of
+        Left err -> Left err
+        Right exprTable -> Right exprTable
+    And lExpr rExpr -> do
+      let exprTableEither = checkLogicExpression procName "&&" lExpr rExpr
+      case exprTableEither of
+        Left err -> Left err
+        Right exprTable -> Right exprTable
+    UnaryNot expr -> do
+      let exprTableEither = checkLogicSubExpression procName "!" expr
+      case exprTableEither of
+        Left err -> Left err
+        Right exprTable -> Right (NotTable exprTable BoolType)
 -- TODO
 --    Eq    lExpr rExpr      ->
 --    NotEq lExpr rExpr      ->
@@ -285,7 +293,6 @@ checkExpression procName expr = do
 --    LesEq lExpr rExpr      ->
 --    Grt   lExpr rExpr      ->
 --    GrtEq lExpr rExpr      ->
---    UnaryNot    expression ->
 
 checkLogicExpression ::
   Identifier -> String -> Expression -> Expression -> Either (IO Task) ExpressionTable
@@ -311,12 +318,48 @@ checkLogicSubExpression procName operator expr = do
     Left err -> Left err
     Right exprTable -> do
       case exprTable of
-        BoolTable _ -> Right exprTable
-        SingleExprTable expr exprType -> do
+        VariableTable _ exprType -> do
           case exprType of
-            BoolType -> Right exprTable
-            _    -> Left errorExit
-        _ -> Left errorExit
+            BoolType  -> Right exprTable
+            otherwise -> Left errorExit
+        BoolTable _ -> Right exprTable
+        OrTable _ _ exprType -> do
+          case exprType of
+            BoolType  -> Right exprTable
+            otherwise -> Left errorExit
+        AndTable _ _ exprType -> do
+          case exprType of
+            BoolType  -> Right exprTable
+            otherwise -> Left errorExit
+        EqTable _ _ exprType -> do
+          case exprType of
+            BoolType  -> Right exprTable
+            otherwise -> Left errorExit
+        NotEqTable _ _ exprType -> do
+          case exprType of
+            BoolType  -> Right exprTable
+            otherwise -> Left errorExit
+        LesTable _ _ exprType -> do
+          case exprType of
+            BoolType  -> Right exprTable
+            otherwise -> Left errorExit
+        LesEqTable _ _ exprType -> do
+          case exprType of
+            BoolType  -> Right exprTable
+            otherwise -> Left errorExit
+        GrtTable _ _ exprType -> do
+          case exprType of
+            BoolType  -> Right exprTable
+            otherwise -> Left errorExit
+        GrtEqTable _ _ exprType -> do
+          case exprType of
+            BoolType  -> Right exprTable
+            otherwise -> Left errorExit
+        NotTable _ exprType -> do
+          case exprType of
+            BoolType  -> Right exprTable
+            otherwise -> Left errorExit
+        otherwise -> Left errorExit
 
 -------------------------------------------------------------------------------
 ---- Check whether the main procedure is parameter-less.

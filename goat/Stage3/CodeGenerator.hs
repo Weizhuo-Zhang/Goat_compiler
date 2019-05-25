@@ -60,13 +60,16 @@ generateStatement :: String -> [Int] -> StatementTable -> IO ()
 generateStatement procName label statementTable = do
   case statementTable of
     WriteTable exprTable -> do { generateWriteStatement exprTable }
-    -- TODO
     IfTable exprTable stmtTables ->
       generateIfStatement procName label exprTable stmtTables
     IfElseTable exprTable stmtTables1 stmtTables2 ->
       generateIfElseStatement procName label exprTable stmtTables1 stmtTables2
     WhileTable exprTable stmtTables ->
       generateWhileStatement procName label exprTable stmtTables
+    -- TODO
+    -- AssignTable
+    -- ReadTable
+    -- CallTable
 
 generateWriteStatement :: ExpressionTable -> IO ()
 generateWriteStatement exprTable =
@@ -141,29 +144,37 @@ generateWhileStatement procName label exprTable stmts = do
   ; putStrLn (label_c ++ ":")
   }
 
--- TODO
 generateExpressionTable :: ExpressionTable -> IO ()
 generateExpressionTable exprTable =
   case exprTable of
-    -- TODO
---    SingleExprTable expr exprType ->
---        generateSingleExpression expr exprTable
-    OrTable lExpr rExpr exprType ->
-        generateOrExpression lExpr rExpr exprType
-    AndTable lExpr rExpr exprType ->
-        generateAndExpression lExpr rExpr exprType
     BoolTable val -> printLine ("int_const r0, " ++ (convertBoolToInt val))
+    OrTable lExpr rExpr exprType ->
+      generateOrExpression lExpr rExpr exprType
+    AndTable lExpr rExpr exprType ->
+      generateAndExpression lExpr rExpr exprType
+-- TODO change this to register allocation
+-- TODO
 --    IntTable val -> printLine "int_const r0, " ++ val
 --    FloatTable val -> printLine "real_const r0, " ++ val
 --    StringTable val -> "string_const r0, " ++ val
-
--- TODO
---generateSingleExpression :: Expression -> BaseType -> IO ()
---generateSingleExpression expr exprType =
---    case expr of
+--    EqTable lExpr rExpr exprType ->
+--      generateEqExpression lExpr rExpr exprType
+--    NotEqTable lExpr rExpr exprType ->
+--      generateNotEqExpression lExpr rExpr exprType
+--    LesTable lExpr rExpr exprType ->
+--      generateLesExpression lExpr rExpr exprType
+--    LesEqTable lExpr rExpr exprType ->
+--      generateLesEqExpression lExpr rExpr exprType
+--    GrtTable lExpr rExpr exprType ->
+--      generateGrtExpression lExpr rExpr exprType
+--    GrtEqTable lExpr rExpr exprType ->
+--      generateGrtEqExpression lExpr rExpr exprType
+    NotTable expr exprType ->
+      generateNotExpression expr exprType
 
 generateOrExpression :: ExpressionTable -> ExpressionTable -> BaseType -> IO ()
 generateOrExpression lExpr rExpr exprType = do
+-- TODO change this to register allocation
   { generateExpressionTable lExpr
   ; printLine "move r1, r0"
   ; generateExpressionTable rExpr
@@ -172,10 +183,17 @@ generateOrExpression lExpr rExpr exprType = do
 
 generateAndExpression :: ExpressionTable -> ExpressionTable -> BaseType -> IO ()
 generateAndExpression lExpr rExpr exprType = do
+-- TODO change this to register allocation
   { generateExpressionTable lExpr
   ; printLine "move r1, r0"
   ; generateExpressionTable rExpr
   ; printLine "and r0, r0, r1"
+  }
+
+generateNotExpression :: ExpressionTable -> BaseType -> IO ()
+generateNotExpression expr exprType = do
+  { generateExpressionTable expr
+  ; printLine "not r0, r0"
   }
 
 convertBoolToInt :: Bool -> String

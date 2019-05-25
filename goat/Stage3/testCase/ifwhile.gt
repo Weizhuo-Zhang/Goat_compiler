@@ -61,4 +61,65 @@ begin
     while false do
         write "while false do44444444444444\n";
     od
+
+    if !true then
+        write "!true (((((())))))\n";
+    fi
+
+    if !false then
+        write "true 9\n";
+    fi
+
+    if !true || false then
+        write "!true || falsesssssssssssss\n";
+    fi
+
+    if !true || !true then
+        write "!true || !true###############\n";
+    fi
+
+    if !false || true then
+        write "true 10\n";
+    fi
+
+    if false || !false then
+        write "true 11\n";
+    fi
+
+    if true && !false then
+        write "true 12\n";
+        if !true || false then
+            write "11111111111111111111\n";
+        else
+            write "true 13\n";
+        fi
+    fi
+
+    if !true && true then
+        write "rsfffagsdfasdfad\n";
+    fi
+
+    if !false && true then
+        write "true 14\n";
+    fi
+
+    if !false && !false then
+        write "true 15\n";
+    fi
+
+    if !false then
+        write "true 16\n";
+    else
+        write "#########l#2222222222\n";
+    fi
+
+    if !true then
+        write "#####4444444444444444\n";
+    else
+        write "true 17\n";
+    fi
+
+    while false do
+        write "while false do44444444444444\n";
+    od
 end
