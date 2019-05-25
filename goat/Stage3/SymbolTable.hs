@@ -57,7 +57,4 @@ data ExpressionTable = VariableTable   { variable     :: Variable
                                        , divRightVal :: ExpressionTable
                                        , divType     :: BaseType
                                        }
-                     | AssignTable     { assignVar        :: VariableTable
-                                       , assignExpression :: ExpressionTable
-                                       }
                      deriving (Show, Eq)
