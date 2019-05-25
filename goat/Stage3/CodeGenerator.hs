@@ -80,6 +80,97 @@ generateWriteStatement exprTable =
                         ; printNewLineIndentation
                         ; putStrLn "call_builtin print_string"
                         }
+        IntTable val -> do { printNewLineIndentation
+                           ; putStrLn $ "int_const r0, " ++
+                             (show $ val)
+                           ; printNewLineIndentation
+                           ; putStrLn "call_builtin print_int"
+                           }
+        FloatTable val -> do { printNewLineIndentation
+                               ; putStrLn $ "real_const r0, " ++
+                                 (show $ val)
+                               ; printNewLineIndentation
+                               ; putStrLn "call_builtin print_real"
+                               }
+        BoolTable bool -> do
+            case bool of
+                True -> do { printNewLineIndentation
+                           ; putStrLn "int_const r0, 1"
+                           ; printNewLineIndentation
+                           ; putStrLn "call_builtin print_bool"
+                           }
+                False -> do { printNewLineIndentation
+                            ; putStrLn "int_const r0, 0"
+                            ; printNewLineIndentation
+                            ; putStrLn "call_builtin print_bool"
+                            }
+        VariableTable var varType -> return ()
+        otherwise -> do
+           let exprType = getExprType exprTable
+           generateExpression exprTable 0
+           case exprType of
+               IntType -> do { printNewLineIndentation
+                             ; putStrLn "call_builtin print_int"
+                             }
+               FloatType -> do { printNewLineIndentation
+                               ; putStrLn "call_builtin print_real"
+                               }
+
+
+
+-- generateReadStatement :: ExpressionTable -> IO ()
+-- generateReadStatement exprTable = do {}
+
+generateExpression :: ExpressionTable -> Int -> IO ()
+generateExpression exprTable registerNum =
+    case exprTable of
+        IntTable val -> do { printNewLineIndentation
+                           ; putStrLn $ "int_const r" ++ (show registerNum)
+                             ++ ", " ++ (show val)
+                           }
+        FloatTable val -> do { printNewLineIndentation
+                             ; putStrLn $ "real_const r" ++ (show registerNum)
+                               ++ ", " ++ (show val)
+                             }
+        AddTable lExpr rExpr baseType -> do
+              generateExpression lExpr registerNum
+              generateExpression rExpr $ registerNum+1
+              case baseType of
+                   IntType -> do { generateOperationString "add" "int" registerNum }
+                   FloatType -> do { generateIntToFloat lExpr rExpr registerNum
+                                   ; generateOperationString "add" "real" registerNum
+                                   }
+        SubTable lExpr rExpr baseType -> do
+              generateExpression lExpr registerNum
+              generateExpression rExpr $ registerNum+1
+              case baseType of
+                   IntType -> do { generateOperationString "sub" "int" registerNum }
+                   FloatType -> do { generateIntToFloat lExpr rExpr registerNum
+                                   ; generateOperationString "sub" "real" registerNum
+                                   }
+        MulTable lExpr rExpr baseType -> do
+              generateExpression lExpr registerNum
+              generateExpression rExpr $ registerNum+1
+              case baseType of
+                   IntType -> do { generateOperationString "mul" "int" registerNum }
+                   FloatType -> do { generateIntToFloat lExpr rExpr registerNum
+                                   ; generateOperationString "mul" "real" registerNum
+                                   }
+        DivTable lExpr rExpr baseType -> do
+              generateExpression lExpr registerNum
+              generateExpression rExpr $ registerNum+1
+              case baseType of
+                   IntType -> do { generateOperationString "div" "int" registerNum }
+                   FloatType -> do { generateIntToFloat lExpr rExpr registerNum
+                                   ; generateOperationString "div" "real" registerNum
+                                   }
+
+
+
+
+
+
+
 
 updateLabel :: [Int] -> [Int]
 updateLabel (x:[]) = (x+1):[]
@@ -232,3 +323,36 @@ registers = Map.empty
 -------------------------------------------------------------------------------
 printNewLineIndentation :: IO ()
 printNewLineIndentation = putStr "    "
+
+getExprType :: ExpressionTable -> BaseType
+getExprType exprTable =
+     case exprTable of
+          IntTable _ -> IntType
+          FloatTable _ -> FloatType
+          BoolTable _ -> BoolType
+          AddTable _ _ baseType -> baseType
+          SubTable _ _ baseType -> baseType
+          MulTable _ _ baseType -> baseType
+          DivTable _ _ baseType -> baseType
+
+generateOperationString :: String -> String -> Int -> IO ()
+generateOperationString operator opType registerNum = do
+  printNewLineIndentation
+  putStrLn $ operator ++ "_" ++ opType ++ " r" ++ (show registerNum)
+    ++ ", r" ++ (show registerNum) ++ ", r" ++
+    (show $ registerNum+1)
+
+generateIntToFloat :: ExpressionTable -> ExpressionTable -> Int -> IO ()
+generateIntToFloat lExpr rExpr registerNum = do
+    let lType = getExprType lExpr
+        rType = getExprType rExpr
+    case (lType,rType) of
+        (FloatType,FloatType) -> return ()
+        (IntType,FloatType) -> do { printNewLineIndentation
+                                 ; putStrLn $ "int_to_real r" ++ (show registerNum)
+                                   ++ ", r" ++ (show registerNum)
+                                 }
+        (FloatType,IntType) -> do { printNewLineIndentation
+                                 ; putStrLn $ "int_to_real r" ++ (show $ registerNum+1)
+                                   ++ ", r" ++ (show $ registerNum+1)
+                                 }

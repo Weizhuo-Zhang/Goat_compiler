@@ -36,8 +36,11 @@ data GoatExitCode = Success          -- 0
                   | ParseError       -- 6
                   | MultipleProc     -- 7
                   | MultipleVar      -- 8
-                  | IfCondError      -- 9
-                  | LogicOpTypeError -- 10
+                  | UndefinedVar     -- 9
+                  | ReadIncorrect    -- 10
+                  | UnmatchedType    -- 11
+                  | IfCondError      -- 12
+                  | LogicOpTypeError -- 13
                   deriving Enum
 
 -------------------------------------------------------------------------------

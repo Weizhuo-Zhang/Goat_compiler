@@ -25,9 +25,9 @@ type ParameterMap = M.Map Identifier Parameter
 
 type VariableMap = M.Map Identifier VariableDeclaration
 
-data ProcedureTable = ProcedureTable { param :: ParameterMap
-                                     , vari :: VariableMap
-                                     , statements :: [StatementTable]
+data ProcedureTable = ProcedureTable { parameterMap :: ParameterMap
+                                     , variableMap :: VariableMap
+                                     , statementTable :: [StatementTable]
                                      } deriving (Show, Eq)
 
 data StatementTable = WriteTable     { writeExprTable    :: ExpressionTable }
@@ -42,10 +42,6 @@ data StatementTable = WriteTable     { writeExprTable    :: ExpressionTable }
                                      , whileStmtTables   :: [StatementTable]
                                      } deriving (Show, Eq)
 
--- SingleExprTable is for ExprVar, UnaryNot and UnaryMinus
--- DoubleExprTable is for Add, Sub, Mul, Div
---                        Or,  And
---                        Eq,  NotEq, Les, LesEq, Grt, GrtEq
 data ExpressionTable = VariableTable   { variable     :: Variable
                                        , variableType :: BaseType
                                        }
@@ -53,6 +49,22 @@ data ExpressionTable = VariableTable   { variable     :: Variable
                      | IntTable        { intVal    :: Int }
                      | FloatTable      { floatVal  :: Float }
                      | StringTable     { stringVal :: String }
+                     | AddTable        { addLeftVal :: ExpressionTable
+                                       , addRightVal :: ExpressionTable
+                                       , addType :: BaseType
+                                       }
+                     | SubTable        { subLeftVal :: ExpressionTable
+                                       , subRightVal :: ExpressionTable
+                                       , subType :: BaseType
+                                       }
+                     | MulTable        { mulLeftVal :: ExpressionTable
+                                       , mulRightVal :: ExpressionTable
+                                       , mulType :: BaseType
+                                       }
+                     | DivTable        { divLeftVal :: ExpressionTable
+                                       , divRightVal :: ExpressionTable
+                                       , divType :: BaseType
+                                       }
                      | OrTable         { orLeftExprTable   :: ExpressionTable
                                        , orRightExprTable  :: ExpressionTable
                                        , orType            :: BaseType
