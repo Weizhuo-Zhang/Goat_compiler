@@ -1,7 +1,7 @@
 proc main()
 begin
-  write true;
-  write 1.157;
-  write 10;
-  write "fuck you";
+  write (1*2*3) + (4*5*6);
+  write "\n";
+  write (1.1+1.2) * (1.2 + 2);
+  write "\n";
 end
