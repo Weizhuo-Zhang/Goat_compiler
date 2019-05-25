@@ -1,8 +1,8 @@
 module GoatPrettyPrint where
 
-import GoatAST
-import GoatExit
-import System.Exit
+import           GoatAST
+import           GoatExit
+import           System.Exit
 
 -------------------------------- Documentation --------------------------------
 
@@ -62,8 +62,8 @@ printBaseType baseType = do
 printParameterIndicator :: ParameterIndicator -> IO ()
 printParameterIndicator parameterIndicator = do
     case parameterIndicator of
-        VarType   -> putStr "val"
-        RefType   -> putStr "ref"
+        VarType -> putStr "val"
+        RefType -> putStr "ref"
 
 -------------------------------------------------------------------------------
 -- Get String of shape Indicator type such as Array and Matrix.
@@ -277,7 +277,7 @@ getConst a = show a
 -- Convert bool constant variable to string.
 -------------------------------------------------------------------------------
 getBoolConst :: Bool -> String
-getBoolConst True = "true"
+getBoolConst True  = "true"
 getBoolConst False = "false"
 
 -------------------------------------------------------------------------------

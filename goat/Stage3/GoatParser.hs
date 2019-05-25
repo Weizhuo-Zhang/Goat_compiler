@@ -1,11 +1,11 @@
 module GoatParser where
 
-import GoatAST
-import Data.Functor.Identity (Identity)
-import Text.Parsec
-import Text.Parsec.Expr
-import Text.Parsec.Language (emptyDef)
-import qualified Text.Parsec.Token as Q
+import           Data.Functor.Identity (Identity)
+import           GoatAST
+import           Text.Parsec
+import           Text.Parsec.Expr
+import           Text.Parsec.Language  (emptyDef)
+import qualified Text.Parsec.Token     as Q
 
 -------------------------------- Documentation --------------------------------
 
