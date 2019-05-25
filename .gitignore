@@ -28,4 +28,5 @@ goat/Goat
 
 goat/Stage1/testCase/GeneratedOutput/*.txt
 goat/Stage3/oz
-
+goat/Stage3/testCase/GeneratedOutput/*.txt
+goat/Stage3/testCase/GeneratedOutput/*.oz
