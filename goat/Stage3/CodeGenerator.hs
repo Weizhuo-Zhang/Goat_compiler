@@ -159,6 +159,8 @@ generateExpression exprTable registerNum =
                              ; putStrLn $ "real_const r" ++ (show registerNum)
                                ++ ", " ++ (show val)
                              }
+        StringTable val -> printLine ("string_const r" ++ (show registerNum) ++
+                                      ", " ++ val)
         AddTable lExpr rExpr baseType -> do
               generateExpression lExpr registerNum
               generateExpression rExpr $ registerNum+1
@@ -191,30 +193,16 @@ generateExpression exprTable registerNum =
                    FloatType -> do { generateIntToFloat lExpr rExpr registerNum
                                    ; generateOperationString "div" "real" registerNum
                                    }
-        OrTable lExpr rExpr exprType ->
-          generateOrExpression  lExpr rExpr registerNum
-        AndTable lExpr rExpr exprType ->
-          generateAndExpression lExpr rExpr registerNum
-    -- TODO change this to register allocation
-    -- TODO
-    --    IntTable val -> printLine "int_const r0, " ++ val
-    --    FloatTable val -> printLine "real_const r0, " ++ val
-    --    StringTable val -> "string_const r0, " ++ val
-    --    EqTable lExpr rExpr exprType ->
-    --      generateEqExpression lExpr rExpr exprType
-    --    NotEqTable lExpr rExpr exprType ->
-    --      generateNotEqExpression lExpr rExpr exprType
-    --    LesTable lExpr rExpr exprType ->
-    --      generateLesExpression lExpr rExpr exprType
-    --    LesEqTable lExpr rExpr exprType ->
-    --      generateLesEqExpression lExpr rExpr exprType
-    --    GrtTable lExpr rExpr exprType ->
-    --      generateGrtExpression lExpr rExpr exprType
-    --    GrtEqTable lExpr rExpr exprType ->
-    --      generateGrtEqExpression lExpr rExpr exprType
-        NotTable expr exprType ->
-          generateNotExpression expr registerNum
-
+        OrTable    lExpr rExpr _        -> generateOrExpression    lExpr rExpr registerNum
+        AndTable   lExpr rExpr _        -> generateAndExpression   lExpr rExpr registerNum
+        EqTable    lExpr rExpr exprType -> generateEqExpression    lExpr rExpr registerNum exprType
+        NotEqTable lExpr rExpr exprType -> generateNotEqExpression lExpr rExpr registerNum exprType
+        LesTable   lExpr rExpr exprType -> generateLesExpression   lExpr rExpr registerNum exprType
+        LesEqTable lExpr rExpr exprType -> generateLesEqExpression lExpr rExpr registerNum exprType
+        GrtTable   lExpr rExpr exprType -> generateGrtExpression   lExpr rExpr registerNum exprType
+        GrtEqTable lExpr rExpr exprType -> generateGrtEqExpression lExpr rExpr registerNum exprType
+        NotTable   expr        _ -> generateNotExpression   expr        registerNum
+        -- TODO Unary Minus
 
 
 
@@ -289,28 +277,73 @@ generateWhileStatement procName label exprTable stmts stackMap = do
   ; putStrLn (label_c ++ ":")
   }
 
-generateOrExpression ::
-  ExpressionTable -> ExpressionTable -> Int -> IO ()
+generateOrExpression :: ExpressionTable -> ExpressionTable -> Int -> IO ()
 generateOrExpression lExpr rExpr regNum = do
+  generateAndOrExpr "or" lExpr rExpr regNum
+
+generateAndExpression :: ExpressionTable -> ExpressionTable -> Int -> IO ()
+generateAndExpression lExpr rExpr regNum = do
+  generateAndOrExpr "and" lExpr rExpr regNum
+
+generateAndOrExpr ::
+  String -> ExpressionTable -> ExpressionTable -> Int -> IO ()
+generateAndOrExpr operator lExpr rExpr regNum = do
   { generateExpression lExpr regNum
   ; generateExpression rExpr (regNum+1)
-  ; printLine $ "or r" ++ (show regNum) ++ ", r" ++ (show regNum) ++
+  ; printLine $ operator ++ " r" ++ (show regNum) ++ ", r" ++ (show regNum) ++
                 ", r" ++ (show (regNum+1))
   }
 
-generateAndExpression ::
-  ExpressionTable -> ExpressionTable -> Int -> IO ()
-generateAndExpression lExpr rExpr regNum = do
-  { generateExpression lExpr regNum
-  ; generateExpression rExpr (regNum+1)
-  ; printLine $ "and r" ++ (show regNum) ++ ", r" ++ (show regNum) ++
-                ", r" ++ (show (regNum+1))
-  }
 
 generateNotExpression :: ExpressionTable -> Int -> IO ()
 generateNotExpression expr regNum = do
   { generateExpression expr regNum
   ; printLine $ "not r" ++ (show regNum) ++ ", r" ++ (show regNum)
+  }
+
+generateEqExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> BaseType -> IO ()
+generateEqExpression lExpr rExpr regNum exprType = do
+  generateCompareExpr "cmp_eq" lExpr rExpr regNum exprType
+
+generateNotEqExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> BaseType -> IO ()
+generateNotEqExpression lExpr rExpr regNum exprType = do
+  generateCompareExpr "cmp_ne" lExpr rExpr regNum exprType
+
+generateLesExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> BaseType -> IO ()
+generateLesExpression lExpr rExpr regNum exprType = do
+  generateCompareExpr "cmp_lt" lExpr rExpr regNum exprType
+
+generateLesEqExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> BaseType -> IO ()
+generateLesEqExpression lExpr rExpr regNum exprType = do
+  generateCompareExpr "cmp_le" lExpr rExpr regNum exprType
+
+generateGrtExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> BaseType -> IO ()
+generateGrtExpression lExpr rExpr regNum exprType = do
+  generateCompareExpr "cmp_gt" lExpr rExpr regNum exprType
+
+generateGrtEqExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> BaseType -> IO ()
+generateGrtEqExpression lExpr rExpr regNum exprType = do
+  generateCompareExpr "cmp_ge" lExpr rExpr regNum exprType
+
+generateCompareExpr ::
+  String -> ExpressionTable -> ExpressionTable -> Int -> BaseType -> IO ()
+generateCompareExpr operator lExpr rExpr regNum exprType = do
+  { generateExpression lExpr regNum
+  ; generateExpression rExpr (regNum+1)
+  ; case exprType of
+      FloatType -> do
+        generateIntToFloat lExpr rExpr regNum
+        printLine $ operator ++ "_real r" ++ (show regNum) ++ ", r" ++
+                    (show regNum) ++ ", r" ++ (show (regNum+1))
+      otherwise ->
+        printLine $ operator ++ "_int r" ++ (show regNum) ++ ", r" ++
+                    (show regNum) ++ ", r" ++ (show (regNum+1))
   }
 
 convertBoolToInt :: Bool -> String

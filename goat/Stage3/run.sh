@@ -21,6 +21,22 @@ echo "----------- ifwhile.gt ----------"
 diff ./testCase/GeneratedOutput/ifwhile.oz ./testCase/ExpectedOutput/ifwhile.oz
 ./oz ./testCase/GeneratedOutput/ifwhile.oz
 
+echo "----------- comparison.gt ----------"
+./Goat testCase/comparison.gt > ./testCase/GeneratedOutput/comparison.oz
+./oz ./testCase/GeneratedOutput/comparison.oz
+
+echo "----------- comparisonNotEq.gt ----------"
+./Goat testCase/comparisonNotEq.gt > ./testCase/GeneratedOutput/comparisonNotEq.oz
+./oz ./testCase/GeneratedOutput/comparisonNotEq.oz
+
+echo "----------- comparisonLes.gt ----------"
+./Goat testCase/comparisonLes.gt > ./testCase/GeneratedOutput/comparisonLes.oz
+./oz ./testCase/GeneratedOutput/comparisonLes.oz
+
+echo "----------- comparisonLesEq.gt ----------"
+./Goat testCase/comparisonLesEq.gt > ./testCase/GeneratedOutput/comparisonLesEq.oz
+./oz ./testCase/GeneratedOutput/comparisonLesEq.oz
+
 echo "----------- asgWithNumericOperatorOnly.gt ----------"
 ./Goat -s ./testCase/asgWithNumericOperatorOnly.gt > asgWithNumericOperatorOnly.symtable
 ./Goat ./testCase/asgWithNumericOperatorOnly.gt

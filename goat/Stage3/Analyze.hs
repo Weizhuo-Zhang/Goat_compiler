@@ -379,14 +379,14 @@ checkExpression procName expr paramMap varMap = do
         checkCompareExpression procName  "=" lExpr rExpr paramMap varMap
       NotEq lExpr rExpr ->
         checkCompareExpression procName "!=" lExpr rExpr paramMap varMap
---    Les   lExpr rExpr      ->
---      let exprTableEither = checkCompareExpression procName "<" lExpr rExpr
---    LesEq lExpr rExpr      ->
---      let exprTableEither = checkCompareExpression procName "<=" lExpr rExpr
---    Grt   lExpr rExpr      ->
---      let exprTableEither = checkCompareExpression procName ">" lExpr rExpr
---    GrtEq lExpr rExpr      ->
---      let exprTableEither = checkCompareExpression procName ">=" lExpr rExpr
+      Les   lExpr rExpr ->
+        checkCompareExpression procName "<"  lExpr rExpr paramMap varMap
+      LesEq lExpr rExpr ->
+        checkCompareExpression procName "<=" lExpr rExpr paramMap varMap
+      Grt   lExpr rExpr ->
+        checkCompareExpression procName ">"  lExpr rExpr paramMap varMap
+      GrtEq lExpr rExpr ->
+        checkCompareExpression procName ">=" lExpr rExpr paramMap varMap
 
 checkLogicExpression ::
   Identifier -> String -> Expression -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
@@ -469,16 +469,18 @@ checkBoolType exprTable exprType errorExit =
 -- Check whether the type of given ExpressionTables are the same
 -------------------------------------------------------------------------------
 checkSameType ::
-  Identifier -> String -> ExpressionTable -> ExpressionTable -> Either (IO Task) ExpressionTable
+  Identifier -> String -> ExpressionTable -> ExpressionTable ->
+  Either (IO Task) ExpressionTable
 checkSameType procName operator lExpr rExpr = do
   let lType = getBaseType lExpr
       rType = getBaseType rExpr
   if lType == rType
-    then Left (exitWithNotSameTypeError procName operator)
-    else Right (getComparisonTable operator lExpr rExpr)
+    then Right (getComparisonTable operator lExpr rExpr lType)
+    else Left (exitWithNotSameTypeError procName operator)
 
 checkBaseType ::
-  Identifier -> String -> ExpressionTable -> ExpressionTable -> Either (IO Task) ExpressionTable
+  Identifier -> String -> ExpressionTable -> ExpressionTable ->
+  Either (IO Task) ExpressionTable
 checkBaseType procName operator lExpr rExpr = do
   let lType = getBaseType lExpr
       rType = getBaseType rExpr
@@ -487,19 +489,21 @@ checkBaseType procName operator lExpr rExpr = do
       { let exprTypeEither = getExpressionTableType procName lExpr rExpr
       ; case exprTypeEither of
           Left err -> Left err
-          Right exprType -> Right (getComparisonTable operator lExpr rExpr)
+          Right exprType ->
+            Right (getComparisonTable operator lExpr rExpr exprType)
       }
-    else Right (getComparisonTable operator lExpr rExpr)
+    else Right (getComparisonTable operator lExpr rExpr lType)
 
-getComparisonTable :: String -> ExpressionTable -> ExpressionTable -> ExpressionTable
-getComparisonTable operator lExpr rExpr =
+getComparisonTable ::
+  String -> ExpressionTable -> ExpressionTable -> BaseType -> ExpressionTable
+getComparisonTable operator lExpr rExpr baseType =
   case operator of
-    "="  -> EqTable    lExpr rExpr BoolType
-    "!=" -> NotEqTable lExpr rExpr BoolType
-    "<"  -> LesTable   lExpr rExpr BoolType
-    "<=" -> LesEqTable lExpr rExpr BoolType
-    ">"  -> GrtTable   lExpr rExpr BoolType
-    ">=" -> GrtEqTable lExpr rExpr BoolType
+    "="  -> EqTable    lExpr rExpr baseType
+    "!=" -> NotEqTable lExpr rExpr baseType
+    "<"  -> LesTable   lExpr rExpr baseType
+    "<=" -> LesEqTable lExpr rExpr baseType
+    ">"  -> GrtTable   lExpr rExpr baseType
+    ">=" -> GrtEqTable lExpr rExpr baseType
 
 -------------------------------------------------------------------------------
 -- Note: Please filter the StringTable before using this function
