@@ -149,6 +149,8 @@ generateWriteStatement exprTable =
 generateExpression :: ExpressionTable -> Int -> IO ()
 generateExpression exprTable registerNum =
     case exprTable of
+        BoolTable val -> printLine ("int_const r" ++ (show registerNum) ++
+                                    ", " ++ (convertBoolToInt val))
         IntTable val -> do { printNewLineIndentation
                            ; putStrLn $ "int_const r" ++ (show registerNum)
                              ++ ", " ++ (show val)
@@ -189,6 +191,29 @@ generateExpression exprTable registerNum =
                    FloatType -> do { generateIntToFloat lExpr rExpr registerNum
                                    ; generateOperationString "div" "real" registerNum
                                    }
+        OrTable lExpr rExpr exprType ->
+          generateOrExpression  lExpr rExpr registerNum
+        AndTable lExpr rExpr exprType ->
+          generateAndExpression lExpr rExpr registerNum
+    -- TODO change this to register allocation
+    -- TODO
+    --    IntTable val -> printLine "int_const r0, " ++ val
+    --    FloatTable val -> printLine "real_const r0, " ++ val
+    --    StringTable val -> "string_const r0, " ++ val
+    --    EqTable lExpr rExpr exprType ->
+    --      generateEqExpression lExpr rExpr exprType
+    --    NotEqTable lExpr rExpr exprType ->
+    --      generateNotEqExpression lExpr rExpr exprType
+    --    LesTable lExpr rExpr exprType ->
+    --      generateLesExpression lExpr rExpr exprType
+    --    LesEqTable lExpr rExpr exprType ->
+    --      generateLesEqExpression lExpr rExpr exprType
+    --    GrtTable lExpr rExpr exprType ->
+    --      generateGrtExpression lExpr rExpr exprType
+    --    GrtEqTable lExpr rExpr exprType ->
+    --      generateGrtEqExpression lExpr rExpr exprType
+        NotTable expr exprType ->
+          generateNotExpression expr registerNum
 
 
 
@@ -215,7 +240,7 @@ generateIfStatement procName label exprTable stmts stackMap = do
   { let label_a = procName ++ "_" ++ (showLabel label) ++ "_a"
   ; let label_b = procName ++ "_" ++ (showLabel label) ++ "_b"
   -- check condition
-  ; generateExpressionTable exprTable
+  ; generateExpression exprTable 0
   ; printLine ("branch_on_true r0, " ++ label_a)
   ; printLine ("branch_uncond " ++ label_b)
   -- If statements
@@ -231,7 +256,7 @@ generateIfElseStatement ::
 generateIfElseStatement procName label exprTable stmts1 stmts2 stackMap = do
   { let label_a = procName ++ "_" ++ (showLabel label) ++ "_a"
   ; let label_b = procName ++ "_" ++ (showLabel label) ++ "_b"
-  ; generateExpressionTable exprTable
+  ; generateExpression exprTable 0
   -- Else statements
   ; printLine ("branch_on_false r0, " ++ label_a)
   -- If statements
@@ -252,7 +277,7 @@ generateWhileStatement procName label exprTable stmts stackMap = do
   ; let label_c = procName ++ "_" ++ (showLabel label) ++ "_c"
   -- check condition
   ; putStrLn (label_a ++ ":")
-  ; generateExpressionTable exprTable
+  ; generateExpression exprTable 0
   ; printLine ("branch_on_true r0, " ++ label_b)
   ; printLine ("branch_uncond " ++ label_c)
   -- while statements
@@ -264,56 +289,28 @@ generateWhileStatement procName label exprTable stmts stackMap = do
   ; putStrLn (label_c ++ ":")
   }
 
-generateExpressionTable :: ExpressionTable -> IO ()
-generateExpressionTable exprTable =
-  case exprTable of
-    BoolTable val -> printLine ("int_const r0, " ++ (convertBoolToInt val))
-    OrTable lExpr rExpr exprType ->
-      generateOrExpression lExpr rExpr exprType
-    AndTable lExpr rExpr exprType ->
-      generateAndExpression lExpr rExpr exprType
--- TODO change this to register allocation
--- TODO
---    IntTable val -> printLine "int_const r0, " ++ val
---    FloatTable val -> printLine "real_const r0, " ++ val
---    StringTable val -> "string_const r0, " ++ val
---    EqTable lExpr rExpr exprType ->
---      generateEqExpression lExpr rExpr exprType
---    NotEqTable lExpr rExpr exprType ->
---      generateNotEqExpression lExpr rExpr exprType
---    LesTable lExpr rExpr exprType ->
---      generateLesExpression lExpr rExpr exprType
---    LesEqTable lExpr rExpr exprType ->
---      generateLesEqExpression lExpr rExpr exprType
---    GrtTable lExpr rExpr exprType ->
---      generateGrtExpression lExpr rExpr exprType
---    GrtEqTable lExpr rExpr exprType ->
---      generateGrtEqExpression lExpr rExpr exprType
-    NotTable expr exprType ->
-      generateNotExpression expr exprType
-
-generateOrExpression :: ExpressionTable -> ExpressionTable -> BaseType -> IO ()
-generateOrExpression lExpr rExpr exprType = do
--- TODO change this to register allocation
-  { generateExpressionTable lExpr
-  ; printLine "move r1, r0"
-  ; generateExpressionTable rExpr
-  ; printLine "or r0, r0, r1"
+generateOrExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> IO ()
+generateOrExpression lExpr rExpr regNum = do
+  { generateExpression lExpr regNum
+  ; generateExpression rExpr (regNum+1)
+  ; printLine $ "or r" ++ (show regNum) ++ ", r" ++ (show regNum) ++
+                ", r" ++ (show (regNum+1))
   }
 
-generateAndExpression :: ExpressionTable -> ExpressionTable -> BaseType -> IO ()
-generateAndExpression lExpr rExpr exprType = do
--- TODO change this to register allocation
-  { generateExpressionTable lExpr
-  ; printLine "move r1, r0"
-  ; generateExpressionTable rExpr
-  ; printLine "and r0, r0, r1"
+generateAndExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> IO ()
+generateAndExpression lExpr rExpr regNum = do
+  { generateExpression lExpr regNum
+  ; generateExpression rExpr (regNum+1)
+  ; printLine $ "and r" ++ (show regNum) ++ ", r" ++ (show regNum) ++
+                ", r" ++ (show (regNum+1))
   }
 
-generateNotExpression :: ExpressionTable -> BaseType -> IO ()
-generateNotExpression expr exprType = do
-  { generateExpressionTable expr
-  ; printLine "not r0, r0"
+generateNotExpression :: ExpressionTable -> Int -> IO ()
+generateNotExpression expr regNum = do
+  { generateExpression expr regNum
+  ; printLine $ "not r" ++ (show regNum) ++ ", r" ++ (show regNum)
   }
 
 convertBoolToInt :: Bool -> String
