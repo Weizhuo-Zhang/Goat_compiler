@@ -102,6 +102,9 @@ data ExpressionTable = VariableTable   { variable     :: Variable
                                        , grtEqRightExpr :: ExpressionTable
                                        , grtEqType      :: BaseType
                                        }
+                     | NegativeTable   { negativeExpr :: ExpressionTable
+                                       , negativeType :: BaseType
+                                       }
                      | NotTable        { notExprTable :: ExpressionTable
                                        , notType      :: BaseType
                                        } deriving (Show, Eq)
