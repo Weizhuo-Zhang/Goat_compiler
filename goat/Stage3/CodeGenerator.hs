@@ -90,10 +90,18 @@ generateStatement procName label statementTable stackMap = do
       generateIfElseStatement procName label exprTable stmtTables1 stmtTables2 stackMap
     WhileTable exprTable stmtTables ->
       generateWhileStatement procName label exprTable stmtTables stackMap
+    CallTable procId expressionTbls ->
+      generateCallStatement procId
+
     -- TODO
     -- AssignTable
     -- ReadTable
     -- CallTable
+
+generateCallStatement :: Identifier -> IO ()
+generateCallStatement procId = do
+  printNewLineIndentation
+  putStr ("call proc_" ++ procId)
 
 generateWriteStatement :: ExpressionTable -> IO ()
 generateWriteStatement exprTable =
