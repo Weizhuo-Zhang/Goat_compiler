@@ -126,16 +126,17 @@ generateWriteStatement exprTable stackMap =
         IntTable    _ -> generateWriteWithType "int"    exprTable stackMap
         FloatTable  _ -> generateWriteWithType "real"   exprTable stackMap
         StringTable _ -> generateWriteWithType "string" exprTable stackMap
-        AddTable _ _ exprType ->
+        AddTable    _ _ exprType ->
             generateWriteChooseType exprType exprTable stackMap
-        SubTable _ _ exprType ->
+        SubTable    _ _ exprType ->
             generateWriteChooseType exprType exprTable stackMap
-        MulTable _ _ exprType ->
+        MulTable    _ _ exprType ->
             generateWriteChooseType exprType exprTable stackMap
-        DivTable _ _ exprType ->
+        DivTable    _ _ exprType ->
             generateWriteChooseType exprType exprTable stackMap
-        -- TODO UnaryMinus
-        otherwise             -> generateWriteWithType "int" exprTable stackMap
+        NegativeTable _ exprType ->
+            generateWriteChooseType exprType exprTable stackMap
+        otherwise -> generateWriteWithType "int" exprTable stackMap
 
 generateWriteWithType :: String -> ExpressionTable -> StackMap -> IO ()
 generateWriteWithType writeType exprTable stackMap = do
@@ -209,8 +210,8 @@ generateExpression exprTable registerNum stackMap =
         LesEqTable lExpr rExpr exprType -> generateLesEqExpression lExpr rExpr registerNum exprType stackMap
         GrtTable   lExpr rExpr exprType -> generateGrtExpression   lExpr rExpr registerNum exprType stackMap
         GrtEqTable lExpr rExpr exprType -> generateGrtEqExpression lExpr rExpr registerNum exprType stackMap
+        NegativeTable     expr exprType -> generateNegativeExpression expr registerNum exprType stackMap
         NotTable   expr  _ -> generateNotExpression expr registerNum stackMap
-        -- TODO Unary Minus
 
 updateLabel :: [Int] -> [Int]
 updateLabel (x:[]) = (x+1):[]
@@ -288,11 +289,13 @@ generateVariableExpr var varType regNum stackMap = do
 
   }
 
-generateOrExpression :: ExpressionTable -> ExpressionTable -> Int -> StackMap -> IO ()
+generateOrExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> StackMap -> IO ()
 generateOrExpression lExpr rExpr regNum stackMap = do
   generateAndOrExpr "or" lExpr rExpr regNum stackMap
 
-generateAndExpression :: ExpressionTable -> ExpressionTable -> Int -> StackMap -> IO ()
+generateAndExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> StackMap -> IO ()
 generateAndExpression lExpr rExpr regNum stackMap = do
   generateAndOrExpr "and" lExpr rExpr regNum stackMap
 
@@ -354,6 +357,16 @@ generateCompareExpr operator lExpr rExpr regNum exprType stackMap = do
       otherwise ->
         printLine $ operator ++ "_int r" ++ (show regNum) ++ ", r" ++
                     (show regNum) ++ ", r" ++ (show (regNum+1))
+  }
+
+generateNegativeExpression ::
+  ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
+generateNegativeExpression expr registerNum exprType stackMap = do
+  { let regNum = show registerNum
+  ; generateExpression expr registerNum stackMap
+  ; case exprType of
+      IntType   -> printLine $ "neg_int r"  ++ regNum ++ ", r" ++ regNum
+      FloatType -> printLine $ "neg_real r" ++ regNum ++ ", r" ++ regNum
   }
 
 convertBoolToInt :: Bool -> String
