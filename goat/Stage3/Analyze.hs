@@ -123,7 +123,7 @@ analyze _           = return Unit
 
 insertProcList :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
 insertProcList (proc:[]) procMap = do
-    let procTable = insertProcedureTable proc
+    let procTable = insertProcedureTable proc procMap
     case procTable of
         Left err           -> Left err
         Right subProcTable -> Right $ M.insert procName subProcTable procMap
@@ -142,14 +142,14 @@ insertProcList (proc:procs) procMap = do
                  )
                  MultipleProc
         False -> do
-          let procTable = insertProcedureTable proc
+          let procTable = insertProcedureTable proc procMap
           case procTable of
             Left err -> Left err
             Right subProcTable ->
               Right $ M.insert procName subProcTable subProcMap
 
-insertProcedureTable :: Procedure -> Either (IO Task) ProcedureTable
-insertProcedureTable procedure =
+insertProcedureTable :: Procedure -> ProgramMap -> Either (IO Task) ProcedureTable
+insertProcedureTable procedure procMap =
   case paramMap of
           Left err -> Left err
           Right subParamMap -> do
@@ -159,7 +159,7 @@ insertProcedureTable procedure =
               case varMap of
                   Left err -> Left err
                   Right subVarMap -> do
-                      let newStatements = insertStatementList procedureName (bodyStatements procedureBody) subParamMap subVarMap
+                      let newStatements = insertStatementList procedureName (bodyStatements procedureBody) subParamMap subVarMap procMap
                       case newStatements of
                           Left err -> Left err
                           Right subStatements ->
@@ -210,24 +210,24 @@ insertVariableMap procName (bodyVarDecl:bodyVarDecls) paramMap varMap = do
                         True  -> Left $ exitWithMultipleVarDeclaration varName procName
                         False -> Right $ M.insert varName bodyVarDecl subVarMap
 
-insertStatementList :: Identifier -> [Statement] -> ParameterMap -> VariableMap -> Either (IO Task) [StatementTable]
-insertStatementList procName (stmt:[]) paramMap varMap = do
-    let newStmtTable = checkStatement procName stmt paramMap varMap
+insertStatementList :: Identifier -> [Statement] -> ParameterMap -> VariableMap -> ProgramMap -> Either (IO Task) [StatementTable]
+insertStatementList procName (stmt:[]) paramMap varMap procMap = do
+    let newStmtTable = checkStatement procName stmt paramMap varMap procMap
     case newStmtTable of
         Left err        -> Left err
         Right stmtTable -> Right $ (stmtTable):[]
-insertStatementList procName (stmt:stmts) paramMap varMap = do
-    let newStatements = insertStatementList procName stmts paramMap varMap
+insertStatementList procName (stmt:stmts) paramMap varMap procMap = do
+    let newStatements = insertStatementList procName stmts paramMap varMap procMap
     case newStatements of
         Left err            -> Left err
         Right subStatements -> do
-            let newStmtTable = checkStatement procName stmt paramMap varMap
+            let newStmtTable = checkStatement procName stmt paramMap varMap procMap
             case newStmtTable of
                 Left err        -> Left err
                 Right stmtTable -> Right $ (stmtTable):subStatements
 
-checkStatement :: Identifier -> Statement -> ParameterMap -> VariableMap -> Either (IO Task) StatementTable
-checkStatement procName stmt paramMap varMap =
+checkStatement :: Identifier -> Statement -> ParameterMap -> VariableMap -> ProgramMap -> Either (IO Task) StatementTable
+checkStatement procName stmt paramMap varMap procMap =
     case stmt of
         Write expr -> do
             let eitherWriteStatement = checkWriteStmt procName expr paramMap varMap
@@ -250,7 +250,7 @@ checkStatement procName stmt paramMap varMap =
           case exprEither of
             Left err -> Left err
             Right exprTable -> do
-              let stmtTablesEither = insertStatementList procName stmts paramMap varMap
+              let stmtTablesEither = insertStatementList procName stmts paramMap varMap procMap
               case stmtTablesEither of
                 Left err         -> Left err
                 Right stmtTables -> Right (IfTable exprTable stmtTables)
@@ -259,11 +259,11 @@ checkStatement procName stmt paramMap varMap =
           case exprEither of
             Left err -> Left err
             Right exprTable -> do
-              let stmtTablesEither1 = insertStatementList procName stmts1 paramMap varMap
+              let stmtTablesEither1 = insertStatementList procName stmts1 paramMap varMap procMap
               case stmtTablesEither1 of
                 Left err -> Left err
                 Right stmtTables1 -> do
-                  let stmtTablesEither2 = insertStatementList procName stmts2 paramMap varMap
+                  let stmtTablesEither2 = insertStatementList procName stmts2 paramMap varMap procMap
                   case stmtTablesEither2 of
                     Left err -> Left err
                     Right stmtTables2 -> do
@@ -273,10 +273,12 @@ checkStatement procName stmt paramMap varMap =
           case exprEither of
             Left err -> Left err
             Right exprTable -> do
-              let stmtTablesEither = insertStatementList procName stmts paramMap varMap
+              let stmtTablesEither = insertStatementList procName stmts paramMap varMap procMap
               case stmtTablesEither of
                 Left err         -> Left err
                 Right stmtTables -> Right (WhileTable exprTable stmtTables)
+        --Call procId argExprs -> do
+
         -- TODO
         -- Read val
         -- Call ident expr
