@@ -47,4 +47,4 @@ echo "----------- comparisonGrtEq.gt ----------"
 
 echo "----------- asgWithNumericOperatorOnly.gt ----------"
 ./Goat -s ./testCase/asgWithNumericOperatorOnly.gt > asgWithNumericOperatorOnly.symtable
-./Goat ./testCase/asgWithNumericOperatorOnly.gt
+# ./Goat ./testCase/asgWithNumericOperatorOnly.gt
