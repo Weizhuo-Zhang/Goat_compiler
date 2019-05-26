@@ -28,10 +28,8 @@ type SlotNumber = Int
 -------------------------------------------------------------------------------
 
 codeGeneration :: ProgramMap -> IO ()
-codeGeneration programMap = do { printNewLineIndentation
-                               ; putStrLn "call proc_main"
-                               ; printNewLineIndentation
-                               ; putStrLn "halt"
+codeGeneration programMap = do { printLine "call proc_main"
+                               ; printLine "halt"
                                ; let procedures = Map.keys programMap
                                ; generateProcedureList procedures programMap
                                }
@@ -41,35 +39,49 @@ generateProcedureList (procedure:[]) programMap =
     case Map.lookup procedure programMap of
         Just procedureTable -> do { putStrLn $ "proc_" ++ procedure ++ ":"
                                   ; generateProcedure procedure procedureTable
-                                  ; printNewLineIndentation
-                                  ; putStrLn "return"
+                                  ; printLine "return"
                                   }
-
 generateProcedureList (procedure:procedures) programMap =
     case Map.lookup procedure programMap of
-        Just procedureTable -> do { putStrLn $ procedure ++ ":"
+        Just procedureTable -> do { putStrLn $ "proc_" ++ procedure ++ ":"
                                   ; generateProcedure procedure procedureTable
-                                  ; printNewLineIndentation
-                                  ; putStrLn "return"
+                                  ; printLine "return"
                                   ; generateProcedureList procedures programMap
                                   }
 
 generateProcedure :: Identifier -> ProcedureTable -> IO ()
 generateProcedure procName (ProcedureTable paramMap varMap statements) = do
     let parameterNumber = Map.size paramMap
-        variableNumber = Map.size varMap
-        totalVarNumber = parameterNumber + variableNumber
+        variableNumber  = Map.size varMap
+        totalVarNumber  = parameterNumber + variableNumber
     case totalVarNumber of
         0         -> putStr ""
         otherwise -> printLine $ "push_stack_frame " ++ (show totalVarNumber)
     let stackMap = insertStackMap paramMap varMap
+        varList = Map.keys varMap
+    -- TODO
+    -- initParameters
+    case variableNumber of
+        0         -> putStr ""
+        otherwise -> do { printLine "int_const r0, 0"
+                        -- TODO
+                        -- initArrayMatrix
+                        ; initVariables varList stackMap
+                        }
     generateStatements procName [0] statements stackMap
     case totalVarNumber of
         0         -> putStr ""
         otherwise -> printLine $ "pop_stack_frame " ++ (show totalVarNumber)
 
-
-
+initVariables :: [Identifier] -> StackMap -> IO ()
+initVariables [] _ = return ()
+initVariables (var:[]) stackMap = do
+  let varSlotNum = stackMap Map.! var
+  printLine $ "store " ++ (show varSlotNum) ++ ", r0"
+initVariables (var:varList) stackMap = do
+  let varSlotNum = stackMap Map.! var
+  printLine $ "store " ++ (show varSlotNum) ++ ", r0"
+  initVariables varList stackMap
 
 generateStatements :: String -> [Int] -> [StatementTable] -> StackMap -> IO ()
 generateStatements _ _ [] _  = return ()
@@ -149,6 +161,8 @@ generateWriteStatement exprTable =
 generateExpression :: ExpressionTable -> Int -> IO ()
 generateExpression exprTable registerNum =
     case exprTable of
+        -- TODO
+        -- VariableTable
         BoolTable val -> printLine ("int_const r" ++ (show registerNum) ++
                                     ", " ++ (convertBoolToInt val))
         IntTable val -> do { printNewLineIndentation
