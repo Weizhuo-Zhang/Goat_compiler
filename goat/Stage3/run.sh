@@ -16,6 +16,6 @@ echo "--------------------- hello.gt ---------------------"
 diff ./testCase/GeneratedOutput/hello.oz ./testCase/ExpectedOutput/hello.oz
 ./oz ./testCase/GeneratedOutput/hello.oz
 
-echo "----------- asgWithNumericOperatorOnly.gt ----------"
+echo "\n----------- asgWithNumericOperatorOnly.gt ----------"
 ./Goat -s ./testCase/asgWithNumericOperatorOnly.gt > asgWithNumericOperatorOnly.symtable
-./Goat ./testCase/asgWithNumericOperatorOnly.gt
+# ./Goat ./testCase/asgWithNumericOperatorOnly.gt
