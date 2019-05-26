@@ -44,6 +44,9 @@ data StatementTable = WriteTable     { writeExprTable    :: ExpressionTable }
                                      }
                     | WhileTable     { whileExprTable  :: ExpressionTable
                                      , whileStmtTables :: [StatementTable]
+                                     } 
+                    | CallTable      { procIdentifier :: Identifier
+                                     , argExprTables :: [ExpressionTable]
                                      } deriving (Show, Eq)
 
 data ExpressionTable = VariableTable   { variable     :: Variable
