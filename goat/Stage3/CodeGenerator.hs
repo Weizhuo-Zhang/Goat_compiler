@@ -60,12 +60,12 @@ generateProcedure procName (ProcedureTable paramMap varMap statements) = do
         variableNumber = Map.size varMap
         totalVarNumber = parameterNumber + variableNumber
     case totalVarNumber of
-        0 -> putStr ""
+        0         -> putStr ""
         otherwise -> printLine $ "push_stack_frame " ++ (show totalVarNumber)
     let stackMap = insertStackMap paramMap varMap
     generateStatements procName [0] statements stackMap
     case totalVarNumber of
-        0 -> putStr ""
+        0         -> putStr ""
         otherwise -> printLine $ "pop_stack_frame " ++ (show totalVarNumber)
 
 
@@ -189,16 +189,6 @@ generateExpression exprTable registerNum =
                    FloatType -> do { generateIntToFloat lExpr rExpr registerNum
                                    ; generateOperationString "div" "real" registerNum
                                    }
-
-
-
-
-
-
-
-
--- generateReadStatement :: ExpressionTable -> IO ()
--- generateReadStatement exprTable = do {}
 
 
 updateLabel :: [Int] -> [Int]
@@ -347,11 +337,27 @@ registers = Map.empty
 
 
 
--------------------------------------------------------------------------------
--- helper functions
--------------------------------------------------------------------------------
+------------------------------- Helper functions ------------------------------
+
 printNewLineIndentation :: IO ()
 printNewLineIndentation = putStr "    "
+
+-------------------------------------------------------------------------------
+-- Create the Oz statement: int_to_real r0 r1, where 0 and 1 are provided
+-- register numbers.
+-------------------------------------------------------------------------------
+printIntToRealInNewRegister :: Int -> Int -> IO ()
+printIntToRealInNewRegister targetRegisterNumber sourceRegisterNumber = do
+  putStrLn $ "int_to_real r" ++ (show targetRegisterNumber) ++
+              ", r" ++ (show sourceRegisterNumber)
+
+-------------------------------------------------------------------------------
+-- Create the Oz statement: int_to_real r0 r0, where 0 is the provided register
+-- number.
+-------------------------------------------------------------------------------
+printIntToRealInSameRegister :: Int -> IO ()
+printIntToRealInSameRegister registerNumber = do
+  printIntToRealInNewRegister registerNumber registerNumber
 
 getExprType :: ExpressionTable -> BaseType
 getExprType exprTable =
@@ -378,13 +384,11 @@ generateIntToFloat lExpr rExpr registerNum = do
     case (lType,rType) of
         (FloatType,FloatType) -> return ()
         (IntType,FloatType) -> do { printNewLineIndentation
-                                 ; putStrLn $ "int_to_real r" ++ (show registerNum)
-                                   ++ ", r" ++ (show registerNum)
-                                 }
+                                  ; printIntToRealInSameRegister registerNum
+                                  }
         (FloatType,IntType) -> do { printNewLineIndentation
-                                 ; putStrLn $ "int_to_real r" ++ (show $ registerNum+1)
-                                   ++ ", r" ++ (show $ registerNum+1)
-                                 }
+                                  ; printIntToRealInSameRegister (registerNum + 1)
+                                  }
 
 insertStackMap :: ParameterMap -> VariableMap -> StackMap
 insertStackMap paramMap varMap = do
