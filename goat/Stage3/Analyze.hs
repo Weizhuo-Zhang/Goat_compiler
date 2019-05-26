@@ -325,6 +325,11 @@ checkExpression procName expr paramMap varMap = do
       IntConst   val -> Right $ IntTable val
       FloatConst val -> Right $ FloatTable val
       StrConst   val -> Right $ StringTable val
+      ExprVar    val -> do
+          let eitherVariableExpression = checkVariable procName val paramMap varMap
+          case eitherVariableExpression of
+              Left err                 -> Left err
+              Right variableExpression -> Right variableExpression
       Add lExpr rExpr -> do
           let eitherAddExpression = checkOperationExpression procName addSymbol lExpr rExpr paramMap varMap
           case eitherAddExpression of
