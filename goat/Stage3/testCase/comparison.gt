@@ -1,0 +1,87 @@
+# Used to test Eq
+
+proc main()
+begin
+    # Eq for Bool
+    if true = true then
+        write "[SUCCESS] success 1\n";
+    else
+        write "[ERROR] ERROR 1 *********************\n";
+    fi
+
+    if false = false then
+        write "[SUCCESS] success 2\n";
+    else
+        write "[ERROR] ERROR 2 *********************\n";
+    fi
+
+    if true = false then
+        write "[ERROR] ERROR 3 *********************\n";
+    else
+        write "[SUCCESS] success 3\n";
+    fi
+
+    if false = true then
+        write "[ERROR] ERROR 4 *********************\n";
+    else
+        write "[SUCCESS] success 4\n";
+    fi
+
+     # Eq for Int
+    if 0 = 0 then
+        write "[SUCCESS] success 5\n";
+    else
+        write "[ERROR] ERROR 5 *********************\n";
+    fi
+
+    if 999 = 999 then
+        write "[SUCCESS] success 6\n";
+    else
+        write "[ERROR] ERROR 6 *********************\n";
+    fi
+
+    if 1 = 23 then
+        write "[ERROR] ERROR 7 *********************\n";
+    else
+        write "[SUCCESS] success 7\n";
+    fi
+
+    if 32 = 6 then
+        write "[ERROR] ERROR 8 *********************\n";
+    else
+        write "[SUCCESS] success 8\n";
+    fi
+
+    # Eq for Float
+    if 0.1 = 0.1 then
+        write "[SUCCESS] success 9\n";
+    else
+        write "[ERROR] ERROR 9 *********************\n";
+    fi
+
+    if 999.0 = 999.0 then
+        write "[SUCCESS] success 10\n";
+    else
+        write "[ERROR] ERROR 10 *********************\n";
+    fi
+
+    if 2.35 = 23.5 then
+        write "[ERROR] ERROR 11 *********************\n";
+    else
+        write "[SUCCESS] success 11\n";
+    fi
+
+    if 341.4 = 3.351 then
+        write "[ERROR] ERROR 12 *********************\n";
+    else
+        write "[SUCCESS] success 12\n";
+    fi
+
+    if 001 = 01 then
+        write "[SUCCESS] success 13\n";
+    else
+        write "[ERROR] ERROR 13 *********************\n";
+    fi
+
+    write "done\n";
+end

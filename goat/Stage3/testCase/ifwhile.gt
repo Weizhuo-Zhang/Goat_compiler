@@ -2,7 +2,6 @@
 
 proc main()
 begin
-    write "Hello, world!\n";
     if true then
         write "true 1\n";
     fi
