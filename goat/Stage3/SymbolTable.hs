@@ -27,14 +27,15 @@ type VariableMap = M.Map Identifier VariableDeclaration
 
 type StackMap = M.Map Identifier Int
 
-data ProcedureTable = ProcedureTable { parameterMap :: ParameterMap
-                                     , variableMap :: VariableMap
+data ProcedureTable = ProcedureTable { parameterMap   :: ParameterMap
+                                     , variableMap    :: VariableMap
                                      , statementTable :: [StatementTable]
                                      } deriving (Show, Eq)
 
 data StatementTable = WriteTable     { writeExprTable    :: ExpressionTable }
                     | ReadTable      { readExprTable     :: ExpressionTable }
-                    | AssignTable    { assignExprTable   :: ExpressionTable}
+                    | AssignTable    { assignVarTable  :: ExpressionTable
+                                     , assignExprTable :: ExpressionTable}
                     | IfTable        { ifExprTable  :: ExpressionTable
                                      , ifStmtTables :: [StatementTable]
                                      }
@@ -103,6 +104,9 @@ data ExpressionTable = VariableTable   { variable     :: Variable
                      | GrtEqTable      { grtEqLeftExpr  :: ExpressionTable
                                        , grtEqRightExpr :: ExpressionTable
                                        , grtEqType      :: BaseType
+                                       }
+                     | NegativeTable   { negativeExpr :: ExpressionTable
+                                       , negativeType :: BaseType
                                        }
                      | NotTable        { notExprTable :: ExpressionTable
                                        , notType      :: BaseType

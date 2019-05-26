@@ -28,10 +28,8 @@ type SlotNumber = Int
 -------------------------------------------------------------------------------
 
 codeGeneration :: ProgramMap -> IO ()
-codeGeneration programMap = do { printNewLineIndentation
-                               ; putStrLn "call proc_main"
-                               ; printNewLineIndentation
-                               ; putStrLn "halt"
+codeGeneration programMap = do { printLine "call proc_main"
+                               ; printLine "halt"
                                ; let procedures = Map.keys programMap
                                ; generateProcedureList procedures programMap
                                }
@@ -41,35 +39,49 @@ generateProcedureList (procedure:[]) programMap =
     case Map.lookup procedure programMap of
         Just procedureTable -> do { putStrLn $ "proc_" ++ procedure ++ ":"
                                   ; generateProcedure procedure procedureTable
-                                  ; printNewLineIndentation
-                                  ; putStrLn "return"
+                                  ; printLine "return"
                                   }
-
 generateProcedureList (procedure:procedures) programMap =
     case Map.lookup procedure programMap of
-        Just procedureTable -> do { putStrLn $ procedure ++ ":"
+        Just procedureTable -> do { putStrLn $ "proc_" ++ procedure ++ ":"
                                   ; generateProcedure procedure procedureTable
-                                  ; printNewLineIndentation
-                                  ; putStrLn "return"
+                                  ; printLine "return"
                                   ; generateProcedureList procedures programMap
                                   }
 
 generateProcedure :: Identifier -> ProcedureTable -> IO ()
 generateProcedure procName (ProcedureTable paramMap varMap statements) = do
     let parameterNumber = Map.size paramMap
-        variableNumber = Map.size varMap
-        totalVarNumber = parameterNumber + variableNumber
+        variableNumber  = Map.size varMap
+        totalVarNumber  = parameterNumber + variableNumber
     case totalVarNumber of
-        0 -> putStr ""
+        0         -> putStr ""
         otherwise -> printLine $ "push_stack_frame " ++ (show totalVarNumber)
     let stackMap = insertStackMap paramMap varMap
+        varList = Map.keys varMap
+    -- TODO
+    -- initParameters
+    case variableNumber of
+        0         -> putStr ""
+        otherwise -> do { printLine "int_const r0, 0"
+                        -- TODO
+                        -- initArrayMatrix
+                        ; initVariables varList stackMap
+                        }
     generateStatements procName [0] statements stackMap
     case totalVarNumber of
-        0 -> putStr ""
+        0         -> putStr ""
         otherwise -> printLine $ "pop_stack_frame " ++ (show totalVarNumber)
 
-
-
+initVariables :: [Identifier] -> StackMap -> IO ()
+initVariables [] _ = return ()
+initVariables (var:[]) stackMap = do
+  let varSlotNum = stackMap Map.! var
+  printLine $ "store " ++ (show varSlotNum) ++ ", r0"
+initVariables (var:varList) stackMap = do
+  let varSlotNum = stackMap Map.! var
+  printLine $ "store " ++ (show varSlotNum) ++ ", r0"
+  initVariables varList stackMap
 
 generateStatements :: String -> [Int] -> [StatementTable] -> StackMap -> IO ()
 generateStatements _ _ [] _  = return ()
@@ -83,80 +95,78 @@ generateStatements procName label (stat:stats) stackMap = do
 generateStatement :: String -> [Int] -> StatementTable -> StackMap -> IO ()
 generateStatement procName label statementTable stackMap = do
   case statementTable of
-    WriteTable exprTable -> do { generateWriteStatement exprTable }
-    IfTable exprTable stmtTables ->
+    AssignTable varTable  exprTable  ->
+      generateAssignStatement procName varTable exprTable stackMap
+    WriteTable  exprTable            -> generateWriteStatement exprTable stackMap
+    IfTable     exprTable stmtTables ->
       generateIfStatement procName label exprTable stmtTables stackMap
     IfElseTable exprTable stmtTables1 stmtTables2 ->
       generateIfElseStatement procName label exprTable stmtTables1 stmtTables2 stackMap
-    WhileTable exprTable stmtTables ->
+    WhileTable  exprTable stmtTables ->
       generateWhileStatement procName label exprTable stmtTables stackMap
     CallTable procId expressionTbls ->
       generateCallStatement procId
 
     -- TODO
-    -- AssignTable
     -- ReadTable
     -- CallTable
 
 generateCallStatement :: Identifier -> IO ()
-generateCallStatement procId = do
-  printNewLineIndentation
-  putStr ("call proc_" ++ procId)
+generateCallStatement procName = do
+  printLine $ "call proc_" ++ procName
 
-generateWriteStatement :: ExpressionTable -> IO ()
-generateWriteStatement exprTable =
+generateAssignStatement ::
+  String -> ExpressionTable -> ExpressionTable -> StackMap -> IO ()
+generateAssignStatement procName varTable exprTable stackMap = do
+  -- TODO Array Matrix
+  { let slotNum = getVariableSlotNum (variable varTable) stackMap
+  ; generateExpression exprTable 0 stackMap
+  ; printLine $ "store " ++ (show slotNum) ++ ", r0"
+  }
+
+generateWriteStatement :: ExpressionTable -> StackMap -> IO ()
+generateWriteStatement exprTable stackMap =
     case exprTable of
-        StringTable string -> do { printNewLineIndentation
-                        ; putStr "string_const r0, "
-                        ; putStrLn $ "\"" ++ string ++ "\""
-                        ; printNewLineIndentation
-                        ; putStrLn "call_builtin print_string"
-                        }
-        IntTable val -> do { printNewLineIndentation
-                           ; putStrLn $ "int_const r0, " ++
-                             (show $ val)
-                           ; printNewLineIndentation
-                           ; putStrLn "call_builtin print_int"
-                           }
-        FloatTable val -> do { printNewLineIndentation
-                             ; putStrLn $ "real_const r0, " ++
-                               (show $ val)
-                             ; printNewLineIndentation
-                             ; putStrLn "call_builtin print_real"
-                             }
-        BoolTable bool -> do
-            case bool of
-                True -> do { printNewLineIndentation
-                           ; putStrLn "int_const r0, 1"
-                           ; printNewLineIndentation
-                           ; putStrLn "call_builtin print_bool"
-                           }
-                False -> do { printNewLineIndentation
-                            ; putStrLn "int_const r0, 0"
-                            ; printNewLineIndentation
-                            ; putStrLn "call_builtin print_bool"
-                            }
-        VariableTable var varType -> return ()
-        otherwise -> do
-           -- Expression
-           let exprType = getExprType exprTable
-           generateExpression exprTable 0
-           case exprType of
-               IntType -> do { printNewLineIndentation
-                             ; putStrLn "call_builtin print_int"
-                             }
-               FloatType -> do { printNewLineIndentation
-                               ; putStrLn "call_builtin print_real"
-                               }
+        VariableTable _ exprType ->
+            generateWriteChooseType exprType exprTable stackMap
+        BoolTable   _ -> generateWriteWithType "int"    exprTable stackMap
+        IntTable    _ -> generateWriteWithType "int"    exprTable stackMap
+        FloatTable  _ -> generateWriteWithType "real"   exprTable stackMap
+        StringTable _ -> generateWriteWithType "string" exprTable stackMap
+        AddTable    _ _ exprType ->
+            generateWriteChooseType exprType exprTable stackMap
+        SubTable    _ _ exprType ->
+            generateWriteChooseType exprType exprTable stackMap
+        MulTable    _ _ exprType ->
+            generateWriteChooseType exprType exprTable stackMap
+        DivTable    _ _ exprType ->
+            generateWriteChooseType exprType exprTable stackMap
+        NegativeTable _ exprType ->
+            generateWriteChooseType exprType exprTable stackMap
+        otherwise -> generateWriteWithType "int" exprTable stackMap
 
+generateWriteWithType :: String -> ExpressionTable -> StackMap -> IO ()
+generateWriteWithType writeType exprTable stackMap = do
+  { generateExpression exprTable 0 stackMap
+  ; printLine $ "call_builtin print_" ++ writeType
+  }
 
+generateWriteChooseType :: BaseType -> ExpressionTable -> StackMap -> IO ()
+generateWriteChooseType exprType exprTable stackMap =
+  case exprType of
+    FloatType -> generateWriteWithType "real" exprTable stackMap
+    otherwise -> generateWriteWithType "int"  exprTable stackMap
 
 -- generateReadStatement :: ExpressionTable -> IO ()
 -- generateReadStatement exprTable = do {}
 
-generateExpression :: ExpressionTable -> Int -> IO ()
-generateExpression exprTable registerNum =
+generateExpression :: ExpressionTable -> Int -> StackMap -> IO ()
+generateExpression exprTable registerNum stackMap =
     case exprTable of
+        VariableTable var varType ->
+          generateVariableExpr var varType registerNum stackMap
+        BoolTable val -> printLine ("int_const r" ++ (show registerNum) ++
+                                    ", " ++ (convertBoolToInt val))
         IntTable val -> do { printNewLineIndentation
                            ; putStrLn $ "int_const r" ++ (show registerNum)
                              ++ ", " ++ (show val)
@@ -165,49 +175,50 @@ generateExpression exprTable registerNum =
                              ; putStrLn $ "real_const r" ++ (show registerNum)
                                ++ ", " ++ (show val)
                              }
+        StringTable val -> printLine ("string_const r" ++ (show registerNum) ++
+                                      ", " ++ "\"" ++ val ++ "\"")
         AddTable lExpr rExpr baseType -> do
-              generateExpression lExpr registerNum
-              generateExpression rExpr $ registerNum+1
+              generateExpression lExpr registerNum stackMap
+              generateExpression rExpr (registerNum+1) stackMap
               case baseType of
                    IntType -> do { generateOperationString "add" "int" registerNum }
                    FloatType -> do { generateIntToFloat lExpr rExpr registerNum
                                    ; generateOperationString "add" "real" registerNum
                                    }
         SubTable lExpr rExpr baseType -> do
-              generateExpression lExpr registerNum
-              generateExpression rExpr $ registerNum+1
+              generateExpression lExpr registerNum stackMap
+              generateExpression rExpr (registerNum+1) stackMap
               case baseType of
                    IntType -> do { generateOperationString "sub" "int" registerNum }
                    FloatType -> do { generateIntToFloat lExpr rExpr registerNum
                                    ; generateOperationString "sub" "real" registerNum
                                    }
         MulTable lExpr rExpr baseType -> do
-              generateExpression lExpr registerNum
-              generateExpression rExpr $ registerNum+1
+              generateExpression lExpr registerNum stackMap
+              generateExpression rExpr (registerNum+1) stackMap
               case baseType of
                    IntType -> do { generateOperationString "mul" "int" registerNum }
                    FloatType -> do { generateIntToFloat lExpr rExpr registerNum
                                    ; generateOperationString "mul" "real" registerNum
                                    }
         DivTable lExpr rExpr baseType -> do
-              generateExpression lExpr registerNum
-              generateExpression rExpr $ registerNum+1
+              generateExpression lExpr registerNum stackMap
+              generateExpression rExpr (registerNum+1) stackMap
               case baseType of
                    IntType -> do { generateOperationString "div" "int" registerNum }
                    FloatType -> do { generateIntToFloat lExpr rExpr registerNum
                                    ; generateOperationString "div" "real" registerNum
                                    }
-
-
-
-
-
-
-
-
--- generateReadStatement :: ExpressionTable -> IO ()
--- generateReadStatement exprTable = do {}
-
+        OrTable    lExpr rExpr _        -> generateOrExpression    lExpr rExpr registerNum stackMap
+        AndTable   lExpr rExpr _        -> generateAndExpression   lExpr rExpr registerNum stackMap
+        EqTable    lExpr rExpr exprType -> generateEqExpression    lExpr rExpr registerNum exprType stackMap
+        NotEqTable lExpr rExpr exprType -> generateNotEqExpression lExpr rExpr registerNum exprType stackMap
+        LesTable   lExpr rExpr exprType -> generateLesExpression   lExpr rExpr registerNum exprType stackMap
+        LesEqTable lExpr rExpr exprType -> generateLesEqExpression lExpr rExpr registerNum exprType stackMap
+        GrtTable   lExpr rExpr exprType -> generateGrtExpression   lExpr rExpr registerNum exprType stackMap
+        GrtEqTable lExpr rExpr exprType -> generateGrtEqExpression lExpr rExpr registerNum exprType stackMap
+        NegativeTable     expr exprType -> generateNegativeExpression expr registerNum exprType stackMap
+        NotTable   expr  _ -> generateNotExpression expr registerNum stackMap
 
 updateLabel :: [Int] -> [Int]
 updateLabel (x:[]) = (x+1):[]
@@ -223,7 +234,7 @@ generateIfStatement procName label exprTable stmts stackMap = do
   { let label_a = procName ++ "_" ++ (showLabel label) ++ "_a"
   ; let label_b = procName ++ "_" ++ (showLabel label) ++ "_b"
   -- check condition
-  ; generateExpressionTable exprTable
+  ; generateExpression exprTable 0 stackMap
   ; printLine ("branch_on_true r0, " ++ label_a)
   ; printLine ("branch_uncond " ++ label_b)
   -- If statements
@@ -239,7 +250,7 @@ generateIfElseStatement ::
 generateIfElseStatement procName label exprTable stmts1 stmts2 stackMap = do
   { let label_a = procName ++ "_" ++ (showLabel label) ++ "_a"
   ; let label_b = procName ++ "_" ++ (showLabel label) ++ "_b"
-  ; generateExpressionTable exprTable
+  ; generateExpression exprTable 0 stackMap
   -- Else statements
   ; printLine ("branch_on_false r0, " ++ label_a)
   -- If statements
@@ -260,7 +271,7 @@ generateWhileStatement procName label exprTable stmts stackMap = do
   ; let label_c = procName ++ "_" ++ (showLabel label) ++ "_c"
   -- check condition
   ; putStrLn (label_a ++ ":")
-  ; generateExpressionTable exprTable
+  ; generateExpression exprTable 0 stackMap
   ; printLine ("branch_on_true r0, " ++ label_b)
   ; printLine ("branch_uncond " ++ label_c)
   -- while statements
@@ -272,56 +283,97 @@ generateWhileStatement procName label exprTable stmts stackMap = do
   ; putStrLn (label_c ++ ":")
   }
 
-generateExpressionTable :: ExpressionTable -> IO ()
-generateExpressionTable exprTable =
-  case exprTable of
-    BoolTable val -> printLine ("int_const r0, " ++ (convertBoolToInt val))
-    OrTable lExpr rExpr exprType ->
-      generateOrExpression lExpr rExpr exprType
-    AndTable lExpr rExpr exprType ->
-      generateAndExpression lExpr rExpr exprType
--- TODO change this to register allocation
--- TODO
---    IntTable val -> printLine "int_const r0, " ++ val
---    FloatTable val -> printLine "real_const r0, " ++ val
---    StringTable val -> "string_const r0, " ++ val
---    EqTable lExpr rExpr exprType ->
---      generateEqExpression lExpr rExpr exprType
---    NotEqTable lExpr rExpr exprType ->
---      generateNotEqExpression lExpr rExpr exprType
---    LesTable lExpr rExpr exprType ->
---      generateLesExpression lExpr rExpr exprType
---    LesEqTable lExpr rExpr exprType ->
---      generateLesEqExpression lExpr rExpr exprType
---    GrtTable lExpr rExpr exprType ->
---      generateGrtExpression lExpr rExpr exprType
---    GrtEqTable lExpr rExpr exprType ->
---      generateGrtEqExpression lExpr rExpr exprType
-    NotTable expr exprType ->
-      generateNotExpression expr exprType
+generateVariableExpr :: Variable -> BaseType -> Int -> StackMap -> IO ()
+generateVariableExpr var varType regNum stackMap = do
+  { let varShape = varShapeIndicator var
+        varSlotNum = getVariableSlotNum var stackMap
+  ; case varShape of
+      NoIndicator ->
+        printLine $ "load r" ++ (show regNum) ++ ", " ++ (show varSlotNum)
+      -- TODO Array Matrix
+      Array  n    -> return ()
+      Matrix m n  -> return ()
 
-generateOrExpression :: ExpressionTable -> ExpressionTable -> BaseType -> IO ()
-generateOrExpression lExpr rExpr exprType = do
--- TODO change this to register allocation
-  { generateExpressionTable lExpr
-  ; printLine "move r1, r0"
-  ; generateExpressionTable rExpr
-  ; printLine "or r0, r0, r1"
   }
 
-generateAndExpression :: ExpressionTable -> ExpressionTable -> BaseType -> IO ()
-generateAndExpression lExpr rExpr exprType = do
--- TODO change this to register allocation
-  { generateExpressionTable lExpr
-  ; printLine "move r1, r0"
-  ; generateExpressionTable rExpr
-  ; printLine "and r0, r0, r1"
+generateOrExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> StackMap -> IO ()
+generateOrExpression lExpr rExpr regNum stackMap = do
+  generateAndOrExpr "or" lExpr rExpr regNum stackMap
+
+generateAndExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> StackMap -> IO ()
+generateAndExpression lExpr rExpr regNum stackMap = do
+  generateAndOrExpr "and" lExpr rExpr regNum stackMap
+
+generateAndOrExpr ::
+  String -> ExpressionTable -> ExpressionTable -> Int -> StackMap -> IO ()
+generateAndOrExpr operator lExpr rExpr regNum stackMap = do
+  { generateExpression lExpr regNum stackMap
+  ; generateExpression rExpr (regNum+1) stackMap
+  ; printLine $ operator ++ " r" ++ (show regNum) ++ ", r" ++ (show regNum) ++
+                ", r" ++ (show (regNum+1))
   }
 
-generateNotExpression :: ExpressionTable -> BaseType -> IO ()
-generateNotExpression expr exprType = do
-  { generateExpressionTable expr
-  ; printLine "not r0, r0"
+generateNotExpression :: ExpressionTable -> Int -> StackMap -> IO ()
+generateNotExpression expr regNum stackMap = do
+  { generateExpression expr regNum stackMap
+  ; printLine $ "not r" ++ (show regNum) ++ ", r" ++ (show regNum)
+  }
+
+generateEqExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
+generateEqExpression lExpr rExpr regNum exprType stackMap = do
+  generateCompareExpr "cmp_eq" lExpr rExpr regNum exprType stackMap
+
+generateNotEqExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
+generateNotEqExpression lExpr rExpr regNum exprType stackMap = do
+  generateCompareExpr "cmp_ne" lExpr rExpr regNum exprType stackMap
+
+generateLesExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
+generateLesExpression lExpr rExpr regNum exprType stackMap = do
+  generateCompareExpr "cmp_lt" lExpr rExpr regNum exprType stackMap
+
+generateLesEqExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
+generateLesEqExpression lExpr rExpr regNum exprType stackMap = do
+  generateCompareExpr "cmp_le" lExpr rExpr regNum exprType stackMap
+
+generateGrtExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
+generateGrtExpression lExpr rExpr regNum exprType stackMap = do
+  generateCompareExpr "cmp_gt" lExpr rExpr regNum exprType stackMap
+
+generateGrtEqExpression ::
+  ExpressionTable -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
+generateGrtEqExpression lExpr rExpr regNum exprType stackMap = do
+  generateCompareExpr "cmp_ge" lExpr rExpr regNum exprType stackMap
+
+generateCompareExpr ::
+  String -> ExpressionTable -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
+generateCompareExpr operator lExpr rExpr regNum exprType stackMap = do
+  { generateExpression lExpr regNum stackMap
+  ; generateExpression rExpr (regNum+1) stackMap
+  ; case exprType of
+      FloatType -> do
+        generateIntToFloat lExpr rExpr regNum
+        printLine $ operator ++ "_real r" ++ (show regNum) ++ ", r" ++
+                    (show regNum) ++ ", r" ++ (show (regNum+1))
+      otherwise ->
+        printLine $ operator ++ "_int r" ++ (show regNum) ++ ", r" ++
+                    (show regNum) ++ ", r" ++ (show (regNum+1))
+  }
+
+generateNegativeExpression ::
+  ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
+generateNegativeExpression expr registerNum exprType stackMap = do
+  { let regNum = show registerNum
+  ; generateExpression expr registerNum stackMap
+  ; case exprType of
+      IntType   -> printLine $ "neg_int r"  ++ regNum ++ ", r" ++ regNum
+      FloatType -> printLine $ "neg_real r" ++ regNum ++ ", r" ++ regNum
   }
 
 convertBoolToInt :: Bool -> String
@@ -355,11 +407,27 @@ registers = Map.empty
 
 
 
--------------------------------------------------------------------------------
--- helper functions
--------------------------------------------------------------------------------
+------------------------------- Helper functions ------------------------------
+
 printNewLineIndentation :: IO ()
 printNewLineIndentation = putStr "    "
+
+-------------------------------------------------------------------------------
+-- Create the Oz statement: int_to_real r0 r1, where 0 and 1 are provided
+-- register numbers.
+-------------------------------------------------------------------------------
+printIntToRealInNewRegister :: Int -> Int -> IO ()
+printIntToRealInNewRegister targetRegisterNumber sourceRegisterNumber = do
+  putStrLn $ "int_to_real r" ++ (show targetRegisterNumber) ++
+              ", r" ++ (show sourceRegisterNumber)
+
+-------------------------------------------------------------------------------
+-- Create the Oz statement: int_to_real r0 r0, where 0 is the provided register
+-- number.
+-------------------------------------------------------------------------------
+printIntToRealInSameRegister :: Int -> IO ()
+printIntToRealInSameRegister registerNumber = do
+  printIntToRealInNewRegister registerNumber registerNumber
 
 getExprType :: ExpressionTable -> BaseType
 getExprType exprTable =
@@ -386,13 +454,16 @@ generateIntToFloat lExpr rExpr registerNum = do
     case (lType,rType) of
         (FloatType,FloatType) -> return ()
         (IntType,FloatType) -> do { printNewLineIndentation
-                                 ; putStrLn $ "int_to_real r" ++ (show registerNum)
-                                   ++ ", r" ++ (show registerNum)
-                                 }
+                                  ; printIntToRealInSameRegister registerNum
+                                  }
         (FloatType,IntType) -> do { printNewLineIndentation
-                                 ; putStrLn $ "int_to_real r" ++ (show $ registerNum+1)
-                                   ++ ", r" ++ (show $ registerNum+1)
-                                 }
+                                  ; printIntToRealInSameRegister (registerNum + 1)
+                                  }
+
+getVariableSlotNum :: Variable -> StackMap -> Int
+getVariableSlotNum variable stackMap = stackMap Map.! varName
+  where varName = (varId variable)
+
 
 insertStackMap :: ParameterMap -> VariableMap -> StackMap
 insertStackMap paramMap varMap = do

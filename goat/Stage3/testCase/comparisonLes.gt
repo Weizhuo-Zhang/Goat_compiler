@@ -1,0 +1,81 @@
+# Used to test Les
+
+proc main()
+begin
+    # Les for Bool
+    if false < true then
+        write "[SUCCESS] success 1\n";
+    else
+        write "[ERROR] ERROR 1 *********************\n";
+    fi
+
+    if true < false then
+        write "[ERROR] ERROR 2 *********************\n";
+    else
+        write "[SUCCESS] success 2\n";
+    fi
+
+    if true < true then
+        write "[ERROR] ERROR 3 *********************\n";
+    else
+        write "[SUCCESS] success 3\n";
+    fi
+
+    if false < false then
+        write "[ERROR] ERROR 4 *********************\n";
+    else
+        write "[SUCCESS] success 4\n";
+    fi
+
+     # Les for Int
+    if 5 < 5 then
+        write "[ERROR] ERROR 5 *********************\n";
+    else
+        write "[SUCCESS] success 5\n";
+    fi
+
+    if 3233 < 3233 then
+        write "[ERROR] ERROR 6 *********************\n";
+    else
+        write "[SUCCESS] success 6\n";
+    fi
+
+    if 134 < 233 then
+        write "[SUCCESS] success 7\n";
+    else
+        write "[ERROR] ERROR 7 *********************\n";
+    fi
+
+    if 345 < 0090 then
+        write "[ERROR] ERROR 8 *********************\n";
+    else
+        write "[SUCCESS] success 8\n";
+    fi
+
+    # NotEq for Float
+    if 4.3 < 4.3 then
+        write "[ERROR] ERROR 9 *********************\n";
+    else
+        write "[SUCCESS] success 9\n";
+    fi
+
+    if 324.4 < 999.213 then
+        write "[SUCCESS] success 10\n";
+    else
+        write "[ERROR] ERROR 10 *********************\n";
+    fi
+
+    if 445.4 < 445.4000 then
+        write "[ERROR] ERROR 11 *********************\n";
+    else
+        write "[SUCCESS] success 11\n";
+    fi
+
+    if 341.4 < 3351.0 then
+        write "[SUCCESS] success 12\n";
+    else
+        write "[ERROR] ERROR 12 *********************\n";
+    fi
+
+    write "done\n";
+end
