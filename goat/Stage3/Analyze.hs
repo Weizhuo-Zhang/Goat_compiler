@@ -105,6 +105,10 @@ exitWithTypeError :: Identifier -> IO Task
 exitWithTypeError procName =
   exitWithError ("There is a Type Error in the Statment in proc: " ++
                 "\"" ++ procName ++ "\"") UnmatchedType
+
+exitWithParamError :: Identifier -> IO Task
+exitWithParamError procId =
+  exitWithError ("Param error on calling " ++ "\"" ++ procId ++ "\"") ParamError
 -------------------------------- Analyzer Code --------------------------------
 
 -------------------------------------------------------------------------------
@@ -277,11 +281,88 @@ checkStatement procName stmt paramMap varMap procMap =
               case stmtTablesEither of
                 Left err         -> Left err
                 Right stmtTables -> Right (WhileTable exprTable stmtTables)
-        --Call procId argExprs -> do
-
+        Call procId argExprs -> do
+          let exprsEither = checkCallStmt procId argExprs procMap
+          case exprsEither of
+            Left err -> Left err
+            Right expreTables -> Right (CallTable procId expreTables)
         -- TODO
         -- Read val
-        -- Call ident expr
+
+checkExprBaseType :: Identifier -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) BaseType
+checkExprBaseType procId expr paramMap varMap = do
+    let expressionTable = checkExpression procId expr paramMap varMap
+    case expressionTable of
+      Left err -> Left err
+      Right exprTable -> do
+        case exprTable of
+          VariableTable var varType -> Right varType
+          BoolTable boolVal -> Right BoolType
+          FloatTable floatVal -> Right FloatType
+          IntTable intVal -> Right IntType
+          SubTable subLeftVal subRightVal subType -> Right subType
+          AddTable addLeftVal addRightVal addType -> Right addType
+          DivTable divLeftVal divRightVal divType -> Right divType
+          MulTable mulLeftVal mulRightVal mulType -> Right mulType
+          AndTable andLeftExprTable andRightExprTable andType -> Right andType
+          OrTable orLeftExprTable orRightExprTable orType -> Right orType
+          NotEqTable notEqLeftExpr notEqRightExpr notEqType -> Right notEqType
+          EqTable eqLeftExpr eqRightExpr eqType -> Right eqType
+          LesEqTable lesEqLeftExpr lesEqRightExpr lesEqType -> Right lesEqType
+          LesTable lesLeftExpr lesRightExpr lesType -> Right lesType
+          GrtEqTable grtEqLeftExpr grtEqRightExpr grtEqType -> Right grtEqType
+          GrtTable grtLeftExpr grtRightExpr grtType -> Right grtType
+          NotTable notExprTable notType -> Right notType
+          otherwise -> Left (exitWithParamError procId)
+        
+
+checkArguments :: Identifier -> [Expression] -> [BaseType] -> ParameterMap -> VariableMap -> Either (IO Task) [ExpressionTable]
+checkArguments procId [e] [b] paramMap varMap = do
+  let exprBaseType = checkExprBaseType procId e paramMap varMap
+  case exprBaseType of
+    Left err -> Left err
+    Right baseType -> do
+      case (baseType == b) of
+        True -> do
+          let eitherExprTable = checkExpression procId e paramMap varMap
+          case eitherExprTable of
+            Left err -> Left err
+            Right expressionTable -> Right [expressionTable]
+        otherwise -> Left (exitWithParamError procId)       
+
+checkArguments procId (e:es) (b:bs) paramMap varMap = do
+  let expressionTables = checkArguments procId es bs paramMap varMap
+  case expressionTables of
+    Left err -> Left err
+    Right exprTables -> do
+      let exprBaseType = checkExprBaseType procId e paramMap varMap
+      case exprBaseType of
+        Left err -> Left err
+        Right baseType -> do
+          case (baseType == b) of
+            True -> do
+              let eitherExprTable = checkExpression procId e paramMap varMap
+              case eitherExprTable of
+                Left err -> Left err
+                Right expressionTable -> Right (expressionTable:exprTables)
+            otherwise -> Left (exitWithParamError procId)
+
+checkCallStmt :: Identifier -> [Expression] -> ProgramMap -> Either (IO Task) [ExpressionTable]
+checkCallStmt calledProcId argExprs procMap = do
+  case M.lookup calledProcId procMap of
+    Just calledProcTable -> do
+      let varMap = variableMap calledProcTable
+          paramMap = parameterMap calledProcTable
+          paramList = M.toList paramMap;
+          paramBaseTypes = [passingType (snd param) | param <- paramList]
+      case ((length argExprs) == (length paramList)) of
+        True -> do
+          let expreTables = checkArguments calledProcId argExprs paramBaseTypes paramMap varMap
+          case expreTables of
+            Left err -> Left err
+            Right expressionTables -> Right expressionTables
+        otherwise -> Left (exitWithParamError calledProcId)
+    Nothing -> Left (exitWithParamError calledProcId)
 
 -- TODO: Complete the type matching in write statement
 checkWriteStmt :: Identifier -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable

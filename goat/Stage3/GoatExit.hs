@@ -41,6 +41,7 @@ data GoatExitCode = Success          -- 0
                   | UnmatchedType    -- 11
                   | IfCondError      -- 12
                   | LogicOpTypeError -- 13
+                  | ParamError       -- 14
                   deriving Enum
 
 -------------------------------------------------------------------------------
