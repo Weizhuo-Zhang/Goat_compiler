@@ -37,6 +37,14 @@ echo "----------- comparisonLesEq.gt ----------"
 ./Goat testCase/comparisonLesEq.gt > ./testCase/GeneratedOutput/comparisonLesEq.oz
 ./oz ./testCase/GeneratedOutput/comparisonLesEq.oz
 
+echo "----------- comparisonGrt.gt ----------"
+./Goat testCase/comparisonGrt.gt > ./testCase/GeneratedOutput/comparisonGrt.oz
+./oz ./testCase/GeneratedOutput/comparisonGrt.oz
+
+echo "----------- comparisonGrtEq.gt ----------"
+./Goat testCase/comparisonGrtEq.gt > ./testCase/GeneratedOutput/comparisonGrtEq.oz
+./oz ./testCase/GeneratedOutput/comparisonGrtEq.oz
+
 echo "----------- asgWithNumericOperatorOnly.gt ----------"
 ./Goat -s ./testCase/asgWithNumericOperatorOnly.gt > asgWithNumericOperatorOnly.symtable
 ./Goat ./testCase/asgWithNumericOperatorOnly.gt
