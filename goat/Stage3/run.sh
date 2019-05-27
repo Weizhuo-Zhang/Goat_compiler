@@ -45,6 +45,10 @@ echo "----------- comparisonGrtEq.gt ----------"
 ./Goat testCase/comparisonGrtEq.gt > ./testCase/GeneratedOutput/comparisonGrtEq.oz
 ./oz ./testCase/GeneratedOutput/comparisonGrtEq.oz
 
+echo "--------------------------------- read.gt -------------------------------"
+./Goat ./testCase/read.gt > ./testCase/GeneratedOutput/read.oz
+./oz ./testCase/GeneratedOutput/read.oz
+
 echo "----------- asgWithNumericOperatorOnly.gt ----------"
-./Goat -s ./testCase/asgWithNumericOperatorOnly.gt > asgWithNumericOperatorOnly.symtable
+# ./Goat -s ./testCase/asgWithNumericOperatorOnly.gt > asgWithNumericOperatorOnly.symtable
 # ./Goat ./testCase/asgWithNumericOperatorOnly.gt
