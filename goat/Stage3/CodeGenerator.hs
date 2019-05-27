@@ -53,13 +53,13 @@ generateProcedureList (procedure:procedures) programMap =
 generateProcedure :: Identifier -> ProcedureTable -> IO ()
 generateProcedure procName (ProcedureTable paramMap varMap statements) = do
     let parameterNumber = Map.size paramMap
-        variableNumber  = Map.size varMap
+        varList         = Map.keys varMap
+        variableNumber  = getVariableMapSize varList varMap
         totalVarNumber  = parameterNumber + variableNumber
     case totalVarNumber of
         0         -> putStr ""
         otherwise -> printLine $ "push_stack_frame " ++ (show totalVarNumber)
     let stackMap = insertStackMap paramMap varMap
-        varList = Map.keys varMap
     -- TODO
     -- initParameters
     case variableNumber of
@@ -490,16 +490,34 @@ getVariableSlotNum :: VariableSubTable -> StackMap -> Int
 getVariableSlotNum variable stackMap = stackMap Map.! varId
   where varId = varName variable
 
+getVariableMapSize :: [Identifier] -> VariableMap -> Int
+getVariableMapSize [] _ = 0
+getVariableMapSize (var:[]) varMap =
+  getVariableSize varIndicator
+  where varIndicator = varShapeIndicator $ declarationVariable (varMap Map.! var)
+getVariableMapSize (var:vars) varMap =
+  (getVariableSize varIndicator) + (getVariableMapSize vars varMap)
+  where varIndicator = varShapeIndicator $ declarationVariable (varMap Map.! var)
+
+getVariableSize :: ShapeIndicator -> Int
+getVariableSize varIndicator =
+  case varIndicator of
+    NoIndicator                      -> 0
+    Array  (IntConst n)              -> n
+    Matrix (IntConst m) (IntConst n) -> m*n
 
 insertStackMap :: ParameterMap -> VariableMap -> StackMap
 insertStackMap paramMap varMap = do
     let paramList = Map.keys paramMap
         varList = Map.keys varMap
         stackList = paramList ++ varList
-    subinsertStackMap stackList 0
+    subinsertStackMap stackList 0 varMap
 
-
--- TODO Array Matrix
-subinsertStackMap :: [String] -> Int -> StackMap
-subinsertStackMap (name:[]) index = Map.insert name index Map.empty
-subinsertStackMap (name:names) index = Map.insert name index (subinsertStackMap names $ index+1)
+subinsertStackMap :: [String] -> Int -> VariableMap -> StackMap
+subinsertStackMap (name:[]) index _ = Map.insert name index Map.empty
+subinsertStackMap (name:names) index varMap =
+  case (Map.member name varMap) of
+    True  -> Map.insert name index (subinsertStackMap names (index+varSize) varMap)
+        where varIndicator = varShapeIndicator $ declarationVariable (varMap Map.! name)
+              varSize = getVariableSize varIndicator
+    False -> Map.insert name index (subinsertStackMap names (index+1) varMap)
