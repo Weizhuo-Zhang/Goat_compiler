@@ -152,20 +152,47 @@ exitWithUnaryMinusError procName =
 -------------------------------------------------------------------------------
 -- analyze Procedure
 -------------------------------------------------------------------------------
-analyze :: ProgramMap -> IO Task
-analyze _           = return Unit
--- analyzeProc (proc:[])    = do { printHeader $ header proc
---                               ; printBody $ body proc
---                               }
--- analyzeProc (proc:procs) = do { printHeader $ header proc
---                               ; printBody $ body proc
---                               ; putStrLn "" -- print new line character
---                               ; printProc (procs)
---                               }
+analyze :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
+analyze procedures procMap = do
+    let procMapWithoutStatements = insertProcListWithoutStatements procedures procMap
+    case procMapWithoutStatements of
+        Left err -> Left err
+        Right programMap -> insertStatementsInProcList procedures programMap
 
-insertProcList :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
-insertProcList (proc:[]) procMap = do
-    let procTable = insertProcedureTable proc procMap
+insertStatementsInProcList :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
+insertStatementsInProcList (proc:[]) procMap = do
+    let statementsEither = insertStatementList procedureName (bodyStatements procedureBody) paramMap varMap procMap
+        procedureName = getProcedureIdentifier proc
+        procedureBody = (body proc)
+        procedureTable = procMap M.! procedureName
+        paramMap = parameterMap procedureTable
+        varMap = variableMap procedureTable
+    case statementsEither of
+        Left err -> Left err
+        Right statements -> do
+              let newProcTable = ProcedureTable paramMap varMap statements
+              Right $ M.insert procedureName newProcTable procMap
+
+insertStatementsInProcList (proc:procs) procMap = do
+    let statementsEither = insertStatementList procedureName (bodyStatements procedureBody) paramMap varMap procMap
+        procedureName = getProcedureIdentifier proc
+        procedureBody = (body proc)
+        procedureTable = procMap M.! procedureName
+        paramMap = parameterMap procedureTable
+        varMap = variableMap procedureTable
+    case statementsEither of
+        Left err -> Left err
+        Right statements -> do
+              let newProcMapEither = insertStatementsInProcList procs procMap
+                  newProcTable = ProcedureTable paramMap varMap statements
+              case newProcMapEither of
+                Left err -> Left err
+                Right newProcMap -> Right $ M.insert procedureName newProcTable newProcMap
+
+
+insertProcListWithoutStatements :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
+insertProcListWithoutStatements (proc:[]) procMap = do
+    let procTable = insertProcedureTableWithoutStatement proc procMap
     case procTable of
         Left err           -> Left err
         Right subProcTable -> Right $ M.insert procName subProcTable procMap
@@ -184,14 +211,18 @@ insertProcList (proc:procs) procMap = do
                  )
                  MultipleProc
         False -> do
-          let procTable = insertProcedureTable proc procMap
+          let procTable = insertProcedureTableWithoutStatement proc procMap
           case procTable of
             Left err -> Left err
             Right subProcTable ->
               Right $ M.insert procName subProcTable subProcMap
 
-insertProcedureTable :: Procedure -> ProgramMap -> Either (IO Task) ProcedureTable
-insertProcedureTable procedure procMap =
+insertProcedureTableWithoutStatement :: Procedure -> ProgramMap -> Either (IO Task) ProcedureTable
+insertProcedureTableWithoutStatement procedure procMap = do
+  let  paramMap = insertParameterMap procedureName procedureParameters M.empty
+       procedureBody = (body procedure)
+       procedureName = getProcedureIdentifier procedure
+       procedureParameters = getProcedureParameters procedure
   case paramMap of
           Left err -> Left err
           Right subParamMap -> do
@@ -200,17 +231,9 @@ insertProcedureTable procedure procMap =
                           procedureName (bodyVarDeclarations procedureBody) subParamMap M.empty
               case varMap of
                   Left err -> Left err
-                  Right subVarMap -> do
-                      let newStatements = insertStatementList procedureName (bodyStatements procedureBody) subParamMap subVarMap procMap
-                      case newStatements of
-                          Left err -> Left err
-                          Right subStatements ->
-                              Right $ ProcedureTable subParamMap subVarMap subStatements
+                  Right subVarMap -> Right $ ProcedureTable subParamMap subVarMap []
 
- where paramMap = insertParameterMap procedureName procedureParameters M.empty
-       procedureBody = (body procedure)
-       procedureName = getProcedureIdentifier procedure
-       procedureParameters = getProcedureParameters procedure
+
 
 insertParameterMap ::
   Identifier -> [Parameter] -> ParameterMap -> Either (IO Task) ParameterMap
@@ -785,5 +808,4 @@ checkMainProc program = do
 -- Main entry of semantic Analyze module.
 -------------------------------------------------------------------------------
 semanticAnalyse :: GoatProgram -> Either (IO Task) ProgramMap
-semanticAnalyse program = insertProcList (procedures program) M.empty
--- semanticAnalyse program = insertProcList $ procedures program
+semanticAnalyse program = analyze (procedures program) M.empty
