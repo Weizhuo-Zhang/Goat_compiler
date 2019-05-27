@@ -65,24 +65,41 @@ generateProcedure procName (ProcedureTable paramMap varMap statements) = do
     case variableNumber of
         0         -> putStr ""
         otherwise -> do { printLine "int_const r0, 0"
-                        -- TODO
-                        -- initArrayMatrix
-                        ; initVariables varList stackMap
+                        ; initVariables varList varMap stackMap
                         }
     generateStatements procName [0] statements stackMap
     case totalVarNumber of
         0         -> putStr ""
         otherwise -> printLine $ "pop_stack_frame " ++ (show totalVarNumber)
 
-initVariables :: [Identifier] -> StackMap -> IO ()
-initVariables [] _ = return ()
-initVariables (var:[]) stackMap = do
+initVariables :: [Identifier] -> VariableMap -> StackMap -> IO ()
+initVariables [] _ _ = return ()
+initVariables (var:[]) varMap stackMap = do
+  let varSlotNum   = stackMap Map.! var
+      varIndicator = varShapeIndicator $ declarationVariable (varMap Map.! var)
+  initVariableWithIndicator varIndicator varSlotNum
+initVariables (var:varList) varMap stackMap = do
   let varSlotNum = stackMap Map.! var
-  printLine $ "store " ++ (show varSlotNum) ++ ", r0"
-initVariables (var:varList) stackMap = do
-  let varSlotNum = stackMap Map.! var
-  printLine $ "store " ++ (show varSlotNum) ++ ", r0"
-  initVariables varList stackMap
+      varIndicator = varShapeIndicator $ declarationVariable (varMap Map.! var)
+  initVariableWithIndicator varIndicator varSlotNum
+  initVariables varList varMap stackMap
+
+initVariableWithIndicator :: ShapeIndicator -> Int -> IO ()
+initVariableWithIndicator varIndicator varSlotNum =
+  case varIndicator of
+    NoIndicator                       -> initSingleVar varSlotNum
+    Array  (IntConst n)               -> initOffset    varSlotNum n
+    Matrix (IntConst m) (IntConst n)  -> initOffset    varSlotNum (m*n)
+
+initSingleVar :: Int -> IO ()
+initSingleVar varSlotNum = printLine $ "store " ++ (show varSlotNum) ++ ", r0"
+
+initOffset :: Int -> Int -> IO ()
+initOffset varSlotNum offset = do
+  if offset > 0
+    then do initSingleVar varSlotNum
+            initOffset (offset-1) (varSlotNum+1)
+    else putStr ""
 
 generateStatements :: String -> [Int] -> [StatementTable] -> StackMap -> IO ()
 generateStatements _ _ [] _  = return ()
@@ -160,7 +177,7 @@ generateWriteChooseType exprType exprTable stackMap =
 generateReadStatement :: ExpressionTable -> StackMap -> IO ()
 generateReadStatement exprTable stackMap = do
     let exprType = getExprType exprTable
-        slotNum = stackMap Map.! (varId $ variable exprTable)
+        slotNum = stackMap Map.! (varName $ variable exprTable)
     case exprType of
         BoolType  -> generateReadStatementByType "bool" slotNum
         IntType   -> generateReadStatementByType "int" slotNum
@@ -482,6 +499,7 @@ insertStackMap paramMap varMap = do
     subinsertStackMap stackList 0
 
 
+-- TODO Array Matrix
 subinsertStackMap :: [String] -> Int -> StackMap
 subinsertStackMap (name:[]) index = Map.insert name index Map.empty
 subinsertStackMap (name:names) index = Map.insert name index (subinsertStackMap names $ index+1)
