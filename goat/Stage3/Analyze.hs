@@ -155,6 +155,28 @@ exitWithAssignTypeError procName varName =
   (getAssignTypeErrorMessage procName varName)
   AssignTypeError
 
+getVarIndicatorErrorMessage :: Identifier -> String -> String
+getVarIndicatorErrorMessage procName varName =
+  "Variable indicator Error! The variable " ++ "\"" ++ varName ++ "\"" ++
+  " should not be Array or Matrix in procedure " ++ "\"" ++ procName ++ "\""
+
+exitWithVarIndicatorError :: Identifier -> String -> IO Task
+exitWithVarIndicatorError procName varName =
+  exitWithError
+  (getVarIndicatorErrorMessage procName varName)
+  VarIndicatorError
+
+getVarIndicatorNotSameMessage :: Identifier -> String -> String
+getVarIndicatorNotSameMessage procName varName =
+  "Variable indicator Error! The indicator of variable " ++
+  "\"" ++ varName ++ "\"" ++ " is not same as declaration" ++
+  " in procedure " ++ "\"" ++ procName ++ "\""
+
+exitWithVarIndicatorNotSame :: Identifier -> String -> IO Task
+exitWithVarIndicatorNotSame procName varName =
+  exitWithError
+  (getVarIndicatorNotSameMessage procName varName)
+  VarIndicatorError
 -------------------------------- Analyzer Code --------------------------------
 
 -------------------------------------------------------------------------------
@@ -616,17 +638,40 @@ checkAssignType procName variableTable expressionTable exprType = do
             then Right $ AssignTable variableTable expressionTable
             else Left $ exitWithAssignTypeError procName varName
 
-checkVariable :: Identifier -> Variable -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
+checkVariable ::
+  Identifier -> Variable -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkVariable procName var paramMap varMap = do
     case (M.member id paramMap) of
-        True -> Right $ VariableTable var paramBaseType
+        True  -> checkParamIndicator procName var paramBaseType
         False -> do
             case (M.member id varMap) of
-                True  -> Right $ VariableTable var varBaseType
+                True  -> checkVariableIndicator procName var varDecl varBaseType
                 False -> Left $ exitWithUndefinedVariable id
-            where varBaseType = lookupBaseTypeVarMap id varMap
+            where varDecl     = varMap M.! id
+                  varBaseType = lookupBaseTypeVarMap id varMap
     where id = varId var
           paramBaseType = lookupBaseTypeParamMap id paramMap
+
+checkParamIndicator ::
+  Identifier -> Variable -> BaseType -> Either (IO Task) ExpressionTable
+checkParamIndicator procName var paramBaseType = do
+    case varIndicator of
+        NoIndicator -> Right $ VariableTable var paramBaseType
+        otherwise   -> Left $ exitWithVarIndicatorError procName id
+    where id = varId var
+          varIndicator  = varShapeIndicator var
+
+checkVariableIndicator ::
+  Identifier -> Variable -> VariableDeclaration -> BaseType -> Either (IO Task) ExpressionTable
+checkVariableIndicator procName var varDecl varBaseType = do
+    case (varIndicator, declIndicator)of
+        (NoIndicator, NoIndicator) -> Right $ VariableTable var varBaseType
+        (Array  _   , Array  _   ) -> Right $ VariableTable var varBaseType
+        (Matrix _ _ , Matrix _ _ ) -> Right $ VariableTable var varBaseType
+        otherwise -> Left  $ exitWithVarIndicatorNotSame procName id
+    where id = varId var
+          varIndicator  = varShapeIndicator var
+          declIndicator = varShapeIndicator $ declarationVariable varDecl
 
 checkOperationExpression :: Identifier -> String -> Expression -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkOperationExpression procName operator lExpr rExpr paramMap varMap = do
