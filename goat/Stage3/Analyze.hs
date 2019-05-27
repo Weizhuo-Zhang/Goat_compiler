@@ -197,8 +197,8 @@ insertProcListWithoutStatements (proc:[]) procMap = do
         Left err           -> Left err
         Right subProcTable -> Right $ M.insert procName subProcTable procMap
     where procName = getProcedureIdentifier proc
-insertProcList (proc:procs) procMap = do
-  let newProcMap = insertProcList procs procMap
+insertProcListWithoutStatements (proc:procs) procMap = do
+  let newProcMap = insertProcListWithoutStatements procs procMap
   case newProcMap of
     Left err -> Left err
     Right subProcMap -> do
