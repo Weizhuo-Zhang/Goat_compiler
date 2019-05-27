@@ -282,16 +282,16 @@ generateWhileStatement procName label exprTable stmts stackMap = do
   ; putStrLn (label_c ++ ":")
   }
 
-generateVariableExpr :: Variable -> BaseType -> Int -> StackMap -> IO ()
+generateVariableExpr :: VariableSubTable -> BaseType -> Int -> StackMap -> IO ()
 generateVariableExpr var varType regNum stackMap = do
-  { let varShape = varShapeIndicator var
+  { let varShape = varShapeIndicatorTable var
         varSlotNum = getVariableSlotNum var stackMap
   ; case varShape of
-      NoIndicator ->
+      NoIndicatorTable ->
         printLine $ "load r" ++ (show regNum) ++ ", " ++ (show varSlotNum)
       -- TODO Array Matrix
-      Array  n    -> return ()
-      Matrix m n  -> return ()
+      ArrayTable  n    -> return ()
+      MatrixTable m n  -> return ()
 
   }
 
@@ -455,9 +455,9 @@ generateIntToFloat lExpr rExpr registerNum = do
         (IntType,FloatType) -> printIntToRealInSameRegister registerNum
         (FloatType,IntType) -> printIntToRealInSameRegister (registerNum + 1)
 
-getVariableSlotNum :: Variable -> StackMap -> Int
-getVariableSlotNum variable stackMap = stackMap Map.! varName
-  where varName = (varId variable)
+getVariableSlotNum :: VariableSubTable -> StackMap -> Int
+getVariableSlotNum variable stackMap = stackMap Map.! varId
+  where varId = varName variable
 
 
 insertStackMap :: ParameterMap -> VariableMap -> StackMap

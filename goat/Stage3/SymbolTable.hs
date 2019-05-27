@@ -47,7 +47,18 @@ data StatementTable = WriteTable     { writeExprTable    :: ExpressionTable }
                                      , whileStmtTables :: [StatementTable]
                                      } deriving (Show, Eq)
 
-data ExpressionTable = VariableTable   { variable     :: Variable
+data VariableSubTable = VariableSubTable { varName                :: Identifier
+                                         , varShapeIndicatorTable :: ShapeIndicatorTable
+                                         } deriving (Show, Eq)
+
+data ShapeIndicatorTable = ArrayTable  { arrayExprTable   :: ExpressionTable }
+                         | MatrixTable { matrixMExprTable :: ExpressionTable
+                                       , matrixNExprTable :: ExpressionTable
+                                       }
+                         | NoIndicatorTable
+                         deriving (Show, Eq)
+
+data ExpressionTable = VariableTable   { variable     :: VariableSubTable
                                        , variableType :: BaseType
                                        }
                      | BoolTable       { boolVal   :: Bool }
