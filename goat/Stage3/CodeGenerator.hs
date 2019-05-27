@@ -160,8 +160,7 @@ generateWriteChooseType exprType exprTable stackMap =
 generateReadStatement :: ExpressionTable -> StackMap -> IO ()
 generateReadStatement exprTable stackMap = do
     let exprType = getExprType exprTable
-        varName = varId $ variable exprTable
-        slotNum = stackMap Map.! varName
+        slotNum = stackMap Map.! (varId $ variable exprTable)
     case exprType of
         BoolType  -> generateReadStatementByType "bool" slotNum
         IntType   -> generateReadStatementByType "int" slotNum
@@ -445,14 +444,14 @@ printIntToRealInSameRegister registerNumber = do
 getExprType :: ExpressionTable -> BaseType
 getExprType exprTable =
      case exprTable of
-          IntTable _            -> IntType
-          FloatTable _          -> FloatType
-          BoolTable _           -> BoolType
+          IntTable _               -> IntType
+          FloatTable _             -> FloatType
+          BoolTable _              -> BoolType
           VariableTable _ baseType -> baseType
-          AddTable _ _ baseType -> baseType
-          SubTable _ _ baseType -> baseType
-          MulTable _ _ baseType -> baseType
-          DivTable _ _ baseType -> baseType
+          AddTable _ _ baseType    -> baseType
+          SubTable _ _ baseType    -> baseType
+          MulTable _ _ baseType    -> baseType
+          DivTable _ _ baseType    -> baseType
 
 generateOperationString :: String -> String -> Int -> IO ()
 generateOperationString operator opType registerNum = do
