@@ -107,9 +107,9 @@ exitWithTypeError procName =
   exitWithError ("There is a Type Error in the Statment in proc: " ++
                 "\"" ++ procName ++ "\"") UnmatchedType
 
-exitWithParamError :: Identifier -> IO Task
-exitWithParamError procId =
-  exitWithError ("Param error on calling " ++ "\"" ++ procId ++ "\"") ParamError
+exitWithParamError :: Identifier -> String -> IO Task
+exitWithParamError procId str =
+  exitWithError ("Param error on calling " ++ "\"" ++ procId ++ "\"" ++ " " ++ str) ParamError
 
 getComparisonExprTypeErrorMessage :: Identifier -> String -> String
 getComparisonExprTypeErrorMessage procName operator =
@@ -346,7 +346,7 @@ checkExprBaseType procId expr paramMap varMap = do
           GrtEqTable grtEqLeftExpr grtEqRightExpr grtEqType -> Right grtEqType
           GrtTable grtLeftExpr grtRightExpr grtType -> Right grtType
           NotTable notExprTable notType -> Right notType
-          otherwise -> Left (exitWithParamError procId)
+          otherwise -> Left (exitWithParamError procId "1")
 
 checkArguments :: Identifier -> [Expression] -> [BaseType] -> ParameterMap -> VariableMap -> Either (IO Task) [ExpressionTable]
 checkArguments procId [e] [b] paramMap varMap = do
@@ -360,7 +360,7 @@ checkArguments procId [e] [b] paramMap varMap = do
           case eitherExprTable of
             Left err -> Left err
             Right expressionTable -> Right [expressionTable]
-        otherwise -> Left (exitWithParamError procId)
+        otherwise -> Left (exitWithParamError procId "2")
 checkArguments procId (e:es) (b:bs) paramMap varMap = do
   let expressionTables = checkArguments procId es bs paramMap varMap
   case expressionTables of
@@ -376,7 +376,7 @@ checkArguments procId (e:es) (b:bs) paramMap varMap = do
               case eitherExprTable of
                 Left err -> Left err
                 Right expressionTable -> Right (expressionTable:exprTables)
-            otherwise -> Left (exitWithParamError procId)
+            otherwise -> Left (exitWithParamError procId "3")
 
 checkCallStmt :: Identifier -> [Expression] -> ProgramMap -> Either (IO Task) [ExpressionTable]
 checkCallStmt calledProcId argExprs procMap = do
@@ -388,12 +388,15 @@ checkCallStmt calledProcId argExprs procMap = do
           paramBaseTypes = [passingType (snd param) | param <- paramList]
       case ((length argExprs) == (length paramList)) of
         True -> do
-          let expreTables = checkArguments calledProcId argExprs paramBaseTypes paramMap varMap
-          case expreTables of
-            Left err -> Left err
-            Right expressionTables -> Right expressionTables
-        otherwise -> Left (exitWithParamError calledProcId)
-    Nothing -> Left (exitWithParamError calledProcId)
+          case ((length argExprs) == 0) of
+            True -> Right []
+            otherwise -> do
+              let expreTables = checkArguments calledProcId argExprs paramBaseTypes paramMap varMap
+              case expreTables of
+                Left err -> Left err
+                Right expressionTables -> Right expressionTables
+        otherwise -> Left (exitWithParamError calledProcId "4")
+    Nothing -> Left (exitWithParamError calledProcId "5")
 
 checkWriteStmt :: Identifier -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) StatementTable
 checkWriteStmt procName expr paramMap varMap = do
