@@ -143,6 +143,17 @@ exitWithUnaryMinusError procName =
   (getUnaryMinusTypeErrorMessage procName)
   UnaryMinusError
 
+getAssignTypeErrorMessage :: Identifier -> String -> String
+getAssignTypeErrorMessage procName varName =
+  "Assign Type Error! The type of " ++ "\"" ++ varName ++ "\"" ++
+  " in procedure " ++ "\"" ++ procName ++ "\"" ++ " is not match."
+
+exitWithAssignTypeError :: Identifier -> String -> IO Task
+exitWithAssignTypeError procName varName =
+  exitWithError
+  (getAssignTypeErrorMessage procName varName)
+  AssignTypeError
+
 -------------------------------- Analyzer Code --------------------------------
 
 -------------------------------------------------------------------------------
@@ -276,10 +287,7 @@ checkStatement procName stmt paramMap varMap =
           case eitherVariableTable of
               Left err            -> Left err
               Right variableTable -> do
-                  let eitherExpressionTable = checkExpression procName expression paramMap varMap
-                  case eitherExpressionTable of
-                      Left  expressionErr   -> Left expressionErr
-                      Right expressionTable -> Right $ AssignTable variableTable expressionTable
+                  checkAssignExpr procName expression variableTable paramMap varMap
         If expr stmts -> do
           let exprEither = checkConsition procName expr paramMap varMap
           case exprEither of
@@ -328,6 +336,16 @@ checkReadStmt procName var paramMap varMap = do
     case eitherExpressionTable of
         Left err        -> Left err
         Right exprTable -> Right $ exprTable
+
+checkAssignExpr ::
+  Identifier -> Expression -> ExpressionTable -> ParameterMap -> VariableMap -> Either (IO Task) StatementTable
+checkAssignExpr procName expr variableTable paramMap varMap = do
+    let eitherExpressionTable = checkExpression procName expr paramMap varMap
+    case eitherExpressionTable of
+      Left err        -> Left err
+      Right expressionTable -> do
+        let exprType = getAssignBaseType expressionTable
+        checkAssignType procName variableTable expressionTable exprType
 
 checkConsition :: Identifier -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkConsition procName expr paramMap varMap = do
@@ -584,6 +602,40 @@ getBaseType exprTable =
     GrtTable   _ _  exprType  -> exprType
     GrtEqTable _ _  exprType  -> exprType
     NegativeTable _ exprType  -> exprType
+    NotTable      _ exprType  -> exprType
+
+getAssignBaseType :: ExpressionTable -> BaseType
+getAssignBaseType exprTable =
+  case exprTable of
+    VariableTable _ exprType  -> exprType
+    BoolTable  _              -> BoolType
+    IntTable   _              -> IntType
+    FloatTable _              -> FloatType
+    AddTable   _ _  exprType  -> exprType
+    SubTable   _ _  exprType  -> exprType
+    MulTable   _ _  exprType  -> exprType
+    DivTable   _ _  exprType  -> exprType
+    OrTable    _ _  exprType  -> BoolType
+    AndTable   _ _  exprType  -> BoolType
+    EqTable    _ _  exprType  -> BoolType
+    NotEqTable _ _  exprType  -> BoolType
+    LesTable   _ _  exprType  -> BoolType
+    LesEqTable _ _  exprType  -> BoolType
+    GrtTable   _ _  exprType  -> BoolType
+    GrtEqTable _ _  exprType  -> BoolType
+    NegativeTable _ exprType  -> exprType
+    NotTable      _ exprType  -> BoolType
+
+checkAssignType ::
+  Identifier -> ExpressionTable -> ExpressionTable -> BaseType -> Either (IO Task) StatementTable
+checkAssignType procName variableTable expressionTable exprType = do
+    let varType = variableType variableTable
+        varName = varId $ variable variableTable
+    if varType == exprType
+        then Right $ AssignTable variableTable expressionTable
+        else if (FloatType == varType) && (IntType == exprType)
+            then Right $ AssignTable variableTable expressionTable
+            else Left $ exitWithAssignTypeError procName varName
 
 checkVariable :: Identifier -> Variable -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkVariable procName var paramMap varMap = do
