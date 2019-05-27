@@ -159,6 +159,40 @@ exitWithAssignTypeError procName varName =
   (getAssignTypeErrorMessage procName varName)
   AssignTypeError
 
+getVarIndicatorErrorMessage :: Identifier -> String -> String
+getVarIndicatorErrorMessage procName varName =
+  "Variable indicator Error! The variable " ++ "\"" ++ varName ++ "\"" ++
+  " should not be Array or Matrix in procedure " ++ "\"" ++ procName ++ "\""
+
+exitWithVarIndicatorError :: Identifier -> String -> IO Task
+exitWithVarIndicatorError procName varName =
+  exitWithError
+  (getVarIndicatorErrorMessage procName varName)
+  VarIndicatorError
+
+getVarIndicatorNotSameMessage :: Identifier -> String -> String
+getVarIndicatorNotSameMessage procName varName =
+  "Variable indicator Error! The indicator of variable " ++
+  "\"" ++ varName ++ "\"" ++ " is not same as declaration" ++
+  " in procedure " ++ "\"" ++ procName ++ "\""
+
+exitWithVarIndicatorNotSame :: Identifier -> String -> IO Task
+exitWithVarIndicatorNotSame procName varName =
+  exitWithError
+  (getVarIndicatorNotSameMessage procName varName)
+  VarIndicatorError
+
+getArrayMatrixIndicatorTypeErrorMessage :: Identifier -> String -> String
+getArrayMatrixIndicatorTypeErrorMessage procName varName =
+  "Array and Matrix dimension type Error! The dimension of Array and Matrix" ++
+  " must be Int. For variable \"" ++ varName ++ "\"" ++
+  " in procedure " ++ "\"" ++ procName ++ "\""
+
+exitArrayMatrixDimensionTypeError :: Identifier -> String -> IO Task
+exitArrayMatrixDimensionTypeError procName varName =
+  exitWithError
+  (getArrayMatrixIndicatorTypeErrorMessage procName varName)
+  VarIndicatorError
 -------------------------------- Analyzer Code --------------------------------
 
 -------------------------------------------------------------------------------
@@ -714,25 +748,92 @@ getBaseType exprTable =
 checkAssignType ::
   Identifier -> ExpressionTable -> ExpressionTable -> BaseType -> Either (IO Task) StatementTable
 checkAssignType procName variableTable expressionTable exprType = do
-    let varType = variableType variableTable
-        varName = varId $ variable variableTable
+    let varType      = variableType variableTable
+        variableName = varName $ variable variableTable
     if varType == exprType
         then Right $ AssignTable variableTable expressionTable
         else if (FloatType == varType) && (IntType == exprType)
             then Right $ AssignTable variableTable expressionTable
-            else Left $ exitWithAssignTypeError procName varName
+            else Left $ exitWithAssignTypeError procName variableName
 
-checkVariable :: Identifier -> Variable -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
+checkVariable ::
+  Identifier -> Variable -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkVariable procName var paramMap varMap = do
     case (M.member id paramMap) of
-        True -> Right $ VariableTable var paramBaseType
+        True  -> checkParamIndicator procName var paramBaseType
         False -> do
             case (M.member id varMap) of
-                True  -> Right $ VariableTable var varBaseType
+                True  -> checkVariableIndicator procName var varDecl varBaseType paramMap varMap
                 False -> Left $ exitWithUndefinedVariable id
-            where varBaseType = lookupBaseTypeVarMap id varMap
+            where varDecl     = varMap M.! id
+                  varBaseType = lookupBaseTypeVarMap id varMap
     where id = varId var
           paramBaseType = lookupBaseTypeParamMap id paramMap
+
+checkParamIndicator ::
+  Identifier -> Variable -> BaseType -> Either (IO Task) ExpressionTable
+checkParamIndicator procName var paramBaseType = do
+    case varIndicator of
+        NoIndicator -> Right $ VariableTable varSubTable paramBaseType
+        otherwise   -> Left  $ exitWithVarIndicatorError procName id
+    where id = varId var
+          varIndicator = varShapeIndicator var
+          varSubTable  = VariableSubTable id NoIndicatorTable
+
+checkVariableIndicator ::
+  Identifier -> Variable -> VariableDeclaration -> BaseType -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
+checkVariableIndicator procName var varDecl varBaseType paramMap varMap = do
+    case (varIndicator, declIndicator)of
+        (NoIndicator, NoIndicator) -> Right $ VariableTable varSubTable varBaseType
+        (Array  n   , Array  _   ) ->
+            checkArrayDimension procName n var varBaseType paramMap varMap
+        (Matrix m n , Matrix _ _ ) ->
+            checkMatrixDimensions procName (m, n) var varBaseType paramMap varMap
+        otherwise -> Left  $ exitWithVarIndicatorNotSame procName id
+    where id = varId var
+          varIndicator  = varShapeIndicator var
+          declIndicator = varShapeIndicator $ declarationVariable varDecl
+          varSubTable   = VariableSubTable id NoIndicatorTable
+
+checkArrayDimension ::
+  Identifier -> Expression -> Variable -> BaseType -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
+checkArrayDimension procName expr var varBaseType paramMap varMap = do
+  let varName = varId var
+      eitherExpressionTable = checkDimension procName expr varName paramMap varMap
+  case eitherExpressionTable of
+    Left  err             -> Left err
+    Right expressionTable -> do
+        let arrayTable = ArrayTable expressionTable
+            varSubTable = VariableSubTable varName arrayTable
+        Right $ VariableTable varSubTable varBaseType
+
+checkMatrixDimensions ::
+  Identifier -> (Expression, Expression) -> Variable -> BaseType -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
+checkMatrixDimensions procName (exprM, exprN) var varBaseType paramMap varMap = do
+  let varName = varId var
+      eitherExpressionTableM = checkDimension procName exprM varName paramMap varMap
+  case eitherExpressionTableM of
+    Left  err             -> Left err
+    Right expressionTableM -> do
+      let eitherExpressionTableN = checkDimension procName exprN varName paramMap varMap
+      case eitherExpressionTableN of
+        Left  err             -> Left err
+        Right expressionTableN -> do
+          let matrixTable = MatrixTable expressionTableM expressionTableN
+              varSubTable = VariableSubTable varName matrixTable
+          Right $ VariableTable varSubTable varBaseType
+
+checkDimension ::
+  Identifier -> Expression -> String -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
+checkDimension procName expr varName paramMap varMap = do
+  let eitherExpressionTable = checkExpression procName expr paramMap varMap
+  case eitherExpressionTable of
+    Left  err             -> Left err
+    Right expressionTable -> do
+      let exprType = getAssignBaseType expressionTable
+      case exprType of
+        IntType   -> Right expressionTable
+        otherwise -> Left $ exitArrayMatrixDimensionTypeError procName varName
 
 checkOperationExpression :: Identifier -> String -> Expression -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkOperationExpression procName operator lExpr rExpr paramMap varMap = do
