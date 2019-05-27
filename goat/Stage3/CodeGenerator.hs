@@ -6,6 +6,7 @@ import           GoatAST
 import           GoatExit
 import           GoatPrettyPrint
 import           SymbolTable
+import           Util
 -------------------------------- Documentation --------------------------------
 
 -- Authors:
@@ -108,7 +109,8 @@ generateStatement procName label statementTable stackMap = do
       generateCallStatement procId
 
     -- TODO
-    -- ReadTable
+    ReadTable exprTable ->
+      generateReadStatement exprTable stackMap
     -- CallTable
 
 generateCallStatement :: Identifier -> IO ()
@@ -120,7 +122,12 @@ generateAssignStatement ::
 generateAssignStatement procName varTable exprTable stackMap = do
   -- TODO Array Matrix
   { let slotNum = getVariableSlotNum (variable varTable) stackMap
+        varType = variableType varTable
+        exprType = getAssignBaseType exprTable
   ; generateExpression exprTable 0 stackMap
+  ; if (FloatType == varType) && (IntType == exprType)
+        then printIntToRealInSameRegister 0
+        else putStr ""
   ; printLine $ "store " ++ (show slotNum) ++ ", r0"
   }
 
@@ -157,8 +164,20 @@ generateWriteChooseType exprType exprTable stackMap =
     FloatType -> generateWriteWithType "real" exprTable stackMap
     otherwise -> generateWriteWithType "int"  exprTable stackMap
 
--- generateReadStatement :: ExpressionTable -> IO ()
--- generateReadStatement exprTable = do {}
+generateReadStatement :: ExpressionTable -> StackMap -> IO ()
+generateReadStatement exprTable stackMap = do
+    let exprType = getExprType exprTable
+        slotNum = stackMap Map.! (varId $ variable exprTable)
+    case exprType of
+        BoolType  -> generateReadStatementByType "bool" slotNum
+        IntType   -> generateReadStatementByType "int" slotNum
+        FloatType -> generateReadStatementByType "real" slotNum
+
+generateReadStatementByType :: String -> Int -> IO ()
+generateReadStatementByType baseType slotNum = do
+    printLine ("call_builtin read_" ++ baseType)
+    printLine ("store " ++ (show slotNum) ++ ", r0")
+
 
 generateExpression :: ExpressionTable -> Int -> StackMap -> IO ()
 generateExpression exprTable registerNum stackMap =
@@ -418,7 +437,7 @@ printNewLineIndentation = putStr "    "
 -------------------------------------------------------------------------------
 printIntToRealInNewRegister :: Int -> Int -> IO ()
 printIntToRealInNewRegister targetRegisterNumber sourceRegisterNumber = do
-  putStrLn $ "int_to_real r" ++ (show targetRegisterNumber) ++
+  printLine $ "int_to_real r" ++ (show targetRegisterNumber) ++
               ", r" ++ (show sourceRegisterNumber)
 
 -------------------------------------------------------------------------------
@@ -432,13 +451,14 @@ printIntToRealInSameRegister registerNumber = do
 getExprType :: ExpressionTable -> BaseType
 getExprType exprTable =
      case exprTable of
-          IntTable _            -> IntType
-          FloatTable _          -> FloatType
-          BoolTable _           -> BoolType
-          AddTable _ _ baseType -> baseType
-          SubTable _ _ baseType -> baseType
-          MulTable _ _ baseType -> baseType
-          DivTable _ _ baseType -> baseType
+          IntTable _               -> IntType
+          FloatTable _             -> FloatType
+          BoolTable _              -> BoolType
+          VariableTable _ baseType -> baseType
+          AddTable _ _ baseType    -> baseType
+          SubTable _ _ baseType    -> baseType
+          MulTable _ _ baseType    -> baseType
+          DivTable _ _ baseType    -> baseType
 
 generateOperationString :: String -> String -> Int -> IO ()
 generateOperationString operator opType registerNum = do
@@ -453,12 +473,8 @@ generateIntToFloat lExpr rExpr registerNum = do
         rType = getExprType rExpr
     case (lType,rType) of
         (FloatType,FloatType) -> return ()
-        (IntType,FloatType) -> do { printNewLineIndentation
-                                  ; printIntToRealInSameRegister registerNum
-                                  }
-        (FloatType,IntType) -> do { printNewLineIndentation
-                                  ; printIntToRealInSameRegister (registerNum + 1)
-                                  }
+        (IntType,FloatType) -> printIntToRealInSameRegister registerNum
+        (FloatType,IntType) -> printIntToRealInSameRegister (registerNum + 1)
 
 getVariableSlotNum :: Variable -> StackMap -> Int
 getVariableSlotNum variable stackMap = stackMap Map.! varName
