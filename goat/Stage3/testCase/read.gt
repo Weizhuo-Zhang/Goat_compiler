@@ -1,0 +1,12 @@
+proc main()
+  int n;
+  float x;
+  bool y;
+begin
+  read n;
+  write n;
+  read x;
+  write x;
+  read y;
+  write y;
+end

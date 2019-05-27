@@ -106,7 +106,8 @@ generateStatement procName label statementTable stackMap = do
     WhileTable  exprTable stmtTables ->
       generateWhileStatement procName label exprTable stmtTables stackMap
     -- TODO
-    -- ReadTable
+    ReadTable exprTable ->
+      generateReadStatement exprTable stackMap
     -- CallTable
 
 generateAssignStatement ::
@@ -156,8 +157,21 @@ generateWriteChooseType exprType exprTable stackMap =
     FloatType -> generateWriteWithType "real" exprTable stackMap
     otherwise -> generateWriteWithType "int"  exprTable stackMap
 
--- generateReadStatement :: ExpressionTable -> IO ()
--- generateReadStatement exprTable = do {}
+generateReadStatement :: ExpressionTable -> StackMap -> IO ()
+generateReadStatement exprTable stackMap = do
+    let exprType = getExprType exprTable
+        varName = varId $ variable exprTable
+        slotNum = stackMap Map.! varName
+    case exprType of
+        BoolType  -> generateReadStatementByType "bool" slotNum
+        IntType   -> generateReadStatementByType "int" slotNum
+        FloatType -> generateReadStatementByType "real" slotNum
+
+generateReadStatementByType :: String -> Int -> IO ()
+generateReadStatementByType baseType slotNum = do
+    printLine ("call_builtin read_" ++ baseType)
+    printLine ("store " ++ (show slotNum) ++ ", r0")
+
 
 generateExpression :: ExpressionTable -> Int -> StackMap -> IO ()
 generateExpression exprTable registerNum stackMap =
@@ -434,6 +448,7 @@ getExprType exprTable =
           IntTable _            -> IntType
           FloatTable _          -> FloatType
           BoolTable _           -> BoolType
+          VariableTable _ baseType -> baseType
           AddTable _ _ baseType -> baseType
           SubTable _ _ baseType -> baseType
           MulTable _ _ baseType -> baseType
