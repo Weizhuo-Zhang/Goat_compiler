@@ -111,10 +111,10 @@ generateStatement procName label statementTable stackMap = do
 
 generateAssignStatement ::
   String -> ExpressionTable -> ExpressionTable -> StackMap -> IO ()
-generateAssignStatement procName vartable exprTable stackMap = do
+generateAssignStatement procName varTable exprTable stackMap = do
   -- TODO Array Matrix
-  { let slotNum = getVariableSlotNum (variable vartable) stackMap
-        varType = variableType vartable
+  { let slotNum = getVariableSlotNum (variable varTable) stackMap
+        varType = variableType varTable
         exprType = getAssignBaseType exprTable
   ; generateExpression exprTable 0 stackMap
   ; if (FloatType == varType) && (IntType == exprType)
