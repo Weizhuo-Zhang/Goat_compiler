@@ -24,6 +24,7 @@ import           Util
 -------------------------------- Documentation --------------------------------
 
 -------------------------------- Utility Code ---------------------------------
+
 -------------------------------------------------------------------------------
 -- lookup parameter Map, It must have a base type
 -------------------------------------------------------------------------------
@@ -35,7 +36,8 @@ lookupBaseTypeParamMap varName paramMap =
 -------------------------------------------------------------------------------
 -- lookup variable Map, It must have a base type
 -------------------------------------------------------------------------------
-lookupBaseTypeVarMap :: Identifier -> M.Map Identifier VariableDeclaration -> BaseType
+lookupBaseTypeVarMap ::
+  Identifier -> M.Map Identifier VariableDeclaration -> BaseType
 lookupBaseTypeVarMap varName varMap =
       case M.lookup varName varMap of
         Just variable -> declarationType variable
@@ -47,16 +49,18 @@ getProcedureIdentifier :: Procedure -> Identifier
 getProcedureIdentifier = headerIdent . header
 
 -------------------------------------------------------------------------------
--- Get procedure identifier from procedure.
+-- Get parameters list from procedure.
 -------------------------------------------------------------------------------
 getProcedureParameters :: Procedure -> [Parameter]
 getProcedureParameters = parameters . header
 
+
 getMultipleVarDeclarationErrorMessage :: Identifier -> Identifier -> String
 getMultipleVarDeclarationErrorMessage varName procName =
   "There are multiple variable declaration named " ++
-  "\"" ++ varName ++ "\"" ++ " in procedure " ++
-  "\"" ++ procName ++ "\""
+  (wrapWithDoubleQuotations varName) ++
+  " in procedure " ++
+  (wrapWithDoubleQuotations procName)
 
 exitWithMultipleVarDeclaration :: Identifier -> Identifier -> IO Task
 exitWithMultipleVarDeclaration varName procName =
@@ -67,7 +71,7 @@ exitWithMultipleVarDeclaration varName procName =
 getConditionTypeErrorMessage :: Identifier -> String
 getConditionTypeErrorMessage procName =
   "If condition type error! The type must be bool. In procedure " ++
-  "\"" ++ procName ++ "\""
+  (wrapWithDoubleQuotations procName)
 
 exitWithConditionTypeError :: Identifier -> IO Task
 exitWithConditionTypeError procName =
@@ -77,9 +81,12 @@ exitWithConditionTypeError procName =
 
 getLogicExprTypeErrorMessage :: Identifier -> String -> String
 getLogicExprTypeErrorMessage procName operator =
-  "\"" ++ operator ++ "\" type error! The argument of \"" ++ operator ++
-  "\" must be bool. In procedure " ++
-  "\"" ++ procName ++ "\""
+  operatorWithQuotationMarks ++
+  " type error! The argument of " ++
+  operatorWithQuotationMarks ++
+  " must be bool. In procedure " ++
+  (wrapWithDoubleQuotations procName)
+  where operatorWithQuotationMarks = wrapWithDoubleQuotations operator
 
 exitWithLogicExprTypeError :: Identifier -> String -> IO Task
 exitWithLogicExprTypeError procName operator =
@@ -90,7 +97,7 @@ exitWithLogicExprTypeError procName operator =
 getUndefinedVariableErrorMessage :: Identifier -> String
 getUndefinedVariableErrorMessage varName =
   "There is a undefined variable named " ++
-  "\"" ++ varName ++ "\"" ++
+  (wrapWithDoubleQuotations varName) ++
   " in the statement"
 
 exitWithUndefinedVariable :: Identifier -> IO Task
@@ -106,13 +113,16 @@ exitWithReadIncorrect =
 exitWithTypeError :: Identifier -> IO Task
 exitWithTypeError procName =
   exitWithError ("There is a Type Error in the Statment in proc: " ++
-                "\"" ++ procName ++ "\"") UnmatchedType
+                (wrapWithDoubleQuotations procName)) UnmatchedType
 
 getComparisonExprTypeErrorMessage :: Identifier -> String -> String
 getComparisonExprTypeErrorMessage procName operator =
-  "\"" ++ operator ++ "\" type error! The argument of \"" ++ operator ++
-  "\" must be base type. In procedure " ++
-  "\"" ++ procName ++ "\""
+  operatorWithQuotationMarks ++
+  " type error! The argument of " ++
+  operatorWithQuotationMarks ++
+  " must be base type. In procedure " ++
+  (wrapWithDoubleQuotations procName)
+  where operatorWithQuotationMarks = wrapWithDoubleQuotations operator
 
 exitWithComparisonTypeError :: Identifier -> String -> IO Task
 exitWithComparisonTypeError procName operator =
@@ -122,9 +132,12 @@ exitWithComparisonTypeError procName operator =
 
 getNotSameTypeErrorMessage :: Identifier -> String -> String
 getNotSameTypeErrorMessage procName operator =
-  "\"" ++ operator ++ "\" type error! The argument of \"" ++ operator ++
-  "\" must be same base type. In procedure " ++
-  "\"" ++ procName ++ "\""
+  operatorWithQuotationMarks ++
+  " type error! The argument of " ++
+  operatorWithQuotationMarks ++
+  " must be same base type. In procedure " ++
+  (wrapWithDoubleQuotations procName)
+  where operatorWithQuotationMarks = wrapWithDoubleQuotations operator
 
 exitWithNotSameTypeError :: Identifier -> String -> IO Task
 exitWithNotSameTypeError procName operator =
@@ -134,9 +147,13 @@ exitWithNotSameTypeError procName operator =
 
 getUnaryMinusTypeErrorMessage :: Identifier -> String
 getUnaryMinusTypeErrorMessage procName =
-  "\"-\" (Unary Minus) type error! The argument of \"-\" (Unary Minus)" ++
+  unaryMinusString ++
+  " type error! The argument of " ++
+  unaryMinusString ++
   " must be int or float. In procedure " ++
-  "\"" ++ procName ++ "\""
+  (wrapWithDoubleQuotations procName)
+  where unaryMinusString = "\"-\" (Unary Minus)"
+
 
 exitWithUnaryMinusError :: Identifier -> IO Task
 exitWithUnaryMinusError procName =
@@ -146,8 +163,11 @@ exitWithUnaryMinusError procName =
 
 getAssignTypeErrorMessage :: Identifier -> String -> String
 getAssignTypeErrorMessage procName varName =
-  "Assign Type Error! The type of " ++ "\"" ++ varName ++ "\"" ++
-  " in procedure " ++ "\"" ++ procName ++ "\"" ++ " is not match."
+  "Assign Type Error! The type of " ++
+  (wrapWithDoubleQuotations varName) ++
+  " in procedure " ++
+  (wrapWithDoubleQuotations procName) ++
+  " is not match."
 
 exitWithAssignTypeError :: Identifier -> String -> IO Task
 exitWithAssignTypeError procName varName =
@@ -157,8 +177,10 @@ exitWithAssignTypeError procName varName =
 
 getVarIndicatorErrorMessage :: Identifier -> String -> String
 getVarIndicatorErrorMessage procName varName =
-  "Variable indicator Error! The variable " ++ "\"" ++ varName ++ "\"" ++
-  " should not be Array or Matrix in procedure " ++ "\"" ++ procName ++ "\""
+  "Variable indicator Error! The variable " ++
+  (wrapWithDoubleQuotations varName) ++
+  " should not be Array or Matrix in procedure " ++
+  (wrapWithDoubleQuotations procName)
 
 exitWithVarIndicatorError :: Identifier -> String -> IO Task
 exitWithVarIndicatorError procName varName =
@@ -169,8 +191,10 @@ exitWithVarIndicatorError procName varName =
 getVarIndicatorNotSameMessage :: Identifier -> String -> String
 getVarIndicatorNotSameMessage procName varName =
   "Variable indicator Error! The indicator of variable " ++
-  "\"" ++ varName ++ "\"" ++ " is not same as declaration" ++
-  " in procedure " ++ "\"" ++ procName ++ "\""
+  (wrapWithDoubleQuotations varName) ++
+  " is not same as declaration" ++
+  " in procedure " ++
+  (wrapWithDoubleQuotations procName)
 
 exitWithVarIndicatorNotSame :: Identifier -> String -> IO Task
 exitWithVarIndicatorNotSame procName varName =
@@ -181,14 +205,31 @@ exitWithVarIndicatorNotSame procName varName =
 getArrayMatrixIndicatorTypeErrorMessage :: Identifier -> String -> String
 getArrayMatrixIndicatorTypeErrorMessage procName varName =
   "Array and Matrix dimension type Error! The dimension of Array and Matrix" ++
-  " must be Int. For variable \"" ++ varName ++ "\"" ++
-  " in procedure " ++ "\"" ++ procName ++ "\""
+  " must be Int. For variable  "++
+  (wrapWithDoubleQuotations varName) ++
+  " in procedure " ++
+  (wrapWithDoubleQuotations procName)
 
 exitArrayMatrixDimensionTypeError :: Identifier -> String -> IO Task
 exitArrayMatrixDimensionTypeError procName varName =
   exitWithError
   (getArrayMatrixIndicatorTypeErrorMessage procName varName)
   VarIndicatorError
+
+getDuplicateProcedureErrorMessage :: Identifier -> String
+getDuplicateProcedureErrorMessage procName =
+  "There are multiple procedures named " ++ (wrapWithDoubleQuotations procName)
+
+
+exitWithDuplicateProcedure :: Identifier -> IO Task
+exitWithDuplicateProcedure procName =
+  exitWithError
+  (getDuplicateProcedureErrorMessage procName)
+  MultipleProc
+
+-------------------------------- Utility Code ---------------------------------
+
+
 -------------------------------- Analyzer Code --------------------------------
 
 -------------------------------------------------------------------------------
@@ -219,12 +260,7 @@ insertProcList (proc:procs) procMap = do
     Right subProcMap -> do
       let procName = getProcedureIdentifier proc
       case (M.member procName subProcMap) of
-        True  ->
-          Left $ exitWithError
-                 ( "There are multiple procedures named " ++
-                   "\"" ++ procName ++ "\""
-                 )
-                 MultipleProc
+        True  -> Left $ exitWithDuplicateProcedure procName
         False -> do
           let procTable = insertProcedureTable proc
           case procTable of
@@ -538,7 +574,7 @@ checkUnaryMinus procName expr paramMap varMap = do
     Right exprTable -> do
       let exprTypeEither = checkUnaryMinusType procName exprTable
       case exprTypeEither of
-        Left err -> Left err
+        Left err       -> Left err
         Right exprType -> Right $ NegativeTable exprTable exprType
 
 checkUnaryMinusType ::
@@ -554,7 +590,7 @@ checkUnaryMinusType procName exprTable = do
     MulTable      _ _ exprType -> checkNotBoolType exprType errorExit
     DivTable      _ _ exprType -> checkNotBoolType exprType errorExit
     NegativeTable _   exprType -> checkNotBoolType exprType errorExit
-    otherwise -> Left errorExit
+    otherwise                  -> Left errorExit
 
 
 checkBoolType ::
@@ -620,24 +656,24 @@ getComparisonTable operator lExpr rExpr baseType =
 getBaseType :: ExpressionTable -> BaseType
 getBaseType exprTable =
   case exprTable of
-    VariableTable _ exprType  -> exprType
-    BoolTable  _              -> BoolType
-    IntTable   _              -> IntType
-    FloatTable _              -> FloatType
-    AddTable   _ _  exprType  -> exprType
-    SubTable   _ _  exprType  -> exprType
-    MulTable   _ _  exprType  -> exprType
-    DivTable   _ _  exprType  -> exprType
-    OrTable    _ _  exprType  -> exprType
-    AndTable   _ _  exprType  -> exprType
-    EqTable    _ _  exprType  -> exprType
-    NotEqTable _ _  exprType  -> exprType
-    LesTable   _ _  exprType  -> exprType
-    LesEqTable _ _  exprType  -> exprType
-    GrtTable   _ _  exprType  -> exprType
-    GrtEqTable _ _  exprType  -> exprType
-    NegativeTable _ exprType  -> exprType
-    NotTable      _ exprType  -> exprType
+    VariableTable _ exprType -> exprType
+    BoolTable  _             -> BoolType
+    IntTable   _             -> IntType
+    FloatTable _             -> FloatType
+    AddTable   _ _  exprType -> exprType
+    SubTable   _ _  exprType -> exprType
+    MulTable   _ _  exprType -> exprType
+    DivTable   _ _  exprType -> exprType
+    OrTable    _ _  exprType -> exprType
+    AndTable   _ _  exprType -> exprType
+    EqTable    _ _  exprType -> exprType
+    NotEqTable _ _  exprType -> exprType
+    LesTable   _ _  exprType -> exprType
+    LesEqTable _ _  exprType -> exprType
+    GrtTable   _ _  exprType -> exprType
+    GrtEqTable _ _  exprType -> exprType
+    NegativeTable _ exprType -> exprType
+    NotTable      _ exprType -> exprType
 
 checkAssignType ::
   Identifier -> ExpressionTable -> ExpressionTable -> BaseType -> Either (IO Task) StatementTable
