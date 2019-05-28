@@ -71,7 +71,6 @@ generateProcedure procName (ProcedureTable paramMap varMap statements) = do
     case variableNumber of
         0         -> putStr ""
         otherwise -> do { printComment "init variables"
-                        ; printLine "int_const r0, 0"
                         ; initVariables varList varMap stackMap
                         }
     generateStatements procName [0] paramMap varMap statements stackMap
@@ -97,17 +96,26 @@ initParameters (param:params) stackMap registerNum = do
 initVariables :: [Identifier] -> VariableMap -> StackMap -> IO ()
 initVariables [] _ _ = return ()
 initVariables (var:[]) varMap stackMap = do
-  let varSlotNum   = stackMap Map.! var
+  let varType    = declarationType $ varMap Map.! var
+      varSlotNum   = stackMap Map.! var
       varIndicator = varShapeIndicator $ declarationVariable (varMap Map.! var)
   printComment $ "initialise variable " ++ var
+  initVariableByBaseType varType
   initVariableWithIndicator varIndicator varSlotNum
 initVariables (var:varList) varMap stackMap = do
-  let varSlotNum = stackMap Map.! var
+  let varType    = declarationType $ varMap Map.! var
+      varSlotNum = stackMap Map.! var
       varIndicator = varShapeIndicator $ declarationVariable (varMap Map.! var)
   printComment $ "init variable: " ++ var
+  initVariableByBaseType varType
   initVariableWithIndicator varIndicator varSlotNum
   initVariables varList varMap stackMap
 
+initVariableByBaseType :: BaseType -> IO ()
+initVariableByBaseType baseType =
+  case baseType of
+    FloatType -> printLine "real_const r0, 0.0"
+    otherwise -> printLine "int_const r0, 0"
 
 initVariableWithIndicator :: ShapeIndicator -> Int -> IO ()
 initVariableWithIndicator varIndicator varSlotNum = do
@@ -225,7 +233,7 @@ generateWriteStatement paramMap varMap exprTable stackMap =
     case exprTable of
         VariableTable _ exprType ->
             generateWriteChooseType exprType paramMap varMap exprTable stackMap
-        BoolTable   _ -> generateWriteWithType "int"    paramMap varMap exprTable stackMap
+        BoolTable   _ -> generateWriteWithType "bool"    paramMap varMap exprTable stackMap
         IntTable    _ -> generateWriteWithType "int"    paramMap varMap exprTable stackMap
         FloatTable  _ -> generateWriteWithType "real"   paramMap varMap exprTable stackMap
         StringTable _ -> generateWriteWithType "string" paramMap varMap exprTable stackMap
@@ -239,7 +247,7 @@ generateWriteStatement paramMap varMap exprTable stackMap =
             generateWriteChooseType exprType paramMap varMap exprTable stackMap
         NegativeTable _ exprType ->
             generateWriteChooseType exprType paramMap varMap exprTable stackMap
-        otherwise -> generateWriteWithType "int" paramMap varMap exprTable stackMap
+        otherwise -> generateWriteWithType "bool" paramMap varMap exprTable stackMap
 
 generateWriteWithType :: String -> ParameterMap -> VariableMap -> ExpressionTable -> StackMap -> IO ()
 generateWriteWithType writeType paramMap varMap exprTable stackMap = do
