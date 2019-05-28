@@ -467,7 +467,7 @@ locateArrayMatrix paramMap varMap var varSlotNumStr regNum stackMap = do
       ; printLine $ "int_const " ++ regNumStr1 ++ ", " ++ m
       ; printLine $ "mul_int " ++ regNumStr0 ++ ", " ++ regNumStr0 ++ ", " ++ regNumStr1
       ; generateExpression paramMap varMap exprN (regNum+1) stackMap
-      ; printLine $ "sub_int "  ++ regNumStr0 ++ ", " ++ regNumStr1 ++ ", " ++ regNumStr0
+      ; printLine $ "add_int "  ++ regNumStr0 ++ ", " ++ regNumStr1 ++ ", " ++ regNumStr0
       ; printLine $ "load_address " ++ regNumStr1 ++ ", " ++ varSlotNumStr
       ; printLine $ "sub_offset "  ++ regNumStr0 ++ ", " ++ regNumStr1 ++ ", " ++ regNumStr0
       }
