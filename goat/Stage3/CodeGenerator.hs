@@ -233,7 +233,7 @@ generateWriteStatement paramMap varMap exprTable stackMap =
     case exprTable of
         VariableTable _ exprType ->
             generateWriteChooseType exprType paramMap varMap exprTable stackMap
-        BoolTable   _ -> generateWriteWithType "int"    paramMap varMap exprTable stackMap
+        BoolTable   _ -> generateWriteWithType "bool"    paramMap varMap exprTable stackMap
         IntTable    _ -> generateWriteWithType "int"    paramMap varMap exprTable stackMap
         FloatTable  _ -> generateWriteWithType "real"   paramMap varMap exprTable stackMap
         StringTable _ -> generateWriteWithType "string" paramMap varMap exprTable stackMap
@@ -247,7 +247,7 @@ generateWriteStatement paramMap varMap exprTable stackMap =
             generateWriteChooseType exprType paramMap varMap exprTable stackMap
         NegativeTable _ exprType ->
             generateWriteChooseType exprType paramMap varMap exprTable stackMap
-        otherwise -> generateWriteWithType "int" paramMap varMap exprTable stackMap
+        otherwise -> generateWriteWithType "bool" paramMap varMap exprTable stackMap
 
 generateWriteWithType :: String -> ParameterMap -> VariableMap -> ExpressionTable -> StackMap -> IO ()
 generateWriteWithType writeType paramMap varMap exprTable stackMap = do
