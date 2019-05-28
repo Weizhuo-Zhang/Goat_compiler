@@ -313,7 +313,7 @@ insertProcListWithoutStatements (proc:procs) procMap = do
     Right subProcMap -> do
       let procName = getProcedureIdentifier proc
       case (M.member procName subProcMap) of
-        True  -> Left $ exitWithDuplicateProcedure
+        True  -> Left $ exitWithDuplicateProcedure procName
         False -> do
           let procTable = insertProcedureTableWithoutStatement proc procMap
           case procTable of
