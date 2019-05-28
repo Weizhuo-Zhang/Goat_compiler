@@ -128,11 +128,11 @@ generateStatement procName label varMap statementTable stackMap = do
       generateWhileStatement procName label exprTable varMap stmtTables stackMap
     ReadTable exprTable ->
       generateReadStatement exprTable stackMap
-    CallTable procId expressionTbls ->
-        generateCallStatement procId
+    CallTable procId expressionTables params ->
+        generateCallStatement procId expressionTables params
 
-generateCallStatement :: Identifier -> IO ()
-generateCallStatement procName = do
+generateCallStatement :: Identifier -> [ExpressionTable] -> [Parameter] -> IO ()
+generateCallStatement procName exprTable params = do
   printLine $ "call proc_" ++ procName
 
 generateAssignStatement ::

@@ -386,7 +386,7 @@ checkStatement procName stmt paramMap varMap procMap =
           let exprsEither = checkCallStmt procId argExprs procMap
           case exprsEither of
             Left err -> Left err
-            Right expreTables -> Right $ CallTable procId expreTables
+            Right (expreTables, params) -> Right $ CallTable procId expreTables params
 
 checkExprBaseType :: Identifier -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) BaseType
 checkExprBaseType procId expr paramMap varMap = do
@@ -444,23 +444,32 @@ checkArguments procId (e:es) (b:bs) paramMap varMap = do
                 Right expressionTable -> Right (expressionTable:exprTables)
             otherwise -> Left (exitWithParamError procId "3")
 
-checkCallStmt :: Identifier -> [Expression] -> ProgramMap -> Either (IO Task) [ExpressionTable]
+paramMapToList :: ParameterMap -> [Parameter]
+paramMapToList paramMap =
+  [(snd param) | param <- paramNewList]
+  where paramList = M.toList paramMap;
+        paramOrderedMap = M.fromList [snd param | param <- paramList]
+        paramNewList = M.toList paramOrderedMap
+
+checkCallStmt :: Identifier -> [Expression] -> ProgramMap -> Either (IO Task) ([ExpressionTable], [Parameter])
 checkCallStmt calledProcId argExprs procMap = do
   case M.lookup calledProcId procMap of
     Just calledProcTable -> do
       let varMap = variableMap calledProcTable
           paramMap = parameterMap calledProcTable
-          paramList = M.toList paramMap;
-          paramBaseTypes = [passingType (snd $ snd param) | param <- paramList]
+          paramList = paramMapToList paramMap
+          paramBaseTypes = [passingType param | param <- paramList]
+--          paramList = M.toList paramMap;
+--          paramBaseTypes = [passingType (snd $ snd param) | param <- paramList]
       case ((length argExprs) == (length paramList)) of
         True -> do
           case ((length argExprs) == 0) of
-            True -> Right []
+            True -> Right ([], [])
             otherwise -> do
               let expreTables = checkArguments calledProcId argExprs paramBaseTypes paramMap varMap
               case expreTables of
                 Left err -> Left err
-                Right expressionTables -> Right expressionTables
+                Right expressionTables -> Right (expressionTables, paramList)
         otherwise -> Left (exitWithParamError calledProcId "4")
     Nothing -> Left (exitWithParamError calledProcId "5")
 
