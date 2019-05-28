@@ -44,17 +44,17 @@ echo "--------------- asgWithNumericOperatorOnly.gt -------------"
 ./Goat ./testCase/asgWithNumericOperatorOnly.gt > ./testCase/GeneratedOutput/asgWithNumericOperatorOnly.oz
 ./oz ./testCase/GeneratedOutput/asgWithNumericOperatorOnly.oz
 
-echo "---------------- multipleVarDeclaration.gt ----------------"
-./Goat ./testCase/multipleVarDeclaration.gt > ./testCase/GeneratedOutput/multipleVarDeclaration.oz
-./oz ./testCase/GeneratedOutput/multipleVarDeclaration.oz
+echo "-------------- multipleVarDeclaration.out.gt --------------"
+./Goat ./testCase/multipleVarDeclaration.out.gt > ./testCase/GeneratedOutput/multipleVarDeclaration.out.oz
+diff ./testCase/GeneratedOutput/multipleVarDeclaration.out.oz ./testCase/ExpectedOutput/multipleVarDeclaration.out.oz
 
 echo "----------------------- proccall.gt -----------------------"
 ./Goat ./testCase/proccall.gt > ./testCase/GeneratedOutput/proccall.oz
 ./oz ./testCase/GeneratedOutput/proccall.oz
 
-echo "------------------------- read.gt -------------------------"
-./Goat ./testCase/read.gt > ./testCase/GeneratedOutput/read.oz
-./oz ./testCase/GeneratedOutput/read.oz
+# echo "------------------------- read.gt -------------------------"
+# ./Goat ./testCase/read.gt > ./testCase/GeneratedOutput/read.oz
+# ./oz ./testCase/GeneratedOutput/read.oz
 
 
 echo "--------------------- Test by folders ---------------------\n"
@@ -144,11 +144,13 @@ echo "------------------------- q49.gt --------------------------"
 
 echo "------------------------- q50.gt --------------------------"
 ./Goat ./testCase/visible/q50.gt > ./testCase/GeneratedOutput/visible/q50.oz
-./oz ./testCase/GeneratedOutput/visible/q50.oz
+./oz ./testCase/GeneratedOutput/visible/q50.oz > ./testCase/GeneratedOutput/visible/q50.txt
+diff ./testCase/GeneratedOutput/visible/q50.txt ./testCase/ExpectedOutput/q50.txt
 
 echo "------------------------- q51.gt --------------------------"
 ./Goat ./testCase/visible/q51.gt > ./testCase/GeneratedOutput/visible/q51.oz
-./oz ./testCase/GeneratedOutput/visible/q51.oz
+./oz ./testCase/GeneratedOutput/visible/q51.oz > ./testCase/GeneratedOutput/visible/q51.txt
+diff ./testCase/GeneratedOutput/visible/q51.txt ./testCase/ExpectedOutput/q51.txt
 
 echo "------------------------- sort.gt -------------------------"
 ./Goat ./testCase/visible/sort.gt > ./testCase/GeneratedOutput/visible/sort.oz
