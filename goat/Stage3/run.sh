@@ -72,7 +72,8 @@ echo "\n\n----------------- Test by folders ------------------\n"
 echo "--------------------- Miles folder... ---------------------\n"
 echo "------------------------- Mile 1 --------------------------"
 ./Goat ./testCase/miles/mile1.gt > ./testCase/GeneratedOutput/miles/mile1.oz
-./oz ./testCase/GeneratedOutput/miles/mile1.oz
+./oz ./testCase/GeneratedOutput/miles/mile1.oz > ./testCase/GeneratedOutput/miles/mile1.txt
+diff ./testCase/GeneratedOutput/miles/mile1.txt ./testCase/ExpectedOutput/mile1.txt
 
 echo "------------------------- Mile 2 --------------------------"
 ./Goat ./testCase/miles/mile2.gt > ./testCase/GeneratedOutput/miles/mile2.oz
