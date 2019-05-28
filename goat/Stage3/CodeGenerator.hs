@@ -127,10 +127,56 @@ generateStatement procName label varMap statementTable stackMap = do
       generateIfElseStatement procName label exprTable varMap stmtTables1 stmtTables2 stackMap
     WhileTable  exprTable stmtTables ->
       generateWhileStatement procName label exprTable varMap stmtTables stackMap
-    -- TODO
     ReadTable exprTable ->
       generateReadStatement exprTable stackMap
-    -- CallTable
+    CallTable procId expressionTables params ->
+        generateCallStatement procId expressionTables params 0 varMap stackMap
+
+generateCallStatement :: Identifier -> [ExpressionTable] -> [Parameter] -> Int -> VariableMap -> StackMap -> IO ()
+generateCallStatement procName (exprTable:[]) (param:[]) paramNum varMap stackMap = do
+  let paramIndicator = passingIndicator param
+  case paramIndicator of
+    VarType -> do
+      generateExpression varMap exprTable 0 stackMap
+      let exprType = getExprType exprTable
+          paramType = passingType param
+      case (exprType,paramType) of
+          (IntType,FloatType) -> printIntToRealInSameRegister 0
+          otherwise -> putStr ""
+      printLine $ "load r0, " ++ (show paramNum)
+    RefType -> do
+      generateExpression varMap exprTable 0 stackMap
+      let exprType = getExprType exprTable
+          paramType = passingType param
+      case (exprType, paramType) of
+          (IntType, FloatType) -> printIntToRealInSameRegister 0
+          otherwise -> putStr ""
+      printLine $ "load_address r0, " ++ (show paramNum)
+  -- print call statement after all parameters are loaded into registers.
+  printLine $ "call proc_" ++ procName
+
+generateCallStatement procName (exprTable:exprTables) (param:params) paramNum varMap stackMap = do
+  let paramIndicator = passingIndicator param
+  case paramIndicator of
+    VarType -> do
+      generateExpression varMap exprTable 0 stackMap
+      let exprType = getExprType exprTable
+          paramType = passingType param
+      case (exprType, paramType) of
+          (IntType, FloatType) -> printIntToRealInSameRegister 0
+          otherwise -> putStr ""
+      printLine $ "load r0, " ++ (show paramNum)
+      generateCallStatement procName exprTables params (paramNum+1) varMap stackMap
+    RefType -> do
+     generateExpression varMap exprTable 0 stackMap
+     let exprType = getExprType exprTable
+         paramType = passingType param
+     case (exprType, paramType) of
+        (IntType, FloatType) -> printIntToRealInSameRegister 0
+        otherwise -> putStr ""
+     printLine $ "load_address r0, " ++ (show paramNum)
+     generateCallStatement procName exprTables params (paramNum+1) varMap stackMap
+
 
 generateAssignStatement ::
   String -> VariableMap -> ExpressionTable -> ExpressionTable -> StackMap -> IO ()

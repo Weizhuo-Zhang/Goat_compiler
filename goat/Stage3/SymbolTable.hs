@@ -21,7 +21,7 @@ import           GoatAST
 
 type ProgramMap = M.Map Identifier ProcedureTable
 
-type ParameterMap = M.Map Identifier Parameter
+type ParameterMap = M.Map Identifier (Int, Parameter)
 
 type VariableMap = M.Map Identifier VariableDeclaration
 
@@ -45,6 +45,10 @@ data StatementTable = WriteTable     { writeExprTable    :: ExpressionTable }
                                      }
                     | WhileTable     { whileExprTable  :: ExpressionTable
                                      , whileStmtTables :: [StatementTable]
+                                     } 
+                    | CallTable      { procIdentifier :: Identifier
+                                     , argExprTables  :: [ExpressionTable]
+                                     , callParamList  :: [Parameter]
                                      } deriving (Show, Eq)
 
 data VariableSubTable = VariableSubTable { varName                :: Identifier

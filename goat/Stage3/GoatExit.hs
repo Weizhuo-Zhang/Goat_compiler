@@ -44,8 +44,11 @@ data GoatExitCode = Success          -- 0
                   | ComparisonError  -- 14
                   | NotSameTypeError -- 15
                   | UnaryMinusError  -- 16
-                  | AssignTypeError  -- 17
-                  | VarIndicatorError-- 18
+                  | ParamError       -- 17
+                  | AssignTypeError  -- 18
+                  | VarIndicatorError-- 19
+                  | UndefinedProc    -- 20
+                  | CallParamNotMatch-- 21
                   deriving Enum
 
 -------------------------------------------------------------------------------
