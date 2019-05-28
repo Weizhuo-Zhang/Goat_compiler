@@ -103,7 +103,8 @@ echo "---------------------- arrayprod.gt -----------------------"
 
 echo "------------------------- asg.gt --------------------------"
 ./Goat ./testCase/visible/asg.gt > ./testCase/GeneratedOutput/visible/asg.oz
-./oz ./testCase/GeneratedOutput/visible/asg.oz
+./oz ./testCase/GeneratedOutput/visible/asg.oz > ./testCase/GeneratedOutput/visible/asg.txt
+diff ./testCase/GeneratedOutput/visible/asg.txt ./testCase/ExpectedOutput/asg.txt
 
 echo "------------------------ assoc.gt -------------------------"
 ./Goat ./testCase/visible/assoc.gt > ./testCase/GeneratedOutput/visible/assoc.oz
