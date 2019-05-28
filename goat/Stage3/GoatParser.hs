@@ -234,6 +234,7 @@ pWrite :: Parser Statement
 pWrite = do
     reserved "write"
     expression <- (pString <|> pExpression)
+    whiteSpace
     semi
     return (Write expression)
     <?> "write statement"
@@ -248,6 +249,7 @@ pAssignment = do
     whiteSpace
     reservedOp ":="
     rvalue <- pExpression
+    whiteSpace
     semi
     return (Assign (Variable id shapeIndicator) rvalue)
     <?> "Assign statement"
@@ -260,6 +262,7 @@ pCall = do
     reserved "call"
     id      <- identifier
     expressionList <- parens $ sepBy pExpression comma
+    whiteSpace
     semi
     return (Call id expressionList)
     <?> "Call statement"
