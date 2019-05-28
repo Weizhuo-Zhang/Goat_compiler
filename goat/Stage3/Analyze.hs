@@ -253,6 +253,20 @@ exitWithDuplicateProcedure procName =
   (getDuplicateProcedureErrorMessage procName)
   MultipleProc
 
+getInvalidCallExprMessage :: Identifier -> Identifier -> String
+getInvalidCallExprMessage procName calledProcId =
+  "Invalid Call statement arguments! The argument of call statement for " ++
+  "procedure " ++
+  (wrapWithDoubleQuotations calledProcId) ++
+  " should only be variable in procedure " ++
+  (wrapWithDoubleQuotations procName)
+
+exitWithInvalidCallExpr :: Identifier -> Identifier -> IO Task
+exitWithInvalidCallExpr procName calledProcId =
+  exitWithError
+  (getInvalidCallExprMessage procName calledProcId)
+  MultipleProc
+
 -------------------------------- Utility Code ---------------------------------
 
 
@@ -447,10 +461,12 @@ checkStatement procName stmt paramMap varMap procMap =
         Right (expreTables, params) -> Right $ CallTable procId expreTables params
 
 checkArguments ::
-  Identifier -> Identifier -> [Expression] -> [BaseType] -> ParameterMap -> VariableMap -> Either (IO Task) [ExpressionTable]
+  Identifier -> Identifier -> [Expression] -> [BaseType] -> [Parameter] -> ParameterMap -> VariableMap -> Either (IO Task) [ExpressionTable]
 --checkArguments procName procId [e] [b] paramMap varMap = do
-checkArguments procName procId (e:[]) (b:[]) paramMap varMap = do
-  let eitherExprTable = checkExpression procName e paramMap varMap
+checkArguments procName procId (e:[]) (b:[]) (parameter:[]) paramMap varMap = do
+  let paramIndicator  = (passingIndicator parameter)
+      eitherExprTable =
+            checkCallExpr procName procId paramIndicator e paramMap varMap
   case eitherExprTable of
     Left err -> Left err
     Right expressionTable -> do
@@ -460,12 +476,14 @@ checkArguments procName procId (e:[]) (b:[]) paramMap varMap = do
       else if (FloatType == b && IntType == exprBaseType)
            then Right [expressionTable]
            else Left $ exitWithCallParamLengthDiff procName procId
-checkArguments procName procId (e:es) (b:bs) paramMap varMap = do
-  let expressionTables = checkArguments procName procId es bs paramMap varMap
+checkArguments procName procId (e:es) (b:bs) (parameter:parameters) paramMap varMap = do
+  let expressionTables = checkArguments procName procId es bs parameters paramMap varMap
   case expressionTables of
     Left err -> Left err
     Right exprTables -> do
-      let eitherExprTable = checkExpression procName e paramMap varMap
+      let paramIndicator  = (passingIndicator parameter)
+          eitherExprTable =
+                checkCallExpr procName procId paramIndicator e paramMap varMap
       case eitherExprTable of
         Left err -> Left err
         Right expressionTable -> do
@@ -475,6 +493,22 @@ checkArguments procName procId (e:es) (b:bs) paramMap varMap = do
           else if ((FloatType == b) && (IntType == exprBaseType))
                then Right $ [expressionTable] ++ exprTables
                else Left $ exitWithCallParamLengthDiff procName procId
+
+checkCallExpr ::
+  Identifier -> Identifier -> ParameterIndicator -> Expression -> ParameterMap -> VariableMap
+  -> Either (IO Task) ExpressionTable
+checkCallExpr procName procId paramIndicator expr paramMap varMap = do
+  let eitherExprTable = checkExpression procName expr paramMap varMap
+  case eitherExprTable of
+    Left err -> Left err
+    Right expressionTable -> do
+      case paramIndicator of
+        VarType -> Right expressionTable
+        RefType -> do
+          case expressionTable of
+             VariableTable _ _ -> Right  expressionTable
+             otherwise         -> Left $ exitWithInvalidCallExpr procName procId
+
 
 paramMapToList :: ParameterMap -> [Parameter]
 paramMapToList paramMap =
@@ -495,7 +529,7 @@ checkCallStmt procName calledProcId argExprs procMap paramMap varMap = do
           case ((length argExprs) == 0) of
             True -> Right ([], [])
             otherwise -> do
-              let expreTables = checkArguments procName calledProcId argExprs paramBaseTypes paramMap varMap
+              let expreTables = checkArguments procName calledProcId argExprs paramBaseTypes paramList paramMap varMap
               case expreTables of
                 Left err               -> Left err
                 Right expressionTables -> Right (expressionTables, paramList)
