@@ -149,7 +149,7 @@ generateStatement procName label paramMap varMap statementTable stackMap = do
     WhileTable  exprTable stmtTables ->
       generateWhileStatement procName label exprTable paramMap varMap stmtTables stackMap
     ReadTable exprTable ->
-      generateReadStatement exprTable stackMap
+      generateReadStatement exprTable paramMap varMap stackMap
     CallTable procId expressionTables params ->
         generateCallStatement procId expressionTables params 0 paramMap varMap stackMap
 
@@ -253,19 +253,43 @@ generateWriteChooseType exprType paramMap varMap exprTable stackMap =
     FloatType -> generateWriteWithType "real" paramMap varMap exprTable stackMap
     otherwise -> generateWriteWithType "int" paramMap  varMap exprTable stackMap
 
-generateReadStatement :: ExpressionTable -> StackMap -> IO ()
-generateReadStatement exprTable stackMap = do
+generateReadStatement :: ExpressionTable -> ParameterMap -> VariableMap -> StackMap -> IO ()
+generateReadStatement exprTable paramMap varMap stackMap = do
     let exprType = getExprType exprTable
         slotNum = stackMap Map.! (varName $ variable exprTable)
     case exprType of
-        BoolType  -> generateReadStatementByType "bool" slotNum
-        IntType   -> generateReadStatementByType "int" slotNum
-        FloatType -> generateReadStatementByType "real" slotNum
+        BoolType  -> generateReadStatementByType "bool" slotNum exprTable paramMap varMap stackMap
+        IntType   -> generateReadStatementByType "int"  slotNum exprTable paramMap varMap stackMap
+        FloatType -> generateReadStatementByType "real" slotNum exprTable paramMap varMap stackMap
 
-generateReadStatementByType :: String -> Int -> IO ()
-generateReadStatementByType baseType slotNum = do
-    printLine ("call_builtin read_" ++ baseType)
-    printLine ("store " ++ (show slotNum) ++ ", r0")
+generateReadStatementByType :: String -> Int -> ExpressionTable -> ParameterMap -> VariableMap -> StackMap -> IO ()
+generateReadStatementByType baseType slotNum exprTable paramMap varMap stackMap = do
+  case exprTable of
+    VariableTable var varType -> do
+      let varId   = varName  var
+          varShape = varShapeIndicatorTable var
+          varSlotNum = getVariableSlotNum var stackMap
+          varSlotNumStr = show varSlotNum
+      printLine ("call_builtin read_" ++ baseType)
+      case (Map.member varId paramMap) of
+        False -> do
+          { case varShape of
+              NoIndicatorTable ->
+                printLine $ "store " ++ varSlotNumStr ++ ", r0"
+              otherwise        -> do
+                { locateArrayMatrix paramMap varMap var varSlotNumStr 1 stackMap
+                ; printLine $ "store_indirect r1, r0"
+                }
+          }
+        True -> do
+          let parameter = snd $ paramMap Map.! varId
+              passType  = passingIndicator parameter
+          case passType of
+            VarType -> printLine $ "store " ++ varSlotNumStr ++ ", r0"
+            RefType -> do
+              { printLine $ "load r1, " ++ varSlotNumStr
+              ; printLine $ "store_indirect r1, r0"
+              }
 
 
 generateExpression :: ParameterMap -> VariableMap -> ExpressionTable -> Int -> StackMap -> IO ()
