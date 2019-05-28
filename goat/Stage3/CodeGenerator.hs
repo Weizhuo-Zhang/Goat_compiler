@@ -174,15 +174,21 @@ generateCallStatement procName (exprTable:exprTables) (param:params) registerNum
 
 checkCallParameter :: Parameter -> ExpressionTable -> Int -> ParameterMap -> VariableMap -> StackMap -> IO ()
 checkCallParameter param exprTable registerNum paramMap varMap stackMap = do
-  let  paramIndicator = passingIndicator param
+  let  varType   = getAssignBaseType exprTable
+       paramType = passingType param
+       paramIndicator = passingIndicator param
   case paramIndicator of
-    VarType -> generateExpression paramMap varMap exprTable registerNum stackMap
+    VarType -> do
+      generateExpression paramMap varMap exprTable registerNum stackMap
+      if (FloatType == paramType) && (IntType == varType)
+        then printIntToRealInSameRegister 0
+        else putStr ""
     RefType -> do
       let var = variable exprTable
           paramId = varName var
           slotNum = stackMap Map.! paramId
           slotNumStr = show slotNum
-          regNumStr0 = show registerNum
+          regNumStr0 = "r" ++ (show registerNum)
       case (Map.member paramId paramMap) of
         False -> do
           let  varShape = varShapeIndicatorTable var

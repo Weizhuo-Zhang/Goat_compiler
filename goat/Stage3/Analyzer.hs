@@ -228,9 +228,11 @@ checkArguments procName procId (e:[]) (b:[]) (parameter:[]) paramMap varMap = do
       let exprBaseType = getAssignBaseType expressionTable
       if (exprBaseType == b)
       then Right [expressionTable]
-      else if (FloatType == b && IntType == exprBaseType)
-           then Right [expressionTable]
-           else Left $ exitWithCallParamLengthDiff procName procId
+      else case paramIndicator of
+             RefType -> Left $ exitWithCallParamLengthDiff procName procId
+             varType -> if (FloatType == b && IntType == exprBaseType)
+                            then Right [expressionTable]
+                            else Left $ exitWithCallParamLengthDiff procName procId
 checkArguments procName procId (e:es) (b:bs) (parameter:parameters) paramMap varMap = do
   let expressionTables = checkArguments procName procId es bs parameters paramMap varMap
   case expressionTables of
@@ -245,9 +247,11 @@ checkArguments procName procId (e:es) (b:bs) (parameter:parameters) paramMap var
           let exprBaseType = getAssignBaseType expressionTable
           if (exprBaseType == b)
           then Right $ [expressionTable] ++ exprTables
-          else if ((FloatType == b) && (IntType == exprBaseType))
-               then Right $ [expressionTable] ++ exprTables
-               else Left $ exitWithCallParamLengthDiff procName procId
+          else case paramIndicator of
+                 RefType -> Left $ exitWithCallParamLengthDiff procName procId
+                 varType -> if (FloatType == b && IntType == exprBaseType)
+                                then Right $ [expressionTable] ++ exprTables
+                                else Left $ exitWithCallParamLengthDiff procName procId
 
 checkCallExpr ::
   Identifier -> Identifier -> ParameterIndicator -> Expression -> ParameterMap -> VariableMap
