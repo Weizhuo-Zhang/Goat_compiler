@@ -164,31 +164,39 @@ generateStatement procName label paramMap varMap statementTable stackMap = do
 generateCallStatement :: Identifier -> [ExpressionTable] -> [Parameter] -> Int -> ParameterMap -> VariableMap -> StackMap -> IO ()
 generateCallStatement procName [] [] _ _ _ _ = printLine $ "call proc_" ++ procName
 generateCallStatement procName (exprTable:[]) (param:[]) registerNum paramMap varMap stackMap = do
-  let paramIndicator = passingIndicator param
-  case paramIndicator of
-    VarType -> do
-      generateExpression paramMap varMap exprTable registerNum stackMap
-    RefType -> do
-      let paramId = varName $ variable exprTable
-          slotNum = stackMap Map.! paramId
-      locateArrayMatrix paramMap varMap (variable exprTable) (show slotNum) registerNum stackMap
+  checkCallParameter param exprTable registerNum paramMap varMap stackMap
   -- print call statement after all parameters are loaded into registers.
   printLine $ "call proc_" ++ procName
 
 generateCallStatement procName (exprTable:exprTables) (param:params) registerNum paramMap varMap stackMap = do
-  let paramIndicator = passingIndicator param
-      paramId = passingIdent param
-      slotNum = stackMap Map.! paramId
-  case paramIndicator of
-    VarType -> do
-      generateExpression paramMap varMap exprTable registerNum stackMap
-      generateCallStatement procName exprTables params (registerNum+1) paramMap varMap stackMap
-    RefType -> do
-      let paramId = varName $ variable exprTable
-          slotNum = stackMap Map.! paramId
-      locateArrayMatrix paramMap varMap (variable exprTable) (show slotNum) registerNum stackMap
-      generateCallStatement procName exprTables params (registerNum+1) paramMap varMap stackMap
+  checkCallParameter param exprTable registerNum paramMap varMap stackMap
+  generateCallStatement procName exprTables params (registerNum+1) paramMap varMap stackMap
 
+checkCallParameter :: Parameter -> ExpressionTable -> Int -> ParameterMap -> VariableMap -> StackMap -> IO ()
+checkCallParameter param exprTable registerNum paramMap varMap stackMap = do
+  let  paramIndicator = passingIndicator param
+  case paramIndicator of
+    VarType -> generateExpression paramMap varMap exprTable registerNum stackMap
+    RefType -> do
+      let var = variable exprTable
+          paramId = varName var
+          slotNum = stackMap Map.! paramId
+          slotNumStr = show slotNum
+          regNumStr0 = show registerNum
+      case (Map.member paramId paramMap) of
+        False -> do
+          let  varShape = varShapeIndicatorTable var
+          case varShape of
+            NoIndicatorTable ->
+              printLine $ "load_address " ++ regNumStr0 ++ ", " ++ slotNumStr
+            otherwise        -> do
+              locateArrayMatrix paramMap varMap var slotNumStr registerNum stackMap
+        True -> do
+          let parameter = snd $ paramMap Map.! paramId
+              passType  = passingIndicator parameter
+          case passType of
+            VarType -> printLine $ "load_address " ++ regNumStr0 ++ ", " ++ slotNumStr
+            RefType -> printLine $ "load " ++ regNumStr0 ++ ", " ++ slotNumStr
 
 generateAssignStatement ::
   String -> ParameterMap -> VariableMap -> ExpressionTable -> ExpressionTable -> StackMap -> IO ()
