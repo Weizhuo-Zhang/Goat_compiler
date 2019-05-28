@@ -59,3 +59,49 @@ echo "---------------- asg.gt -----------------"
 
 
 make clean
+||||||| merged common ancestors
+echo "--------------------- hello.gt ---------------------"
+./Goat testCase/hello.gt > ./testCase/GeneratedOutput/hello.oz
+diff ./testCase/GeneratedOutput/hello.oz ./testCase/ExpectedOutput/hello.oz
+./oz ./testCase/GeneratedOutput/hello.oz
+
+echo "----------- ifwhile.gt ----------"
+./Goat testCase/ifwhile.gt > ./testCase/GeneratedOutput/ifwhile.oz
+diff ./testCase/GeneratedOutput/ifwhile.oz ./testCase/ExpectedOutput/ifwhile.oz
+./oz ./testCase/GeneratedOutput/ifwhile.oz
+
+echo "----------- comparison.gt ----------"
+./Goat testCase/comparison.gt > ./testCase/GeneratedOutput/comparison.oz
+./oz ./testCase/GeneratedOutput/comparison.oz
+
+echo "----------- comparisonNotEq.gt ----------"
+./Goat testCase/comparisonNotEq.gt > ./testCase/GeneratedOutput/comparisonNotEq.oz
+./oz ./testCase/GeneratedOutput/comparisonNotEq.oz
+
+echo "----------- comparisonLes.gt ----------"
+./Goat testCase/comparisonLes.gt > ./testCase/GeneratedOutput/comparisonLes.oz
+./oz ./testCase/GeneratedOutput/comparisonLes.oz
+
+echo "----------- comparisonLesEq.gt ----------"
+./Goat testCase/comparisonLesEq.gt > ./testCase/GeneratedOutput/comparisonLesEq.oz
+./oz ./testCase/GeneratedOutput/comparisonLesEq.oz
+
+echo "----------- comparisonGrt.gt ----------"
+./Goat testCase/comparisonGrt.gt > ./testCase/GeneratedOutput/comparisonGrt.oz
+./oz ./testCase/GeneratedOutput/comparisonGrt.oz
+
+echo "----------- comparisonGrtEq.gt ----------"
+./Goat testCase/comparisonGrtEq.gt > ./testCase/GeneratedOutput/comparisonGrtEq.oz
+./oz ./testCase/GeneratedOutput/comparisonGrtEq.oz
+
+echo "---------------- read.gt ----------------"
+./Goat ./testCase/read.gt > ./testCase/GeneratedOutput/read.oz
+./oz ./testCase/GeneratedOutput/read.oz
+
+echo "------ asgWithNumericOperatorOnly.gt ----"
+./Goat ./testCase/asgWithNumericOperatorOnly.gt > ./testCase/GeneratedOutput/asgWithNumericOperatorOnly.oz
+./oz ./testCase/GeneratedOutput/asgWithNumericOperatorOnly.oz
+
+echo "---------------- asg.gt -----------------"
+./Goat ./testCase/asg.gt > ./testCase/GeneratedOutput/asg.oz
+./oz ./testCase/GeneratedOutput/asg.oz
