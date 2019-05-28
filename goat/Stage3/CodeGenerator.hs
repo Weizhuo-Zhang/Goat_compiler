@@ -151,28 +151,32 @@ generateStatement procName label paramMap varMap statementTable stackMap = do
     ReadTable exprTable ->
       generateReadStatement exprTable stackMap
     CallTable procId expressionTables params ->
-        generateCallStatement procId expressionTables params 0 0 paramMap varMap stackMap
+        generateCallStatement procId expressionTables params 0 paramMap varMap stackMap
 
-generateCallStatement :: Identifier -> [ExpressionTable] -> [Parameter] -> Int -> Int -> ParameterMap -> VariableMap -> StackMap -> IO ()
-generateCallStatement _ [] [] _ _ _ _ _ = return ()
-generateCallStatement procName (exprTable:[]) (param:[]) paramNum registerNum paramMap varMap stackMap = do
+generateCallStatement :: Identifier -> [ExpressionTable] -> [Parameter] -> Int -> ParameterMap -> VariableMap -> StackMap -> IO ()
+generateCallStatement procName [] [] _ _ _ _ = printLine $ "call proc_" ++ procName
+generateCallStatement procName (exprTable:[]) (param:[]) registerNum paramMap varMap stackMap = do
   let paramIndicator = passingIndicator param
+      paramId = passingIdent param
+      slotNum = stackMap Map.! paramId
   case paramIndicator of
     VarType -> do
       generateExpression paramMap varMap exprTable registerNum stackMap
     RefType -> do
-      printLine $ "load_address r" ++ (show registerNum) ++ ", " ++ (show paramNum)
+      printLine $ "load_address r" ++ (show registerNum) ++ ", " ++ (show slotNum)
   -- print call statement after all parameters are loaded into registers.
   printLine $ "call proc_" ++ procName
 
-generateCallStatement procName (exprTable:exprTables) (param:params) paramNum registerNum paramMap varMap stackMap = do
+generateCallStatement procName (exprTable:exprTables) (param:params) registerNum paramMap varMap stackMap = do
   let paramIndicator = passingIndicator param
+      paramId = passingIdent param
+      slotNum = stackMap Map.! paramId
   case paramIndicator of
     VarType -> do
       generateExpression paramMap varMap exprTable registerNum stackMap
     RefType -> do
-     printLine $ "load_address r" ++ (show registerNum) ++ ", " ++ (show paramNum)
-  generateCallStatement procName exprTables params (paramNum+1) (registerNum + 1) paramMap varMap stackMap
+     printLine $ "load_address r" ++ (show registerNum) ++ ", " ++ (show slotNum)
+     generateCallStatement procName exprTables params (registerNum+1) paramMap varMap stackMap
 
 
 generateAssignStatement ::
