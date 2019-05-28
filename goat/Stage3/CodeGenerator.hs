@@ -71,7 +71,6 @@ generateProcedure procName (ProcedureTable paramMap varMap statements) = do
     case variableNumber of
         0         -> putStr ""
         otherwise -> do { printComment "init variables"
-                        ; printLine "int_const r0, 0"
                         ; initVariables varList varMap stackMap
                         }
     generateStatements procName [0] paramMap varMap statements stackMap
@@ -97,17 +96,26 @@ initParameters (param:params) stackMap registerNum = do
 initVariables :: [Identifier] -> VariableMap -> StackMap -> IO ()
 initVariables [] _ _ = return ()
 initVariables (var:[]) varMap stackMap = do
-  let varSlotNum   = stackMap Map.! var
+  let varType    = declarationType $ varMap Map.! var
+      varSlotNum   = stackMap Map.! var
       varIndicator = varShapeIndicator $ declarationVariable (varMap Map.! var)
   printComment $ "initialise variable " ++ var
+  initVariableByBaseType varType
   initVariableWithIndicator varIndicator varSlotNum
 initVariables (var:varList) varMap stackMap = do
-  let varSlotNum = stackMap Map.! var
+  let varType    = declarationType $ varMap Map.! var
+      varSlotNum = stackMap Map.! var
       varIndicator = varShapeIndicator $ declarationVariable (varMap Map.! var)
   printComment $ "init variable: " ++ var
+  initVariableByBaseType varType
   initVariableWithIndicator varIndicator varSlotNum
   initVariables varList varMap stackMap
 
+initVariableByBaseType :: BaseType -> IO ()
+initVariableByBaseType baseType =
+  case baseType of
+    FloatType -> printLine "real_const r0, 0.0"
+    otherwise -> printLine "int_const r0, 0"
 
 initVariableWithIndicator :: ShapeIndicator -> Int -> IO ()
 initVariableWithIndicator varIndicator varSlotNum = do
