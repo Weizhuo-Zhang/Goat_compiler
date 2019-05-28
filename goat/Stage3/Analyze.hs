@@ -392,7 +392,7 @@ checkStatement procName stmt paramMap varMap procMap =
               Right variableTable -> do
                   checkAssignExpr procName expression variableTable paramMap varMap
         If expr stmts -> do
-          let exprEither = checkConsition procName expr paramMap varMap
+          let exprEither = checkCondition procName expr paramMap varMap
           case exprEither of
             Left err -> Left err
             Right exprTable -> do
@@ -401,7 +401,7 @@ checkStatement procName stmt paramMap varMap procMap =
                 Left err         -> Left err
                 Right stmtTables -> Right $ IfTable exprTable stmtTables
         IfElse expr stmts1 stmts2 -> do
-          let exprEither = checkConsition procName expr paramMap varMap
+          let exprEither = checkCondition procName expr paramMap varMap
           case exprEither of
             Left err -> Left err
             Right exprTable -> do
@@ -415,7 +415,7 @@ checkStatement procName stmt paramMap varMap procMap =
                     Right stmtTables2 -> do
                       Right $ IfElseTable exprTable stmtTables1 stmtTables2
         While expr stmts -> do
-          let exprEither = checkConsition procName expr paramMap varMap
+          let exprEither = checkCondition procName expr paramMap varMap
           case exprEither of
             Left err -> Left err
             Right exprTable -> do
