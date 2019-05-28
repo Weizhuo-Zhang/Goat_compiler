@@ -13,51 +13,61 @@ echo "\n\n===================== Stage 3 ======================\n"
 
 echo "--------------------- ifwhile.gt -------------------"
 ./Goat testCase/ifwhile.gt > ./testCase/GeneratedOutput/ifwhile.oz
-diff ./testCase/GeneratedOutput/ifwhile.oz ./testCase/ExpectedOutput/ifwhile.oz
-./oz ./testCase/GeneratedOutput/ifwhile.oz
+./oz ./testCase/GeneratedOutput/ifwhile.oz > ./testCase/GeneratedOutput/ifwhile.txt
+diff ./testCase/GeneratedOutput/ifwhile.txt ./testCase/ExpectedOutput/ifwhile.txt
 
-echo "--------------------- comparison.gt ---------------------"
+echo "------------------ comparison.gt -------------------"
 ./Goat testCase/comparison.gt > ./testCase/GeneratedOutput/comparison.oz
-./oz ./testCase/GeneratedOutput/comparison.oz
+./oz ./testCase/GeneratedOutput/comparison.oz > ./testCase/GeneratedOutput/comparison.txt
+diff ./testCase/GeneratedOutput/comparison.txt ./testCase/ExpectedOutput/comparison.txt
 
-echo "-------------------- comparisonNotEq.gt -------------------"
+echo "---------------- comparisonNotEq.gt ----------------"
 ./Goat testCase/comparisonNotEq.gt > ./testCase/GeneratedOutput/comparisonNotEq.oz
-./oz ./testCase/GeneratedOutput/comparisonNotEq.oz
+./oz ./testCase/GeneratedOutput/comparisonNotEq.oz > ./testCase/GeneratedOutput/comparisonNotEq.txt
+diff ./testCase/GeneratedOutput/comparisonNotEq.txt ./testCase/ExpectedOutput/comparisonNotEq.txt
 
-echo "--------------------- comparisonLes.gt --------------------"
+echo "----------------- comparisonLes.gt -----------------"
 ./Goat testCase/comparisonLes.gt > ./testCase/GeneratedOutput/comparisonLes.oz
-./oz ./testCase/GeneratedOutput/comparisonLes.oz
+./oz ./testCase/GeneratedOutput/comparisonLes.oz > ./testCase/GeneratedOutput/comparisonLes.txt
+diff ./testCase/GeneratedOutput/comparisonLes.txt ./testCase/ExpectedOutput/comparisonLes.txt
 
-echo "------------------- comparisonLesEq.gt --------------------"
+echo "--------------- comparisonLesEq.gt -----------------"
 ./Goat testCase/comparisonLesEq.gt > ./testCase/GeneratedOutput/comparisonLesEq.oz
-./oz ./testCase/GeneratedOutput/comparisonLesEq.oz
+./oz ./testCase/GeneratedOutput/comparisonLesEq.oz > ./testCase/GeneratedOutput/comparisonLesEq.txt
+diff ./testCase/GeneratedOutput/comparisonLesEq.txt ./testCase/ExpectedOutput/comparisonLesEq.txt
 
-echo "--------------------- comparisonGrt.gt --------------------"
+echo "------------------ comparisonGrt.gt ----------------"
 ./Goat testCase/comparisonGrt.gt > ./testCase/GeneratedOutput/comparisonGrt.oz
-./oz ./testCase/GeneratedOutput/comparisonGrt.oz
+./oz ./testCase/GeneratedOutput/comparisonGrt.oz > ./testCase/GeneratedOutput/comparisonGrt.txt
+diff ./testCase/GeneratedOutput/comparisonGrt.txt ./testCase/ExpectedOutput/comparisonGrt.txt
 
-echo "--------------------- comparisonGrtEq.gt ------------------"
+echo "----------------- comparisonGrtEq.gt ---------------"
 ./Goat testCase/comparisonGrtEq.gt > ./testCase/GeneratedOutput/comparisonGrtEq.oz
-./oz ./testCase/GeneratedOutput/comparisonGrtEq.oz
+./oz ./testCase/GeneratedOutput/comparisonGrtEq.oz > ./testCase/GeneratedOutput/comparisonGrtEq.txt
+diff ./testCase/GeneratedOutput/comparisonGrtEq.txt ./testCase/ExpectedOutput/comparisonGrtEq.txt
 
-echo "--------------- asgWithNumericOperatorOnly.gt -------------"
+echo "----------- asgWithNumericOperatorOnly.gt ----------"
 ./Goat ./testCase/asgWithNumericOperatorOnly.gt > ./testCase/GeneratedOutput/asgWithNumericOperatorOnly.oz
-./oz ./testCase/GeneratedOutput/asgWithNumericOperatorOnly.oz
+./oz ./testCase/GeneratedOutput/asgWithNumericOperatorOnly.oz > ./testCase/GeneratedOutput/asgWithNumericOperatorOnly.txt
+diff ./testCase/GeneratedOutput/asgWithNumericOperatorOnly.txt ./testCase/ExpectedOutput/asgWithNumericOperatorOnly.txt
 
-echo "-------------- multipleVarDeclaration.out.gt --------------"
+
+echo "---------- multipleVarDeclaration.out.gt -----------"
 ./Goat ./testCase/multipleVarDeclaration.out.gt > ./testCase/GeneratedOutput/multipleVarDeclaration.out.oz
 diff ./testCase/GeneratedOutput/multipleVarDeclaration.out.oz ./testCase/ExpectedOutput/multipleVarDeclaration.out.oz
 
-echo "----------------------- proccall.gt -----------------------"
+echo "------------------ proccall.gt ---------------------"
 ./Goat ./testCase/proccall.gt > ./testCase/GeneratedOutput/proccall.oz
-./oz ./testCase/GeneratedOutput/proccall.oz
+./oz ./testCase/GeneratedOutput/proccall.oz > ./testCase/GeneratedOutput/proccall.txt
+diff ./testCase/GeneratedOutput/proccall.txt ./testCase/ExpectedOutput/proccall.txt
+
 
 # echo "------------------------- read.gt -------------------------"
 # ./Goat ./testCase/read.gt > ./testCase/GeneratedOutput/read.oz
 # ./oz ./testCase/GeneratedOutput/read.oz
 
 
-echo "--------------------- Test by folders ---------------------\n"
+echo "\n\n----------------- Test by folders ------------------\n"
 
 echo "--------------------- Miles folder... ---------------------\n"
 echo "------------------------- Mile 1 --------------------------"
