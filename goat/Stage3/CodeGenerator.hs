@@ -30,6 +30,9 @@ data InputValue = Int | Float | String
 type SlotNumber = Int
 -------------------------------------------------------------------------------
 
+-------------------------------------------------------------------------------
+-- The entry point for the code generation pipeline.
+-------------------------------------------------------------------------------
 codeGeneration :: ProgramMap -> IO ()
 codeGeneration programMap = do { printLine "call proc_main"
                                ; printLine "halt"
@@ -37,6 +40,9 @@ codeGeneration programMap = do { printLine "call proc_main"
                                ; generateProcedureList procedures programMap
                                }
 
+-------------------------------------------------------------------------------
+-- Generate a sequence of procedures from a list of procedure names.
+-------------------------------------------------------------------------------
 generateProcedureList :: [String] -> ProgramMap -> IO ()
 generateProcedureList (procedure:[]) programMap =
     case Map.lookup procedure programMap of
@@ -52,6 +58,10 @@ generateProcedureList (procedure:procedures) programMap =
                                   ; generateProcedureList procedures programMap
                                   }
 
+-------------------------------------------------------------------------------
+-- Generate an individual procedure for a given procedure name and the
+-- corresponding PrecedureTable.
+-------------------------------------------------------------------------------
 generateProcedure :: Identifier -> ProcedureTable -> IO ()
 generateProcedure procName (ProcedureTable paramMap varMap statements) = do
     let parameterNumber = Map.size paramMap
@@ -78,6 +88,9 @@ generateProcedure procName (ProcedureTable paramMap varMap statements) = do
         0         -> putStr ""
         otherwise -> printLine $ "pop_stack_frame " ++ (show totalVarNumber)
 
+-------------------------------------------------------------------------------
+-- Generate oz code for initializing a list of parameters.
+-------------------------------------------------------------------------------
 initParameters :: [Parameter] -> StackMap -> Int -> IO ()
 initParameters [] _ _ = return ()
 initParameters (param:[]) stackMap registerNum = do
@@ -93,6 +106,9 @@ initParameters (param:params) stackMap registerNum = do
   printLine $ "store " ++ (show paramSlotNum) ++ ", r" ++ (show registerNum)
   initParameters params stackMap (registerNum + 1)
 
+-------------------------------------------------------------------------------
+-- Generate oz code for initializing a list of variables.
+-------------------------------------------------------------------------------
 initVariables :: [Identifier] -> VariableMap -> StackMap -> IO ()
 initVariables [] _ _ = return ()
 initVariables (var:[]) varMap stackMap = do
@@ -111,12 +127,20 @@ initVariables (var:varList) varMap stackMap = do
   initVariableWithIndicator varIndicator varSlotNum
   initVariables varList varMap stackMap
 
+-------------------------------------------------------------------------------
+-- Generate oz code for initialize a variable based on its base type, which
+-- can be either float or int.
+-------------------------------------------------------------------------------
 initVariableByBaseType :: BaseType -> IO ()
 initVariableByBaseType baseType =
   case baseType of
     FloatType -> printLine "real_const r0, 0.0"
     otherwise -> printLine "int_const r0, 0"
 
+-------------------------------------------------------------------------------
+-- Generate os code for initializing a variable that's either an array,
+-- a matrix, or a value.
+-------------------------------------------------------------------------------
 initVariableWithIndicator :: ShapeIndicator -> Int -> IO ()
 initVariableWithIndicator varIndicator varSlotNum = do
   case varIndicator of
@@ -124,9 +148,15 @@ initVariableWithIndicator varIndicator varSlotNum = do
     Array  (IntConst n)              -> initOffset    varSlotNum n
     Matrix (IntConst m) (IntConst n) -> initOffset    varSlotNum (m*n)
 
+-------------------------------------------------------------------------------
+-- Initialize a single value variable
+-------------------------------------------------------------------------------
 initSingleVar :: Int -> IO ()
 initSingleVar varSlotNum = printLine $ "store " ++ (show varSlotNum) ++ ", r0"
 
+-------------------------------------------------------------------------------
+-- Helper function for initializing array or matrix.
+-------------------------------------------------------------------------------
 initOffset :: Int -> Int -> IO ()
 initOffset varSlotNum offset = do
   if offset > 0
@@ -135,6 +165,9 @@ initOffset varSlotNum offset = do
             }
     else putStr ""
 
+-------------------------------------------------------------------------------
+-- Generate oz code for a set of statements, given the list of StatementTables.
+-------------------------------------------------------------------------------
 generateStatements :: String -> [Int] -> ParameterMap -> VariableMap -> [StatementTable] -> StackMap -> IO ()
 generateStatements _ _ _ _ [] _  = return ()
 generateStatements procName label paramMap varMap (stat:[]) stackMap = do
@@ -144,6 +177,9 @@ generateStatements procName label paramMap varMap (stat:stats) stackMap = do
     ; generateStatements procName (updateLabel label) paramMap varMap stats stackMap
     }
 
+-------------------------------------------------------------------------------
+-- Generate oz code for a single statement.
+-------------------------------------------------------------------------------
 generateStatement :: String -> [Int] -> ParameterMap -> VariableMap -> StatementTable -> StackMap -> IO ()
 generateStatement procName label paramMap varMap statementTable stackMap = do
   case statementTable of
@@ -161,6 +197,9 @@ generateStatement procName label paramMap varMap statementTable stackMap = do
     CallTable procId expressionTables params ->
         generateCallStatement procId expressionTables params 0 paramMap varMap stackMap
 
+-------------------------------------------------------------------------------
+-- Genearate oz code for a procedure call statement.
+-------------------------------------------------------------------------------
 generateCallStatement :: Identifier -> [ExpressionTable] -> [Parameter] -> Int -> ParameterMap -> VariableMap -> StackMap -> IO ()
 generateCallStatement procName [] [] _ _ _ _ = printLine $ "call proc_" ++ procName
 generateCallStatement procName (exprTable:[]) (param:[]) registerNum paramMap varMap stackMap = do
@@ -204,6 +243,9 @@ checkCallParameter param exprTable registerNum paramMap varMap stackMap = do
             VarType -> printLine $ "load_address " ++ regNumStr0 ++ ", " ++ slotNumStr
             RefType -> printLine $ "load " ++ regNumStr0 ++ ", " ++ slotNumStr
 
+-------------------------------------------------------------------------------
+-- Generate oz code for an assignment statement.
+-------------------------------------------------------------------------------
 generateAssignStatement ::
   String -> ParameterMap -> VariableMap -> ExpressionTable -> ExpressionTable -> StackMap -> IO ()
 generateAssignStatement procName paramMap varMap varTable exprTable stackMap = do
@@ -242,6 +284,9 @@ generateAssignStatement procName paramMap varMap varTable exprTable stackMap = d
             }
   }
 
+-------------------------------------------------------------------------------
+-- Generate oz code for a write statement.
+-------------------------------------------------------------------------------
 generateWriteStatement :: ParameterMap -> VariableMap -> ExpressionTable -> StackMap -> IO ()
 generateWriteStatement paramMap varMap exprTable stackMap =
     case exprTable of
@@ -263,12 +308,18 @@ generateWriteStatement paramMap varMap exprTable stackMap =
             generateWriteChooseType exprType paramMap varMap exprTable stackMap
         otherwise -> generateWriteWithType "bool" paramMap varMap exprTable stackMap
 
+-------------------------------------------------------------------------------
+-- Generate oz code for a write statement of a given type as a string.
+-------------------------------------------------------------------------------
 generateWriteWithType :: String -> ParameterMap -> VariableMap -> ExpressionTable -> StackMap -> IO ()
 generateWriteWithType writeType paramMap varMap exprTable stackMap = do
   { generateExpression paramMap varMap exprTable 0 stackMap
   ; printLine $ "call_builtin print_" ++ writeType
   }
 
+-------------------------------------------------------------------------------
+-- Generate oz code for a write statement of a given base type.
+-------------------------------------------------------------------------------
 generateWriteChooseType :: BaseType -> ParameterMap -> VariableMap -> ExpressionTable -> StackMap -> IO ()
 generateWriteChooseType exprType paramMap varMap exprTable stackMap =
   case exprType of
@@ -276,6 +327,9 @@ generateWriteChooseType exprType paramMap varMap exprTable stackMap =
     FloatType -> generateWriteWithType "real" paramMap varMap exprTable stackMap
     BoolType  -> generateWriteWithType "bool" paramMap varMap exprTable stackMap
 
+-------------------------------------------------------------------------------
+-- Generate oz code for a read statement.
+-------------------------------------------------------------------------------
 generateReadStatement :: ExpressionTable -> ParameterMap -> VariableMap -> StackMap -> IO ()
 generateReadStatement exprTable paramMap varMap stackMap = do
     let exprType = getAssignBaseType exprTable
@@ -285,6 +339,9 @@ generateReadStatement exprTable paramMap varMap stackMap = do
         IntType   -> generateReadStatementByType "int"  slotNum exprTable paramMap varMap stackMap
         FloatType -> generateReadStatementByType "real" slotNum exprTable paramMap varMap stackMap
 
+-------------------------------------------------------------------------------
+-- Generate oz code for a read statement of a given base type.
+-------------------------------------------------------------------------------
 generateReadStatementByType :: String -> Int -> ExpressionTable -> ParameterMap -> VariableMap -> StackMap -> IO ()
 generateReadStatementByType baseType slotNum exprTable paramMap varMap stackMap = do
   case exprTable of
@@ -314,7 +371,9 @@ generateReadStatementByType baseType slotNum exprTable paramMap varMap stackMap 
               ; printLine $ "store_indirect r1, r0"
               }
 
-
+-------------------------------------------------------------------------------
+-- Generate oz code for an expression, given its ExpressionTable.
+-------------------------------------------------------------------------------
 generateExpression :: ParameterMap -> VariableMap -> ExpressionTable -> Int -> StackMap -> IO ()
 generateExpression paramMap varMap exprTable registerNum stackMap =
     case exprTable of
@@ -375,14 +434,23 @@ generateExpression paramMap varMap exprTable registerNum stackMap =
         NegativeTable     expr exprType -> generateNegativeExpression paramMap varMap expr registerNum exprType stackMap
         NotTable   expr  _ -> generateNotExpression paramMap varMap expr registerNum stackMap
 
+-------------------------------------------------------------------------------
+-- Update labels for statement generation.
+-------------------------------------------------------------------------------
 updateLabel :: [Int] -> [Int]
 updateLabel (x:[]) = (x+1):[]
 updateLabel (x:xs) = x:(updateLabel xs)
 
+-------------------------------------------------------------------------------
+-- Helper function to print labels for conditional statements.
+-------------------------------------------------------------------------------
 showLabel :: [Int] -> String
 showLabel (x:[]) = show(x)
 showLabel (x:xs) = show(x) ++ "_" ++ showLabel(xs)
 
+-------------------------------------------------------------------------------
+-- Generate oz code for an if statement.
+-------------------------------------------------------------------------------
 generateIfStatement ::
   String -> [Int] -> ExpressionTable -> ParameterMap -> VariableMap -> [StatementTable] -> StackMap -> IO ()
 generateIfStatement procName label exprTable paramMap varMap stmts stackMap = do
@@ -399,6 +467,9 @@ generateIfStatement procName label exprTable paramMap varMap stmts stackMap = do
   ; putStrLn (label_b ++ ":")
   }
 
+-------------------------------------------------------------------------------
+-- Generate oz code for an if-else statement
+-------------------------------------------------------------------------------
 generateIfElseStatement ::
   String -> [Int] -> ExpressionTable -> ParameterMap -> VariableMap -> [StatementTable] -> [StatementTable]
   -> StackMap -> IO ()
@@ -418,6 +489,9 @@ generateIfElseStatement procName label exprTable paramMap varMap stmts1 stmts2 s
   ; putStrLn (label_b ++ ":")
   }
 
+-------------------------------------------------------------------------------
+-- Generate oz code for a while statement.
+-------------------------------------------------------------------------------
 generateWhileStatement ::
   String -> [Int] -> ExpressionTable -> ParameterMap -> VariableMap -> [StatementTable] -> StackMap -> IO ()
 generateWhileStatement procName label exprTable paramMap varMap stmts stackMap = do
@@ -438,6 +512,9 @@ generateWhileStatement procName label exprTable paramMap varMap stmts stackMap =
   ; putStrLn (label_c ++ ":")
   }
 
+-------------------------------------------------------------------------------
+-- Generate oz code for variable whose value is an expression.
+-------------------------------------------------------------------------------
 generateVariableExpr :: ParameterMap -> VariableMap -> VariableSubTable -> BaseType -> Int -> StackMap -> IO ()
 generateVariableExpr paramMap varMap var varType regNum stackMap = do
   let varShape = varShapeIndicatorTable var
@@ -464,6 +541,9 @@ generateVariableExpr paramMap varMap var varType regNum stackMap = do
           ; printLine $ "load_indirect " ++ regNumStr0 ++ ", " ++ regNumStr0
           }
 
+-------------------------------------------------------------------------------
+-- Locate register of the value of a cell of an array/matrix for passing by ref.
+-------------------------------------------------------------------------------
 locateArrayMatrix ::
   ParameterMap -> VariableMap -> VariableSubTable -> String -> Int -> StackMap -> IO ()
 locateArrayMatrix paramMap varMap var varSlotNumStr regNum stackMap = do
@@ -493,22 +573,33 @@ locateArrayMatrix paramMap varMap var varSlotNumStr regNum stackMap = do
       ; printLine $ "sub_offset "  ++ regNumStr0 ++ ", " ++ regNumStr1 ++ ", " ++ regNumStr0
       }
 
-
+-------------------------------------------------------------------------------
+-- Get the row number of a matrix.
+-------------------------------------------------------------------------------
 getMatrixM :: ShapeIndicator -> Int
 getMatrixM (Matrix (IntConst n) _ ) = n
   -- case m of
   --   IntConst n -> n
 
+-------------------------------------------------------------------------------
+-- Generate oz code for || expression.
+-------------------------------------------------------------------------------
 generateOrExpression ::
   ParameterMap -> VariableMap -> ExpressionTable -> ExpressionTable -> Int -> StackMap -> IO ()
 generateOrExpression paramMap varMap lExpr rExpr regNum stackMap = do
   generateAndOrExpr "or" paramMap varMap lExpr rExpr regNum stackMap
 
+-------------------------------------------------------------------------------
+-- Generate oz code for && expression.
+-------------------------------------------------------------------------------
 generateAndExpression ::
   ParameterMap -> VariableMap -> ExpressionTable -> ExpressionTable -> Int -> StackMap -> IO ()
 generateAndExpression paramMap varMap lExpr rExpr regNum stackMap = do
   generateAndOrExpr "and" paramMap varMap lExpr rExpr regNum stackMap
 
+-------------------------------------------------------------------------------
+-- Generate oz code for AND-OR expression.
+-------------------------------------------------------------------------------
 generateAndOrExpr ::
   String -> ParameterMap -> VariableMap -> ExpressionTable -> ExpressionTable -> Int -> StackMap -> IO ()
 generateAndOrExpr operator paramMap varMap lExpr rExpr regNum stackMap = do
@@ -518,6 +609,9 @@ generateAndOrExpr operator paramMap varMap lExpr rExpr regNum stackMap = do
                 ", r" ++ (show (regNum+1))
   }
 
+-------------------------------------------------------------------------------
+-- Generate oz code for ! expression.
+-------------------------------------------------------------------------------
 generateNotExpression ::
   ParameterMap -> VariableMap -> ExpressionTable -> Int -> StackMap -> IO ()
 generateNotExpression paramMap varMap expr regNum stackMap = do
@@ -525,36 +619,58 @@ generateNotExpression paramMap varMap expr regNum stackMap = do
   ; printLine $ "not r" ++ (show regNum) ++ ", r" ++ (show regNum)
   }
 
+-------------------------------------------------------------------------------
+-- Generate oz code for = expression.
+-------------------------------------------------------------------------------
 generateEqExpression ::
   ParameterMap -> VariableMap -> ExpressionTable -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
 generateEqExpression paramMap varMap lExpr rExpr regNum exprType stackMap = do
   generateCompareExpr "cmp_eq" paramMap varMap lExpr rExpr regNum exprType stackMap
 
+-------------------------------------------------------------------------------
+-- Generate oz code for != expression.
+-------------------------------------------------------------------------------
 generateNotEqExpression ::
   ParameterMap -> VariableMap -> ExpressionTable -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
 generateNotEqExpression paramMap varMap lExpr rExpr regNum exprType stackMap = do
   generateCompareExpr "cmp_ne" paramMap varMap lExpr rExpr regNum exprType stackMap
 
+-------------------------------------------------------------------------------
+-- Generate oz code for < expression.
+-------------------------------------------------------------------------------
 generateLesExpression ::
   ParameterMap -> VariableMap -> ExpressionTable -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
 generateLesExpression paramMap varMap lExpr rExpr regNum exprType stackMap = do
   generateCompareExpr "cmp_lt" paramMap varMap lExpr rExpr regNum exprType stackMap
 
+-------------------------------------------------------------------------------
+-- Generate oz code for <= expression.
+-------------------------------------------------------------------------------
 generateLesEqExpression ::
   ParameterMap -> VariableMap -> ExpressionTable -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
 generateLesEqExpression paramMap varMap lExpr rExpr regNum exprType stackMap = do
   generateCompareExpr "cmp_le" paramMap varMap lExpr rExpr regNum exprType stackMap
 
+-------------------------------------------------------------------------------
+-- Generate oz code for > expression.
+-------------------------------------------------------------------------------
 generateGrtExpression ::
   ParameterMap -> VariableMap -> ExpressionTable -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
 generateGrtExpression paramMap varMap lExpr rExpr regNum exprType stackMap = do
   generateCompareExpr "cmp_gt" paramMap varMap lExpr rExpr regNum exprType stackMap
 
+-------------------------------------------------------------------------------
+-- Generate oz code for >= expression.
+-------------------------------------------------------------------------------
 generateGrtEqExpression ::
   ParameterMap -> VariableMap -> ExpressionTable -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
 generateGrtEqExpression paramMap varMap lExpr rExpr regNum exprType stackMap = do
   generateCompareExpr "cmp_ge" paramMap varMap lExpr rExpr regNum exprType stackMap
 
+-------------------------------------------------------------------------------
+-- Generate comparison expression of a given type, which can be:
+-- =, >, <, >=, <=
+-------------------------------------------------------------------------------
 generateCompareExpr ::
   String -> ParameterMap -> VariableMap -> ExpressionTable -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
 generateCompareExpr operator paramMap varMap lExpr rExpr regNum exprType stackMap = do
@@ -570,6 +686,9 @@ generateCompareExpr operator paramMap varMap lExpr rExpr regNum exprType stackMa
                     (show regNum) ++ ", r" ++ (show (regNum+1))
   }
 
+-------------------------------------------------------------------------------
+-- Generate oz code for expressions with a single unary operator -.
+-------------------------------------------------------------------------------
 generateNegativeExpression ::
   ParameterMap -> VariableMap -> ExpressionTable -> Int -> BaseType -> StackMap -> IO ()
 generateNegativeExpression paramMap varMap expr registerNum exprType stackMap = do
@@ -580,18 +699,27 @@ generateNegativeExpression paramMap varMap expr registerNum exprType stackMap = 
       FloatType -> printLine $ "neg_real r" ++ regNum ++ ", r" ++ regNum
   }
 
+-------------------------------------------------------------------------------
+-- Convert boolean to int.
+-------------------------------------------------------------------------------
 convertBoolToInt :: Bool -> String
 convertBoolToInt boolVal =
   case boolVal of
     True  -> show 1
     False -> show 0
 
+-------------------------------------------------------------------------------
+-- Print a string with indentation.
+-------------------------------------------------------------------------------
 printLine :: String -> IO ()
 printLine string = do
   { printNewLineIndentation
   ; putStrLn string
   }
 
+-------------------------------------------------------------------------------
+-- Generate oz code for comments.
+-------------------------------------------------------------------------------
 printComment :: String -> IO ()
 printComment string = do
   { putStr "  # "
@@ -617,7 +745,9 @@ registers = Map.empty
 
 
 ------------------------------- Helper functions ------------------------------
-
+-------------------------------------------------------------------------------
+-- Start a new line with proper indentation.
+-------------------------------------------------------------------------------
 printNewLineIndentation :: IO ()
 printNewLineIndentation = putStr "    "
 
@@ -638,6 +768,9 @@ printIntToRealInSameRegister :: Int -> IO ()
 printIntToRealInSameRegister registerNumber = do
   printIntToRealInNewRegister registerNumber registerNumber
 
+-------------------------------------------------------------------------------
+-- Generate string for binary operators.
+-------------------------------------------------------------------------------
 generateOperationString :: String -> String -> Int -> IO ()
 generateOperationString operator opType registerNum = do
   printNewLineIndentation
@@ -645,6 +778,9 @@ generateOperationString operator opType registerNum = do
     ++ ", r" ++ (show registerNum) ++ ", r" ++
     (show $ registerNum+1)
 
+-------------------------------------------------------------------------------
+-- Convert int type to float type.
+-------------------------------------------------------------------------------
 generateIntToFloat :: ExpressionTable -> ExpressionTable -> Int -> IO ()
 generateIntToFloat lExpr rExpr registerNum = do
     let lType = getAssignBaseType lExpr
@@ -654,10 +790,16 @@ generateIntToFloat lExpr rExpr registerNum = do
         (IntType,FloatType) -> printIntToRealInSameRegister registerNum
         (FloatType,IntType) -> printIntToRealInSameRegister (registerNum + 1)
 
+-------------------------------------------------------------------------------
+-- Get a non-conflicting slot number for a new variable.
+-------------------------------------------------------------------------------
 getVariableSlotNum :: VariableSubTable -> StackMap -> Int
 getVariableSlotNum variable stackMap = stackMap Map.! varId
   where varId = varName variable
 
+-------------------------------------------------------------------------------
+-- Get the size of VariableMap.
+-------------------------------------------------------------------------------
 getVariableMapSize :: [Identifier] -> VariableMap -> Int
 getVariableMapSize [] _ = 0
 getVariableMapSize (var:[]) varMap =
@@ -667,6 +809,11 @@ getVariableMapSize (var:vars) varMap =
   (getVariableSize varIndicator) + (getVariableMapSize vars varMap)
   where varIndicator = varShapeIndicator $ declarationVariable (varMap Map.! var)
 
+-------------------------------------------------------------------------------
+-- Get the size of a variable.
+-- Array/matrix: the size of object
+-- Neither: 1
+-------------------------------------------------------------------------------
 getVariableSize :: ShapeIndicator -> Int
 getVariableSize varIndicator =
   case varIndicator of
@@ -674,6 +821,9 @@ getVariableSize varIndicator =
     Array  (IntConst n)              -> n
     Matrix (IntConst m) (IntConst n) -> m*n
 
+-------------------------------------------------------------------------------
+-- Generate a StackMap, given the parameters and variables of a procedure.
+-------------------------------------------------------------------------------
 insertStackMap :: ParameterMap -> VariableMap -> StackMap
 insertStackMap paramMap varMap = do
     let paramList = Map.keys paramMap
