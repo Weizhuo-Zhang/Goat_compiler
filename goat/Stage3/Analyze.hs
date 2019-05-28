@@ -622,17 +622,17 @@ checkLogicSubExpression procName operator expr paramMap varMap = do
     Left err -> Left err
     Right exprTable -> do
       case exprTable of
-        VariableTable _ exprType -> checkBoolType exprTable exprType errorExit
-        BoolTable  _             -> Right exprTable
-        OrTable    _ _ exprType  -> checkBoolType exprTable exprType errorExit
-        AndTable   _ _ exprType  -> checkBoolType exprTable exprType errorExit
-        EqTable    _ _ exprType  -> checkBoolType exprTable exprType errorExit
-        NotEqTable _ _ exprType  -> checkBoolType exprTable exprType errorExit
-        LesTable   _ _ exprType  -> checkBoolType exprTable exprType errorExit
-        LesEqTable _ _ exprType  -> checkBoolType exprTable exprType errorExit
-        GrtTable   _ _ exprType  -> checkBoolType exprTable exprType errorExit
-        GrtEqTable _ _ exprType  -> checkBoolType exprTable exprType errorExit
-        NotTable   _ exprType    -> checkBoolType exprTable exprType errorExit
+        VariableTable _ _ -> checkBoolType exprTable errorExit
+        BoolTable  _      -> Right exprTable
+        OrTable    _ _ _  -> checkBoolType exprTable errorExit
+        AndTable   _ _ _  -> checkBoolType exprTable errorExit
+        EqTable    _ _ _  -> checkBoolType exprTable errorExit
+        NotEqTable _ _ _  -> checkBoolType exprTable errorExit
+        LesTable   _ _ _  -> checkBoolType exprTable errorExit
+        LesEqTable _ _ _  -> checkBoolType exprTable errorExit
+        GrtTable   _ _ _  -> checkBoolType exprTable errorExit
+        GrtEqTable _ _ _  -> checkBoolType exprTable errorExit
+        NotTable   _ _    -> checkBoolType exprTable errorExit
         otherwise -> Left errorExit
 
 checkUnaryNot ::
@@ -702,8 +702,9 @@ checkUnaryMinusType procName exprTable = do
     otherwise                  -> Left errorExit
 
 checkBoolType ::
-  ExpressionTable -> BaseType -> IO Task -> Either (IO Task) ExpressionTable
-checkBoolType exprTable exprType errorExit =
+  ExpressionTable -> IO Task -> Either (IO Task) ExpressionTable
+checkBoolType exprTable errorExit = do
+  let exprType = getAssignBaseType exprTable
   case exprType of
     BoolType  -> Right exprTable
     otherwise -> Left errorExit
