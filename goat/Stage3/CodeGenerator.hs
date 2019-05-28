@@ -1,6 +1,6 @@
 module CodeGenerator where
 
-import           Analyze
+import           Analyzer
 import           Control.Monad.State
 import qualified Data.Map.Strict     as Map
 import           GoatAST

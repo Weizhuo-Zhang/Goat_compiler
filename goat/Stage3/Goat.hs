@@ -1,6 +1,6 @@
 module Main where
 
-import           Analyze
+import           Analyzer
 import           CodeGenerator
 import           GoatAST
 import           GoatExit
