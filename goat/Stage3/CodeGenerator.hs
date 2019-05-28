@@ -7,6 +7,7 @@ import           GoatExit
 import           GoatPrettyPrint
 import           SymbolTable
 import           Util
+
 -------------------------------- Documentation --------------------------------
 
 -- Authors:
@@ -90,9 +91,9 @@ initVariables (var:varList) varMap stackMap = do
 initVariableWithIndicator :: ShapeIndicator -> Int -> IO ()
 initVariableWithIndicator varIndicator varSlotNum = do
   case varIndicator of
-    NoIndicator                       -> initSingleVar varSlotNum
-    Array  (IntConst n)               -> initOffset    varSlotNum n
-    Matrix (IntConst m) (IntConst n)  -> initOffset    varSlotNum (m*n)
+    NoIndicator                      -> initSingleVar varSlotNum
+    Array  (IntConst n)              -> initOffset    varSlotNum n
+    Matrix (IntConst m) (IntConst n) -> initOffset    varSlotNum (m*n)
 
 initSingleVar :: Int -> IO ()
 initSingleVar varSlotNum = printLine $ "store " ++ (show varSlotNum) ++ ", r0"
@@ -225,7 +226,7 @@ generateExpression varMap exprTable registerNum stackMap =
                                ++ ", " ++ (show val)
                              }
         StringTable val -> printLine ("string_const r" ++ (show registerNum) ++
-                                      ", " ++ "\"" ++ val ++ "\"")
+                                      ", " ++ (wrapWithDoubleQuotations val))
         AddTable lExpr rExpr baseType -> do
               generateExpression varMap lExpr registerNum stackMap
               generateExpression varMap rExpr (registerNum+1) stackMap

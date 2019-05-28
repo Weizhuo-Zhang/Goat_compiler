@@ -3,13 +3,20 @@ proc main()
   float x;
   bool y;
 begin
+  write "Please type in an integer: ";
   read n;
+  write "Interger you've typed in is: ";
   write n;
   write "\n";
+
+  write "Please type in a flaot: ";
   read x;
+  write "Float you've typed in is: ";
   write x;
   write "\n";
+  write "Please type in true or false: ";
   read y;
+  write "Boolean value you've typed in is: ";
   write y;
   write "\n";
 end
