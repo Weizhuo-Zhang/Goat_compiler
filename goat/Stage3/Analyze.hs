@@ -27,10 +27,10 @@ import           Util
 -------------------------------------------------------------------------------
 -- lookup parameter Map, It must have a base type
 -------------------------------------------------------------------------------
-lookupBaseTypeParamMap :: Identifier -> M.Map Identifier Parameter -> BaseType
+lookupBaseTypeParamMap :: Identifier -> M.Map Identifier (Int, Parameter) -> BaseType
 lookupBaseTypeParamMap varName paramMap =
     case M.lookup varName paramMap of
-      Just parameter -> passingType parameter
+      Just parameter -> passingType (snd parameter)
 
 -------------------------------------------------------------------------------
 -- lookup variable Map, It must have a base type
@@ -265,7 +265,7 @@ insertProcListWithoutStatements (proc:procs) procMap = do
 
 insertProcedureTableWithoutStatement :: Procedure -> ProgramMap -> Either (IO Task) ProcedureTable
 insertProcedureTableWithoutStatement procedure procMap = do
-  let  paramMap = insertParameterMap procedureName procedureParameters M.empty
+  let  paramMap = insertParameterMap procedureName procedureParameters 0 M.empty
        procedureBody = (body procedure)
        procedureName = getProcedureIdentifier procedure
        procedureParameters = getProcedureParameters procedure
@@ -282,19 +282,19 @@ insertProcedureTableWithoutStatement procedure procMap = do
 
 
 insertParameterMap ::
-  Identifier -> [Parameter] -> ParameterMap -> Either (IO Task) ParameterMap
-insertParameterMap procName [] paramMap = Right paramMap
-insertParameterMap procName (param:[]) paramMap =
-  Right $ M.insert (passingIdent param) param paramMap
-insertParameterMap procName (param:params) paramMap = do
-  let newParamMap = insertParameterMap procName params paramMap
+  Identifier -> [Parameter] -> Int -> ParameterMap -> Either (IO Task) ParameterMap
+insertParameterMap _ [] _ paramMap = Right paramMap
+insertParameterMap _ (param:[]) index paramMap =
+  Right $ M.insert (passingIdent param) (index, param) paramMap
+insertParameterMap procName (param:params) index paramMap = do
+  let newParamMap = insertParameterMap procName params (index+1) paramMap
   case newParamMap of
     Left err -> Left err
     Right subParamMap -> do
       let paramName = (passingIdent param)
       case (M.member paramName subParamMap) of
         True  -> Left $ exitWithMultipleVarDeclaration paramName procName
-        False -> Right $ M.insert paramName param subParamMap
+        False -> Right $ M.insert paramName (index, param) subParamMap
 
 
 insertVariableMap ::
@@ -451,7 +451,7 @@ checkCallStmt calledProcId argExprs procMap = do
       let varMap = variableMap calledProcTable
           paramMap = parameterMap calledProcTable
           paramList = M.toList paramMap;
-          paramBaseTypes = [passingType (snd param) | param <- paramList]
+          paramBaseTypes = [passingType (snd $ snd param) | param <- paramList]
       case ((length argExprs) == (length paramList)) of
         True -> do
           case ((length argExprs) == 0) of
