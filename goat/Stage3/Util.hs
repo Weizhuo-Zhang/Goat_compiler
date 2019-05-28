@@ -3,6 +3,22 @@ module Util where
 import           GoatAST
 import           SymbolTable
 
+-------------------------------- Documentation --------------------------------
+
+-- Authors:
+--   Shizhe Cai (shizhec) - 798125
+--   Weizhuo Zhang (weizhuoz) - 1018329
+--   Mingyang Zhang (mingyangz) - 650242
+--   An Luo (aluo1) - 657605
+
+-- This file contains the util functions used by multiple modules of the Goat
+-- program.
+
+-- The aim of the project is to implement a compiler for a procedural (C-like)
+-- language called Goat.
+
+-------------------------------- Documentation --------------------------------
+
 getAssignBaseType :: ExpressionTable -> BaseType
 getAssignBaseType exprTable =
   case exprTable of

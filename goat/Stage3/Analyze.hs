@@ -247,12 +247,7 @@ analyze _           = return Unit
 --                               }
 
 insertProcList :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
-insertProcList (proc:[]) procMap = do
-    let procTable = insertProcedureTable proc
-    case procTable of
-        Left err           -> Left err
-        Right subProcTable -> Right $ M.insert procName subProcTable procMap
-    where procName = getProcedureIdentifier proc
+insertProcList (proc:[]) procMap = eitherInsertIntoProgramMap proc procMap
 insertProcList (proc:procs) procMap = do
   let newProcMap = insertProcList procs procMap
   case newProcMap of
@@ -261,12 +256,20 @@ insertProcList (proc:procs) procMap = do
       let procName = getProcedureIdentifier proc
       case (M.member procName subProcMap) of
         True  -> Left $ exitWithDuplicateProcedure procName
-        False -> do
-          let procTable = insertProcedureTable proc
-          case procTable of
-            Left err -> Left err
-            Right subProcTable ->
-              Right $ M.insert procName subProcTable subProcMap
+        False -> eitherInsertIntoProgramMap proc subProcMap
+
+-------------------------------------------------------------------------------
+-- Insert provided procedure's table into provided program map, and return a
+-- new program map.
+-------------------------------------------------------------------------------
+eitherInsertIntoProgramMap :: Procedure -> ProgramMap -> Either (IO Task) ProgramMap
+eitherInsertIntoProgramMap proc procMap = do
+  let eitherProcTable = insertProcedureTable proc
+      procName = getProcedureIdentifier proc
+  case eitherProcTable of
+    Left err        -> Left err
+    Right procTable -> Right $ M.insert procName procTable procMap
+
 
 insertProcedureTable :: Procedure -> Either (IO Task) ProcedureTable
 insertProcedureTable procedure =
