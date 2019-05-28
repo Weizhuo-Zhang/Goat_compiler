@@ -441,7 +441,7 @@ checkStatement procName stmt paramMap varMap procMap =
             Left err         -> Left err
             Right stmtTables -> Right $ WhileTable exprTable stmtTables
     Call procId argExprs -> do
-      let exprsEither = checkCallStmt procName procId argExprs procMap
+      let exprsEither = checkCallStmt procName procId argExprs procMap paramMap varMap
       case exprsEither of
         Left err -> Left err
         Right (expreTables, params) -> Right $ CallTable procId expreTables params
@@ -449,7 +449,7 @@ checkStatement procName stmt paramMap varMap procMap =
 checkArguments ::
   Identifier -> Identifier -> [Expression] -> [BaseType] -> ParameterMap -> VariableMap -> Either (IO Task) [ExpressionTable]
 checkArguments procName procId [e] [b] paramMap varMap = do
-  let eitherExprTable = checkExpression procId e paramMap varMap
+  let eitherExprTable = checkExpression procName e paramMap varMap
   case eitherExprTable of
     Left err -> Left err
     Right expressionTable -> do
@@ -464,7 +464,7 @@ checkArguments procName procId (e:es) (b:bs) paramMap varMap = do
   case expressionTables of
     Left err -> Left err
     Right exprTables -> do
-      let eitherExprTable = checkExpression procId e paramMap varMap
+      let eitherExprTable = checkExpression procName e paramMap varMap
       case eitherExprTable of
         Left err -> Left err
         Right expressionTable -> do
@@ -483,13 +483,11 @@ paramMapToList paramMap =
         paramNewList = M.toList paramOrderedMap
 
 checkCallStmt ::
-  Identifier -> Identifier -> [Expression] -> ProgramMap -> Either (IO Task) ([ExpressionTable], [Parameter])
-checkCallStmt procName calledProcId argExprs procMap = do
+  Identifier -> Identifier -> [Expression] -> ProgramMap -> ParameterMap -> VariableMap -> Either (IO Task) ([ExpressionTable], [Parameter])
+checkCallStmt procName calledProcId argExprs procMap paramMap varMap = do
   case M.lookup calledProcId procMap of
     Just calledProcTable -> do
-      let varMap = variableMap calledProcTable
-          paramMap = parameterMap calledProcTable
-          paramList = paramMapToList paramMap
+      let paramList = paramMapToList $ parameterMap calledProcTable
           paramBaseTypes = [passingType param | param <- paramList]
       case ((length argExprs) == (length paramList)) of
         True -> do
