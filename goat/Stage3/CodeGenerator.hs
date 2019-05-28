@@ -7,7 +7,7 @@ import           GoatExit
 import           GoatPrettyPrint
 import           SymbolTable
 import           Util
-import           Analyze 
+import           Analyze
 
 -------------------------------- Documentation --------------------------------
 
@@ -216,12 +216,25 @@ generateAssignStatement procName paramMap varMap varTable exprTable stackMap = d
         then printIntToRealInSameRegister 0
         else putStr ""
   -- Left Variable
-  ; case varShape of
-      NoIndicatorTable ->
-          printLine $ "store " ++ varSlotNumStr ++ ", r0"
-      otherwise        -> do
-        { locateArrayMatrix paramMap varMap var varSlotNumStr 1 stackMap
-        ; printLine $ "store_indirect r1, r0"
+  ; case (Map.member varId paramMap) of
+      False -> do
+        { case varShape of
+            NoIndicatorTable ->
+              printLine $ "store " ++ varSlotNumStr ++ ", r0"
+            otherwise        -> do
+              { locateArrayMatrix paramMap varMap var varSlotNumStr 1 stackMap
+              ; printLine $ "store_indirect r1, r0"
+              }
+        }
+      True -> do
+        { let parameter = snd $ paramMap Map.! varId
+              passType  = passingType parameter
+          case passType of
+            VarType -> printLine $ "store " ++ varSlotNumStr ++ ", r0"
+            RefType -> do
+              { printLine $ "load r1, " ++ varSlotNumStr
+              ; printLine $ "store_indirect r1, r0"
+              }
         }
   }
 
@@ -400,14 +413,28 @@ generateVariableExpr :: ParameterMap -> VariableMap -> VariableSubTable -> BaseT
 generateVariableExpr paramMap varMap var varType regNum stackMap = do
   { let varShape = varShapeIndicatorTable var
         varSlotNum = getVariableSlotNum var stackMap
+        variableName = varName var
         varSlotNumStr = show varSlotNum
         regNumStr0 = "r" ++ (show regNum)
-  ; case varShape of
-      NoIndicatorTable ->
-          printLine $ "load " ++ regNumStr0 ++ ", " ++ varSlotNumStr
-      otherwise        -> do
-        { locateArrayMatrix paramMap varMap var varSlotNumStr regNum stackMap
-        ; printLine $ "load_indirect " ++ regNumStr0 ++ ", " ++ regNumStr0
+  ; case (Map.member variableName paramMap) of
+      False -> do
+        { case varShape of
+            NoIndicatorTable ->
+              printLine $ "load " ++ regNumStr0 ++ ", " ++ varSlotNumStr
+            otherwise        -> do
+              { locateArrayMatrix paramMap varMap var varSlotNumStr regNum stackMap
+              ; printLine $ "load_indirect " ++ regNumStr0 ++ ", " ++ regNumStr0
+              }
+        }
+      True -> do
+        { let parameter = snd $ paramMap Map.! variableName
+              passType  = passingType parameter
+          case passType of
+            VarType -> printLine $ "load " ++ regNumStr0 ++ ", " ++ varSlotNumStr
+            RefType -> do
+              { printLine $ "load " ++ regNumStr0 ++ ", " ++ varSlotNumStr
+              ; printLine $ "load_indirect " ++ regNumStr0 ++ ", " ++ regNumStr0
+              }
         }
   }
 
