@@ -56,3 +56,6 @@ echo "------ asgWithNumericOperatorOnly.gt ----"
 echo "---------------- asg.gt -----------------"
 ./Goat ./testCase/asg.gt > ./testCase/GeneratedOutput/asg.oz
 ./oz ./testCase/GeneratedOutput/asg.oz
+
+
+make clean

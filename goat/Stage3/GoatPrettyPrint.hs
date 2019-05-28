@@ -4,6 +4,8 @@ import           GoatAST
 import           GoatConstant
 import           GoatExit
 import           System.Exit
+import           Util
+
 -------------------------------- Documentation --------------------------------
 
 -- Authors:
@@ -315,7 +317,7 @@ getTopExpr expression =
         BoolConst   val        -> getBoolConst val
         IntConst    val        -> getConst val
         FloatConst  val        -> getConst val
-        StrConst    val        -> "\"" ++ val ++ "\""
+        StrConst    val        -> wrapWithDoubleQuotations val
         Add   lExpr rExpr      -> getInfixOpResult  lExpr " + "  rExpr
         Mul   lExpr rExpr      -> getInfixOpResult  lExpr " * "  rExpr
         Sub   lExpr rExpr      -> getInfixOpResult  lExpr " - "  rExpr
