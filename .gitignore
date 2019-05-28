@@ -31,5 +31,12 @@ oz/oz
 goat/Stage1/testCase/GeneratedOutput/*.txt
 goat/Stage3/oz
 goat/Stage3/Goat
+goat/Stage3/*.symtable
+goat/Stage3/testCase/GeneratedOutput/*.txt
+goat/Stage3/testCase/GeneratedOutput/miles/*.txt
+goat/Stage3/testCase/GeneratedOutput/peers/*.txt
+goat/Stage3/testCase/GeneratedOutput/visible/*.txt
 goat/Stage3/testCase/GeneratedOutput/*.oz
-goat/Stage3/asgWithNumericOperatorOnly.symtable
+goat/Stage3/testCase/GeneratedOutput/miles/*.oz
+goat/Stage3/testCase/GeneratedOutput/peers/*.oz
+goat/Stage3/testCase/GeneratedOutput/visible/*.oz
