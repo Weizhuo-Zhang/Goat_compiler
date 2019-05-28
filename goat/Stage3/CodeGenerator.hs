@@ -227,15 +227,14 @@ generateAssignStatement procName paramMap varMap varTable exprTable stackMap = d
               }
         }
       True -> do
-        { let parameter = snd $ paramMap Map.! varId
-              passType  = passingType parameter
-          case passType of
-            VarType -> printLine $ "store " ++ varSlotNumStr ++ ", r0"
-            RefType -> do
-              { printLine $ "load r1, " ++ varSlotNumStr
-              ; printLine $ "store_indirect r1, r0"
-              }
-        }
+        let parameter = snd $ paramMap Map.! varId
+            passType  = passingIndicator parameter
+        case passType of
+          VarType -> printLine $ "store " ++ varSlotNumStr ++ ", r0"
+          RefType -> do
+            { printLine $ "load r1, " ++ varSlotNumStr
+            ; printLine $ "store_indirect r1, r0"
+            }
   }
 
 generateWriteStatement :: ParameterMap -> VariableMap -> ExpressionTable -> StackMap -> IO ()
@@ -427,15 +426,14 @@ generateVariableExpr paramMap varMap var varType regNum stackMap = do
               }
         }
       True -> do
-        { let parameter = snd $ paramMap Map.! variableName
-              passType  = passingType parameter
-          case passType of
-            VarType -> printLine $ "load " ++ regNumStr0 ++ ", " ++ varSlotNumStr
-            RefType -> do
-              { printLine $ "load " ++ regNumStr0 ++ ", " ++ varSlotNumStr
-              ; printLine $ "load_indirect " ++ regNumStr0 ++ ", " ++ regNumStr0
-              }
-        }
+        let parameter = snd $ paramMap Map.! variableName
+            passType  = passingIndicator parameter
+        case passType of
+          VarType -> printLine $ "load " ++ regNumStr0 ++ ", " ++ varSlotNumStr
+          RefType -> do
+            { printLine $ "load " ++ regNumStr0 ++ ", " ++ varSlotNumStr
+            ; printLine $ "load_indirect " ++ regNumStr0 ++ ", " ++ regNumStr0
+            }
   }
 
 locateArrayMatrix ::
