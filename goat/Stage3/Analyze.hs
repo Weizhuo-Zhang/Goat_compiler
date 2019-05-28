@@ -448,7 +448,8 @@ checkStatement procName stmt paramMap varMap procMap =
 
 checkArguments ::
   Identifier -> Identifier -> [Expression] -> [BaseType] -> ParameterMap -> VariableMap -> Either (IO Task) [ExpressionTable]
-checkArguments procName procId [e] [b] paramMap varMap = do
+--checkArguments procName procId [e] [b] paramMap varMap = do
+checkArguments procName procId (e:[]) (b:[]) paramMap varMap = do
   let eitherExprTable = checkExpression procName e paramMap varMap
   case eitherExprTable of
     Left err -> Left err
@@ -470,9 +471,9 @@ checkArguments procName procId (e:es) (b:bs) paramMap varMap = do
         Right expressionTable -> do
           let exprBaseType = getAssignBaseType expressionTable
           if (exprBaseType == b)
-          then Right [expressionTable]
+          then Right $ [expressionTable] ++ exprTables
           else if ((FloatType == b) && (IntType == exprBaseType))
-               then Right [expressionTable]
+               then Right $ [expressionTable] ++ exprTables
                else Left $ exitWithCallParamLengthDiff procName procId
 
 paramMapToList :: ParameterMap -> [Parameter]
