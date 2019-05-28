@@ -323,15 +323,19 @@ checkCondition procName expr paramMap varMap = do
     Left err -> Left err
     Right exprTable -> do
       case exprTable of
-        BoolTable _      -> Right exprTable
-        OrTable _ _ _    -> Right exprTable
-        AndTable _ _ _   -> Right exprTable
-        NotTable _ _     -> Right exprTable
-        EqTable _ _ _    -> Right exprTable
+        VariableTable _ varType -> do
+          case varType of
+            BoolType  -> Right exprTable
+            otherwise -> Left errorExit
+        BoolTable  _     -> Right exprTable
+        OrTable    _ _ _ -> Right exprTable
+        AndTable   _ _ _ -> Right exprTable
+        NotTable   _ _   -> Right exprTable
+        EqTable    _ _ _ -> Right exprTable
         NotEqTable _ _ _ -> Right exprTable
-        LesTable _ _ _   -> Right exprTable
+        LesTable   _ _ _ -> Right exprTable
         LesEqTable _ _ _ -> Right exprTable
-        GrtTable _ _ _   -> Right exprTable
+        GrtTable   _ _ _ -> Right exprTable
         GrtEqTable _ _ _ -> Right exprTable
         otherwise        -> Left errorExit
 
