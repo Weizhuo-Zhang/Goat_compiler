@@ -157,12 +157,13 @@ generateCallStatement :: Identifier -> [ExpressionTable] -> [Parameter] -> Int -
 generateCallStatement procName [] [] _ _ _ _ = printLine $ "call proc_" ++ procName
 generateCallStatement procName (exprTable:[]) (param:[]) registerNum paramMap varMap stackMap = do
   let paramIndicator = passingIndicator param
-      paramId = passingIdent param
-      slotNum = stackMap Map.! paramId
   case paramIndicator of
     VarType -> do
       generateExpression paramMap varMap exprTable registerNum stackMap
     RefType -> do
+      -- generateExpression paramMap varMap exprTable registerNum stackMap
+      let paramId = varName $ variable exprTable
+          slotNum = stackMap Map.! paramId
       printLine $ "load_address r" ++ (show registerNum) ++ ", " ++ (show slotNum)
   -- print call statement after all parameters are loaded into registers.
   printLine $ "call proc_" ++ procName
@@ -174,9 +175,10 @@ generateCallStatement procName (exprTable:exprTables) (param:params) registerNum
   case paramIndicator of
     VarType -> do
       generateExpression paramMap varMap exprTable registerNum stackMap
+      generateCallStatement procName exprTables params (registerNum+1) paramMap varMap stackMap
     RefType -> do
-     printLine $ "load_address r" ++ (show registerNum) ++ ", " ++ (show slotNum)
-     generateCallStatement procName exprTables params (registerNum+1) paramMap varMap stackMap
+      printLine $ "load_address r" ++ (show registerNum) ++ ", " ++ (show slotNum)
+      generateCallStatement procName exprTables params (registerNum+1) paramMap varMap stackMap
 
 
 generateAssignStatement ::
