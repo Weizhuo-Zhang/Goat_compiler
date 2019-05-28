@@ -616,11 +616,11 @@ checkLogicExpression procName operator lExpr rExpr paramMap varMap = do
 checkLogicSubExpression ::
   Identifier -> String -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkLogicSubExpression procName operator expr paramMap varMap = do
-  let exprTableEither = checkExpression procName expr paramMap varMap
-      errorExit = exitWithLogicExprTypeError procName operator
-  case exprTableEither of
+  let eitherExprTable = checkExpression procName expr paramMap varMap
+  case eitherExprTable of
     Left err -> Left err
     Right exprTable -> do
+      let errorExit = exitWithLogicExprTypeError procName operator
       case exprTable of
         VariableTable _ exprType -> checkBoolType exprTable exprType errorExit
         BoolTable  _             -> Right exprTable
@@ -665,9 +665,9 @@ checkCompareExpression procName operator lExpr rExpr paramMap varMap = do
 checkCompareSubExpression ::
   Identifier -> String -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkCompareSubExpression procName operator expr paramMap varMap = do
-  let exprTableEither = checkExpression procName expr paramMap varMap
+  let eitherExprTable = checkExpression procName expr paramMap varMap
       errorExit = exitWithComparisonTypeError procName operator
-  case exprTableEither of
+  case eitherExprTable of
     Left err -> Left err
     Right exprTable -> do
       case exprTable of
