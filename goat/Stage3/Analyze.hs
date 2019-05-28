@@ -370,7 +370,7 @@ checkStatement procName stmt paramMap varMap =
           Right variableTable -> do
               checkAssignExpr procName expression variableTable paramMap varMap
     If expr stmts -> do
-      let exprEither = checkConsition procName expr paramMap varMap
+      let exprEither = checkCondition procName expr paramMap varMap
       case exprEither of
         Left err -> Left err
         Right exprTable -> do
@@ -379,7 +379,7 @@ checkStatement procName stmt paramMap varMap =
             Left err         -> Left err
             Right stmtTables -> Right $ IfTable exprTable stmtTables
     IfElse expr stmts1 stmts2 -> do
-      let exprEither = checkConsition procName expr paramMap varMap
+      let exprEither = checkCondition procName expr paramMap varMap
       case exprEither of
         Left err -> Left err
         Right exprTable -> do
@@ -393,7 +393,7 @@ checkStatement procName stmt paramMap varMap =
                 Right stmtTables2 -> do
                   Right $ IfElseTable exprTable stmtTables1 stmtTables2
     While expr stmts -> do
-      let exprEither = checkConsition procName expr paramMap varMap
+      let exprEither = checkCondition procName expr paramMap varMap
       case exprEither of
         Left err -> Left err
         Right exprTable -> do
@@ -428,8 +428,8 @@ checkAssignExpr procName expr variableTable paramMap varMap = do
       let exprType = getAssignBaseType expressionTable
       checkAssignType procName variableTable expressionTable exprType
 
-checkConsition :: Identifier -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
-checkConsition procName expr paramMap varMap = do
+checkCondition :: Identifier -> Expression -> ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
+checkCondition procName expr paramMap varMap = do
   let eitherExpressionTable = checkExpression procName expr paramMap varMap
       errorExit = exitWithConditionTypeError procName
   case eitherExpressionTable of
