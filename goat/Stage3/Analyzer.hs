@@ -1,4 +1,4 @@
-module Analyze where
+module Analyzer where
 
 import           AnalyzerUtil
 import qualified Data.Map.Strict as M
