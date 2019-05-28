@@ -278,7 +278,7 @@ generateWriteChooseType exprType paramMap varMap exprTable stackMap =
 
 generateReadStatement :: ExpressionTable -> ParameterMap -> VariableMap -> StackMap -> IO ()
 generateReadStatement exprTable paramMap varMap stackMap = do
-    let exprType = getExprType exprTable
+    let exprType = getAssignBaseType exprTable
         slotNum = stackMap Map.! (varName $ variable exprTable)
     case exprType of
         BoolType  -> generateReadStatementByType "bool" slotNum exprTable paramMap varMap stackMap
@@ -638,18 +638,6 @@ printIntToRealInSameRegister :: Int -> IO ()
 printIntToRealInSameRegister registerNumber = do
   printIntToRealInNewRegister registerNumber registerNumber
 
-getExprType :: ExpressionTable -> BaseType
-getExprType exprTable =
-     case exprTable of
-          IntTable _               -> IntType
-          FloatTable _             -> FloatType
-          BoolTable _              -> BoolType
-          VariableTable _ baseType -> baseType
-          AddTable _ _ baseType    -> baseType
-          SubTable _ _ baseType    -> baseType
-          MulTable _ _ baseType    -> baseType
-          DivTable _ _ baseType    -> baseType
-
 generateOperationString :: String -> String -> Int -> IO ()
 generateOperationString operator opType registerNum = do
   printNewLineIndentation
@@ -659,8 +647,8 @@ generateOperationString operator opType registerNum = do
 
 generateIntToFloat :: ExpressionTable -> ExpressionTable -> Int -> IO ()
 generateIntToFloat lExpr rExpr registerNum = do
-    let lType = getExprType lExpr
-        rType = getExprType rExpr
+    let lType = getAssignBaseType lExpr
+        rType = getAssignBaseType rExpr
     case (lType,rType) of
         (FloatType,FloatType) -> return ()
         (IntType,FloatType) -> printIntToRealInSameRegister registerNum
