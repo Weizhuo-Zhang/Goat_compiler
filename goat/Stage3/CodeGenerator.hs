@@ -7,6 +7,7 @@ import           GoatExit
 import           GoatPrettyPrint
 import           SymbolTable
 import           Util
+import           Analyze 
 
 -------------------------------- Documentation --------------------------------
 
@@ -61,8 +62,12 @@ generateProcedure procName (ProcedureTable paramMap varMap statements) = do
         0         -> putStr ""
         otherwise -> printLine $ "push_stack_frame " ++ (show totalVarNumber)
     let stackMap = insertStackMap paramMap varMap
-    -- TODO
-    -- initParameters
+        paramList = paramMapToList paramMap
+    case parameterNumber of
+        0         -> putStr ""
+        otherwise -> do { printComment "init parameters"
+                        ; initParameters paramList stackMap 0
+                        }
     case variableNumber of
         0         -> putStr ""
         otherwise -> do { printComment "init variables"
@@ -73,6 +78,21 @@ generateProcedure procName (ProcedureTable paramMap varMap statements) = do
     case totalVarNumber of
         0         -> putStr ""
         otherwise -> printLine $ "pop_stack_frame " ++ (show totalVarNumber)
+
+initParameters :: [Parameter] -> StackMap -> Int -> IO ()
+initParameters [] _ _ = return ()
+initParameters (param:[]) stackMap registerNum = do
+  let paramSlotNum = stackMap Map.! paramName
+      paramName = passingIdent param
+  printComment $ "initialise parameters " ++ paramName
+  printLine $ "store " ++ (show paramSlotNum) ++ ", r" ++ (show registerNum)
+
+initParameters (param:params) stackMap registerNum = do
+  let paramSlotNum = stackMap Map.! paramName
+      paramName = passingIdent param
+  printComment $ "initialise parameters " ++ paramName
+  printLine $ "store " ++ (show paramSlotNum) ++ ", r" ++ (show registerNum)
+  initParameters params stackMap (registerNum + 1)
 
 initVariables :: [Identifier] -> VariableMap -> StackMap -> IO ()
 initVariables [] _ _ = return ()
@@ -87,6 +107,7 @@ initVariables (var:varList) varMap stackMap = do
   printComment $ "init variable: " ++ var
   initVariableWithIndicator varIndicator varSlotNum
   initVariables varList varMap stackMap
+
 
 initVariableWithIndicator :: ShapeIndicator -> Int -> IO ()
 initVariableWithIndicator varIndicator varSlotNum = do
