@@ -24,27 +24,6 @@ import           Util
 
 -------------------------------- Documentation --------------------------------
 
-
-
-
-
-
-insertParameterMap ::
-  Identifier -> [Parameter] -> Int -> ParameterMap -> Either (IO Task) ParameterMap
-insertParameterMap _ [] _ paramMap = Right paramMap
-insertParameterMap _ (param:[]) index paramMap =
-  Right $ M.insert (passingIdent param) (index, param) paramMap
-insertParameterMap procName (param:params) index paramMap = do
-  let newParamMap = insertParameterMap procName params (index+1) paramMap
-  case newParamMap of
-    Left err -> Left err
-    Right subParamMap -> do
-      let paramName = (passingIdent param)
-      case (M.member paramName subParamMap) of
-        True  -> Left $ exitWithMultipleVarDeclaration paramName procName
-        False -> Right $ M.insert paramName (index, param) subParamMap
-
-
 insertVariableMap ::
   Identifier -> [VariableDeclaration] -> ParameterMap -> VariableMap -> Either (IO Task) VariableMap
 insertVariableMap procName [] paramMap varMap = Right varMap
@@ -723,26 +702,50 @@ insertStatementsInProcList (proc:procs) procMap = do
                 Left err -> Left err
                 Right newProcMap -> Right $ M.insert procedureName newProcTable newProcMap
 
-
-insertProcedureTableWithoutStatements ::
-  Procedure -> ProgramMap -> Either (IO Task) ProcedureTable
-insertProcedureTableWithoutStatements procedure procMap = do
-  let  paramMap = insertParameterMap procedureName procedureParameters 0 M.empty
-       procedureBody = (body procedure)
-       procedureName = getProcedureIdentifier procedure
-       procedureParameters = getProcedureParameters procedure
-  case paramMap of
+-------------------------------------------------------------------------------
+-- Analyze the given parameter list, insert them into a new parameter table and
+-- return it.
+-------------------------------------------------------------------------------
+insertParameterMap ::
+  Identifier -> [Parameter] -> Int -> ParameterMap ->
+  Either (IO Task) ParameterMap
+insertParameterMap _ [] _ paramMap = Right paramMap
+insertParameterMap _ (param:[]) index paramMap =
+  Right $ M.insert (passingIdent param) (index, param) paramMap
+insertParameterMap procName (param:params) index paramMap = do
+  let eitherParamMap = insertParameterMap procName params (index+1) paramMap
+  case eitherParamMap of
     Left err -> Left err
-    Right subParamMap -> do
-      let varMap = insertVariableMap
-                   procedureName
-                   (bodyVarDeclarations procedureBody)
-                   subParamMap
-                   M.empty
-      case varMap of
-        Left err        -> Left err
-        Right subVarMap -> Right $ ProcedureTable subParamMap subVarMap []
+    Right newParamMap -> do
+      let paramName = (passingIdent param)
+      case (M.member paramName newParamMap) of
+        True  -> Left $ exitWithMultipleVarDeclaration paramName procName
+        False -> Right $ M.insert paramName (index, param) newParamMap
 
+-------------------------------------------------------------------------------
+-- Analyze the given procedure, get the parameter and variable tables, and
+-- insert them into a new procedure table, otherwise return error.
+-------------------------------------------------------------------------------
+insertProcedureTableWithoutStatements ::
+  Procedure -> Either (IO Task) ProcedureTable
+insertProcedureTableWithoutStatements procedure = do
+  let  eitherParamMap = insertParameterMap
+                        procedureName
+                        (getProcedureParameters procedure)
+                        0
+                        M.empty
+       procedureName = getProcedureIdentifier procedure
+  case eitherParamMap of
+    Left err -> Left err
+    Right paramMap -> do
+      let eitherVarMap = insertVariableMap
+                         procedureName
+                         (bodyVarDeclarations $ body procedure)
+                         paramMap
+                         M.empty
+      case eitherVarMap of
+        Left err     -> Left err
+        Right varMap -> Right $ ProcedureTable paramMap varMap []
 
 -------------------------------------------------------------------------------
 -- Get the procedure table which does not contain procedure statements, and
@@ -752,7 +755,7 @@ insertProcedureTableWithoutStatements procedure procMap = do
 insertProcWithoutStatements ::
   Procedure -> ProgramMap -> Either (IO Task) ProgramMap
 insertProcWithoutStatements procedure procMap = do
-  let eitherProcTable = insertProcedureTableWithoutStatements procedure procMap
+  let eitherProcTable = insertProcedureTableWithoutStatements procedure
       procName = getProcedureIdentifier procedure
   case eitherProcTable of
     Left err        -> Left err
