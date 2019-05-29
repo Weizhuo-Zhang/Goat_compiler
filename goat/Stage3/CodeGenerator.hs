@@ -203,30 +203,45 @@ generateStatement procName label paramMap varMap statementTable stackMap = do
 generateCallStatement :: Identifier -> [ExpressionTable] -> [Parameter] -> Int -> ParameterMap -> VariableMap -> StackMap -> IO ()
 generateCallStatement procName [] [] _ _ _ _ = printLine $ "call proc_" ++ procName
 generateCallStatement procName (exprTable:[]) (param:[]) registerNum paramMap varMap stackMap = do
-  let paramIndicator = passingIndicator param
-  case paramIndicator of
-    VarType -> do
-      generateExpression paramMap varMap exprTable registerNum stackMap
-    RefType -> do
-      let paramId = varName $ variable exprTable
-          slotNum = stackMap Map.! paramId
-      locateArrayMatrix paramMap varMap (variable exprTable) (show slotNum) registerNum stackMap
+  checkCallParameter param exprTable registerNum paramMap varMap stackMap
   -- print call statement after all parameters are loaded into registers.
   printLine $ "call proc_" ++ procName
 
 generateCallStatement procName (exprTable:exprTables) (param:params) registerNum paramMap varMap stackMap = do
-  let paramIndicator = passingIndicator param
-      paramId = passingIdent param
-      slotNum = stackMap Map.! paramId
+  checkCallParameter param exprTable registerNum paramMap varMap stackMap
+  generateCallStatement procName exprTables params (registerNum+1) paramMap varMap stackMap
+
+checkCallParameter :: Parameter -> ExpressionTable -> Int -> ParameterMap -> VariableMap -> StackMap -> IO ()
+checkCallParameter param exprTable registerNum paramMap varMap stackMap = do
+  let  varType   = getAssignBaseType exprTable
+       paramType = passingType param
+       paramIndicator = passingIndicator param
   case paramIndicator of
     VarType -> do
       generateExpression paramMap varMap exprTable registerNum stackMap
-      generateCallStatement procName exprTables params (registerNum+1) paramMap varMap stackMap
+      if (FloatType == paramType) && (IntType == varType)
+        then printIntToRealInSameRegister 0
+        else putStr ""
     RefType -> do
-      let paramId = varName $ variable exprTable
+      let var = variable exprTable
+          paramId = varName var
           slotNum = stackMap Map.! paramId
-      locateArrayMatrix paramMap varMap (variable exprTable) (show slotNum) registerNum stackMap
-      generateCallStatement procName exprTables params (registerNum+1) paramMap varMap stackMap
+          slotNumStr = show slotNum
+          regNumStr0 = "r" ++ (show registerNum)
+      case (Map.member paramId paramMap) of
+        False -> do
+          let  varShape = varShapeIndicatorTable var
+          case varShape of
+            NoIndicatorTable ->
+              printLine $ "load_address " ++ regNumStr0 ++ ", " ++ slotNumStr
+            otherwise        -> do
+              locateArrayMatrix paramMap varMap var slotNumStr registerNum stackMap
+        True -> do
+          let parameter = snd $ paramMap Map.! paramId
+              passType  = passingIndicator parameter
+          case passType of
+            VarType -> printLine $ "load_address " ++ regNumStr0 ++ ", " ++ slotNumStr
+            RefType -> printLine $ "load " ++ regNumStr0 ++ ", " ++ slotNumStr
 
 -------------------------------------------------------------------------------
 -- Generate oz code for an assignment statement.
@@ -317,7 +332,7 @@ generateWriteChooseType exprType paramMap varMap exprTable stackMap =
 -------------------------------------------------------------------------------
 generateReadStatement :: ExpressionTable -> ParameterMap -> VariableMap -> StackMap -> IO ()
 generateReadStatement exprTable paramMap varMap stackMap = do
-    let exprType = getExprType exprTable
+    let exprType = getAssignBaseType exprTable
         slotNum = stackMap Map.! (varName $ variable exprTable)
     case exprType of
         BoolType  -> generateReadStatementByType "bool" slotNum exprTable paramMap varMap stackMap
@@ -754,21 +769,6 @@ printIntToRealInSameRegister registerNumber = do
   printIntToRealInNewRegister registerNumber registerNumber
 
 -------------------------------------------------------------------------------
--- Get the base type of an expression.
--------------------------------------------------------------------------------
-getExprType :: ExpressionTable -> BaseType
-getExprType exprTable =
-     case exprTable of
-          IntTable _               -> IntType
-          FloatTable _             -> FloatType
-          BoolTable _              -> BoolType
-          VariableTable _ baseType -> baseType
-          AddTable _ _ baseType    -> baseType
-          SubTable _ _ baseType    -> baseType
-          MulTable _ _ baseType    -> baseType
-          DivTable _ _ baseType    -> baseType
-
--------------------------------------------------------------------------------
 -- Generate string for binary operators.
 -------------------------------------------------------------------------------
 generateOperationString :: String -> String -> Int -> IO ()
@@ -783,8 +783,8 @@ generateOperationString operator opType registerNum = do
 -------------------------------------------------------------------------------
 generateIntToFloat :: ExpressionTable -> ExpressionTable -> Int -> IO ()
 generateIntToFloat lExpr rExpr registerNum = do
-    let lType = getExprType lExpr
-        rType = getExprType rExpr
+    let lType = getAssignBaseType lExpr
+        rType = getAssignBaseType rExpr
     case (lType,rType) of
         (FloatType,FloatType) -> return ()
         (IntType,FloatType) -> printIntToRealInSameRegister registerNum

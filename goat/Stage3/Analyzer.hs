@@ -1,4 +1,4 @@
-module Analyze where
+module Analyzer where
 
 import           AnalyzerUtil
 import qualified Data.Map.Strict as M
@@ -228,9 +228,11 @@ checkArguments procName procId (e:[]) (b:[]) (parameter:[]) paramMap varMap = do
       let exprBaseType = getAssignBaseType expressionTable
       if (exprBaseType == b)
       then Right [expressionTable]
-      else if (FloatType == b && IntType == exprBaseType)
-           then Right [expressionTable]
-           else Left $ exitWithCallParamLengthDiff procName procId
+      else case paramIndicator of
+             RefType -> Left $ exitWithCallParamLengthDiff procName procId
+             varType -> if (FloatType == b && IntType == exprBaseType)
+                            then Right [expressionTable]
+                            else Left $ exitWithCallParamLengthDiff procName procId
 checkArguments procName procId (e:es) (b:bs) (parameter:parameters) paramMap varMap = do
   let expressionTables = checkArguments procName procId es bs parameters paramMap varMap
   case expressionTables of
@@ -245,9 +247,11 @@ checkArguments procName procId (e:es) (b:bs) (parameter:parameters) paramMap var
           let exprBaseType = getAssignBaseType expressionTable
           if (exprBaseType == b)
           then Right $ [expressionTable] ++ exprTables
-          else if ((FloatType == b) && (IntType == exprBaseType))
-               then Right $ [expressionTable] ++ exprTables
-               else Left $ exitWithCallParamLengthDiff procName procId
+          else case paramIndicator of
+                 RefType -> Left $ exitWithCallParamLengthDiff procName procId
+                 varType -> if (FloatType == b && IntType == exprBaseType)
+                                then Right $ [expressionTable] ++ exprTables
+                                else Left $ exitWithCallParamLengthDiff procName procId
 
 checkCallExpr ::
   Identifier -> Identifier -> ParameterIndicator -> Expression -> ParameterMap -> VariableMap
@@ -323,15 +327,19 @@ checkCondition procName expr paramMap varMap = do
     Left err -> Left err
     Right exprTable -> do
       case exprTable of
-        BoolTable _      -> Right exprTable
-        OrTable _ _ _    -> Right exprTable
-        AndTable _ _ _   -> Right exprTable
-        NotTable _ _     -> Right exprTable
-        EqTable _ _ _    -> Right exprTable
+        VariableTable _ varType -> do
+          case varType of
+            BoolType  -> Right exprTable
+            otherwise -> Left errorExit
+        BoolTable  _     -> Right exprTable
+        OrTable    _ _ _ -> Right exprTable
+        AndTable   _ _ _ -> Right exprTable
+        NotTable   _ _   -> Right exprTable
+        EqTable    _ _ _ -> Right exprTable
         NotEqTable _ _ _ -> Right exprTable
-        LesTable _ _ _   -> Right exprTable
+        LesTable   _ _ _ -> Right exprTable
         LesEqTable _ _ _ -> Right exprTable
-        GrtTable _ _ _   -> Right exprTable
+        GrtTable   _ _ _ -> Right exprTable
         GrtEqTable _ _ _ -> Right exprTable
         otherwise        -> Left errorExit
 
