@@ -29,3 +29,23 @@ timesSymbol = "*"
 divSymbol :: String
 divSymbol = "/"
 --------------------------- Algorithmetic symbols -----------------------------
+
+----------------------------- Comparison symbols ------------------------------
+equalSymbol :: String
+equalSymbol = "="
+
+notEqualSymbol :: String
+notEqualSymbol = "!="
+
+lessThanSymbol :: String
+lessThanSymbol = "<"
+
+lessThanOrEqualSymbol :: String
+lessThanOrEqualSymbol = "<="
+
+greaterThanSymbol ::String
+greaterThanSymbol = ">"
+
+greaterThanOrEqualSymbol :: String
+greaterThanOrEqualSymbol = ">="
+----------------------------- Comparison symbols ------------------------------

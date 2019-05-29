@@ -131,7 +131,7 @@ checkArguments procName procId (e:[]) (b:[]) (parameter:[]) paramMap varMap = do
   case eitherExprTable of
     Left err -> Left err
     Right expressionTable -> do
-      let exprBaseType = getAssignBaseType expressionTable
+      let exprBaseType = getExpressionBaseType expressionTable
       if (exprBaseType == b)
       then Right [expressionTable]
       else case paramIndicator of
@@ -150,7 +150,7 @@ checkArguments procName procId (e:es) (b:bs) (parameter:parameters) paramMap var
       case eitherExprTable of
         Left err -> Left err
         Right expressionTable -> do
-          let exprBaseType = getAssignBaseType expressionTable
+          let exprBaseType = getExpressionBaseType expressionTable
           if (exprBaseType == b)
           then Right $ [expressionTable] ++ exprTables
           else case paramIndicator of
@@ -228,7 +228,7 @@ checkAssignExpr procName expr variableTable paramMap varMap = do
   case eitherExpressionTable of
     Left err        -> Left err
     Right expressionTable -> do
-      let exprType = getAssignBaseType expressionTable
+      let exprType = getExpressionBaseType expressionTable
       checkAssignType procName variableTable expressionTable exprType
 
 checkCondition ::
@@ -272,22 +272,46 @@ checkExpression procName expr paramMap varMap = do
           Left err                 -> Left err
           Right variableExpression -> Right variableExpression
     Add lExpr rExpr -> do
-      let eitherAddExpression = checkOperationExpression procName addSymbol lExpr rExpr paramMap varMap
+      let eitherAddExpression = checkArthmeticOperation
+                                procName
+                                addSymbol
+                                lExpr
+                                rExpr
+                                paramMap
+                                varMap
       case eitherAddExpression of
           Left err            -> Left err
           Right addExpression -> Right addExpression
     Mul lExpr rExpr -> do
-      let eitherMulExpression = checkOperationExpression procName timesSymbol lExpr rExpr paramMap varMap
+      let eitherMulExpression = checkArthmeticOperation
+                                procName
+                                timesSymbol
+                                lExpr
+                                rExpr
+                                paramMap
+                                varMap
       case eitherMulExpression of
           Left err            -> Left err
           Right mulExpression -> Right mulExpression
     Sub lExpr rExpr -> do
-      let eitherSubExpression = checkOperationExpression procName minusSymbol lExpr rExpr paramMap varMap
+      let eitherSubExpression = checkArthmeticOperation
+                                procName
+                                minusSymbol
+                                lExpr
+                                rExpr
+                                paramMap
+                                varMap
       case eitherSubExpression of
           Left err            -> Left err
           Right subExpression -> Right subExpression
     Div lExpr rExpr -> do
-      let eitherDivExpression = checkOperationExpression procName divSymbol lExpr rExpr paramMap varMap
+      let eitherDivExpression = checkArthmeticOperation
+                                procName
+                                divSymbol
+                                lExpr
+                                rExpr
+                                paramMap
+                                varMap
       case eitherDivExpression of
           Left err            -> Left err
           Right divExpression -> Right divExpression
@@ -296,17 +320,17 @@ checkExpression procName expr paramMap varMap = do
     And   lExpr rExpr ->
       checkLogicExpression   procName "&&" lExpr rExpr paramMap varMap
     Eq    lExpr rExpr ->
-      checkCompareExpression procName "="  lExpr rExpr paramMap varMap
+      checkCompareExpression procName equalSymbol lExpr rExpr paramMap varMap
     NotEq lExpr rExpr ->
-      checkCompareExpression procName "!=" lExpr rExpr paramMap varMap
+      checkCompareExpression procName notEqualSymbol lExpr rExpr paramMap varMap
     Les   lExpr rExpr ->
-      checkCompareExpression procName "<"  lExpr rExpr paramMap varMap
+      checkCompareExpression procName lessThanSymbol lExpr rExpr paramMap varMap
     LesEq lExpr rExpr ->
-      checkCompareExpression procName "<=" lExpr rExpr paramMap varMap
+      checkCompareExpression procName lessThanOrEqualSymbol lExpr rExpr paramMap varMap
     Grt   lExpr rExpr ->
-      checkCompareExpression procName ">"  lExpr rExpr paramMap varMap
+      checkCompareExpression procName greaterThanSymbol  lExpr rExpr paramMap varMap
     GrtEq lExpr rExpr ->
-      checkCompareExpression procName ">=" lExpr rExpr paramMap varMap
+      checkCompareExpression procName greaterThanOrEqualSymbol lExpr rExpr paramMap varMap
     UnaryMinus  expr  -> checkUnaryMinus procName expr paramMap varMap
     UnaryNot    expr  -> checkUnaryNot   procName expr paramMap varMap
 
@@ -336,17 +360,17 @@ checkLogicSubExpression procName operator expr paramMap varMap = do
     Right exprTable -> do
       let errorExit = exitWithLogicExprTypeError procName operator
       case exprTable of
-        VariableTable _ _ -> checkBoolType exprTable errorExit
+        VariableTable _ _ -> expressionIsBoolTyped exprTable errorExit
         BoolTable  _      -> Right exprTable
-        OrTable    _ _ _  -> checkBoolType exprTable errorExit
-        AndTable   _ _ _  -> checkBoolType exprTable errorExit
-        EqTable    _ _ _  -> checkBoolType exprTable errorExit
-        NotEqTable _ _ _  -> checkBoolType exprTable errorExit
-        LesTable   _ _ _  -> checkBoolType exprTable errorExit
-        LesEqTable _ _ _  -> checkBoolType exprTable errorExit
-        GrtTable   _ _ _  -> checkBoolType exprTable errorExit
-        GrtEqTable _ _ _  -> checkBoolType exprTable errorExit
-        NotTable   _ _    -> checkBoolType exprTable errorExit
+        OrTable    _ _ _  -> expressionIsBoolTyped exprTable errorExit
+        AndTable   _ _ _  -> expressionIsBoolTyped exprTable errorExit
+        EqTable    _ _ _  -> expressionIsBoolTyped exprTable errorExit
+        NotEqTable _ _ _  -> expressionIsBoolTyped exprTable errorExit
+        LesTable   _ _ _  -> expressionIsBoolTyped exprTable errorExit
+        LesEqTable _ _ _  -> expressionIsBoolTyped exprTable errorExit
+        GrtTable   _ _ _  -> expressionIsBoolTyped exprTable errorExit
+        GrtEqTable _ _ _  -> expressionIsBoolTyped exprTable errorExit
+        NotTable   _ _    -> expressionIsBoolTyped exprTable errorExit
         otherwise         -> Left errorExit
 
 checkUnaryNot ::
@@ -403,31 +427,43 @@ checkUnaryMinus procName expr paramMap varMap = do
         Left err       -> Left err
         Right exprType -> Right $ NegativeTable exprTable exprType
 
+-------------------------------------------------------------------------------
+-- Check if the expression  is BoolType, if so, return the expression type,
+-- otherwise exit the program with provided error method.
+-------------------------------------------------------------------------------
 checkUnaryMinusType ::
   Identifier -> ExpressionTable -> Either (IO Task) BaseType
 checkUnaryMinusType procName exprTable = do
   let errorExit = exitWithUnaryMinusError procName
   case exprTable of
-    VariableTable _   exprType -> checkNotBoolType exprType errorExit
+    VariableTable _   exprType -> expressionTypeIsNotBool exprType errorExit
     IntTable      _            -> Right IntType
     FloatTable    _            -> Right FloatType
-    AddTable      _ _ exprType -> checkNotBoolType exprType errorExit
-    SubTable      _ _ exprType -> checkNotBoolType exprType errorExit
-    MulTable      _ _ exprType -> checkNotBoolType exprType errorExit
-    DivTable      _ _ exprType -> checkNotBoolType exprType errorExit
-    NegativeTable _   exprType -> checkNotBoolType exprType errorExit
+    AddTable      _ _ exprType -> expressionTypeIsNotBool exprType errorExit
+    SubTable      _ _ exprType -> expressionTypeIsNotBool exprType errorExit
+    MulTable      _ _ exprType -> expressionTypeIsNotBool exprType errorExit
+    DivTable      _ _ exprType -> expressionTypeIsNotBool exprType errorExit
+    NegativeTable _   exprType -> expressionTypeIsNotBool exprType errorExit
     otherwise                  -> Left errorExit
 
-checkBoolType ::
+-------------------------------------------------------------------------------
+-- Check if the expression type is BoolType, if so, return the expression type,
+-- otherwise exit the program with provided error method.
+-------------------------------------------------------------------------------
+expressionIsBoolTyped ::
   ExpressionTable -> IO Task -> Either (IO Task) ExpressionTable
-checkBoolType exprTable errorExit = do
-  let exprType = getAssignBaseType exprTable
+expressionIsBoolTyped exprTable errorExit = do
+  let exprType = getExpressionBaseType exprTable
   case exprType of
     BoolType  -> Right exprTable
     otherwise -> Left errorExit
 
-checkNotBoolType :: BaseType -> IO Task -> Either (IO Task) BaseType
-checkNotBoolType exprType errorExit =
+-------------------------------------------------------------------------------
+-- Check if the expression type is BoolType, if so, exit the program with
+-- error, otherwise return the expression type.
+-------------------------------------------------------------------------------
+expressionTypeIsNotBool :: BaseType -> IO Task -> Either (IO Task) BaseType
+expressionTypeIsNotBool exprType errorExit =
   case exprType of
     BoolType  -> Left errorExit
     otherwise -> Right exprType
@@ -465,15 +501,19 @@ checkBaseType procName operator lExpr rExpr = do
 
 getComparisonTable ::
   String -> ExpressionTable -> ExpressionTable -> BaseType -> ExpressionTable
-getComparisonTable operator lExpr rExpr baseType =
-  case operator of
-    "="  -> EqTable    lExpr rExpr baseType
-    "!=" -> NotEqTable lExpr rExpr baseType
-    "<"  -> LesTable   lExpr rExpr baseType
-    "<=" -> LesEqTable lExpr rExpr baseType
-    ">"  -> GrtTable   lExpr rExpr baseType
-    ">=" -> GrtEqTable lExpr rExpr baseType
+getComparisonTable operator lExpr rExpr baseType
+  | operator == equalSymbol = EqTable    lExpr rExpr baseType
+  | operator == notEqualSymbol = NotEqTable lExpr rExpr baseType
+  | operator == lessThanSymbol = LesTable   lExpr rExpr baseType
+  | operator == lessThanOrEqualSymbol = LesEqTable lExpr rExpr baseType
+  | operator == greaterThanSymbol = GrtTable   lExpr rExpr baseType
+  | operator == greaterThanOrEqualSymbol =GrtEqTable lExpr rExpr baseType
 
+-------------------------------------------------------------------------------
+-- Check if the provided variable's type matches the expression type, or if
+-- the variable is float and expression is int, if so, return the assign
+-- statement table, otherwise exit the program with assign type error.
+-------------------------------------------------------------------------------
 checkAssignType ::
   Identifier -> ExpressionTable -> ExpressionTable -> BaseType ->
   Either (IO Task) StatementTable
@@ -486,53 +526,93 @@ checkAssignType procName variableTable expressionTable exprType = do
             then Right $ AssignTable variableTable expressionTable
             else Left $ exitWithAssignTypeError procName variableName
 
+-------------------------------------------------------------------------------
+-- Check if the provided variable is in the parameter map or the variable map,
+-- if so, check the indicator and return the expression table, otherwise exit
+-- the program with undefined variable error.
+-------------------------------------------------------------------------------
 checkVariable ::
   Identifier -> Variable -> ParameterMap -> VariableMap ->
   Either (IO Task) ExpressionTable
 checkVariable procName var paramMap varMap = do
+  let id = varId var
+      paramBaseType = lookupBaseTypeParamMap id paramMap
   case (M.member id paramMap) of
     True  -> checkParamIndicator procName var paramBaseType
     False -> do
+      let varDecl     = varMap M.! id
+          varBaseType = lookupBaseTypeVarMap id varMap
       case (M.member id varMap) of
-          True  -> checkVariableIndicator procName var varDecl varBaseType paramMap varMap
+          True  -> checkVariableIndicator
+                   procName
+                   var
+                   varDecl
+                   varBaseType
+                   paramMap
+                   varMap
           False -> Left $ exitWithUndefinedVariable id
-      where varDecl     = varMap M.! id
-            varBaseType = lookupBaseTypeVarMap id varMap
-  where id = varId var
-        paramBaseType = lookupBaseTypeParamMap id paramMap
 
+-------------------------------------------------------------------------------
+-- Check if the provided variable is an array or matrix, if so, exit with the
+-- variable indicator error, otherwise return the variable's expression table.
+-------------------------------------------------------------------------------
 checkParamIndicator ::
   Identifier -> Variable -> BaseType -> Either (IO Task) ExpressionTable
 checkParamIndicator procName var paramBaseType = do
+  let id = varId var
+      varIndicator = varShapeIndicator var
+      varSubTable  = VariableSubTable id NoIndicatorTable
   case varIndicator of
     NoIndicator -> Right $ VariableTable varSubTable paramBaseType
     otherwise   -> Left  $ exitWithVarIndicatorError procName id
-  where id = varId var
-        varIndicator = varShapeIndicator var
-        varSubTable  = VariableSubTable id NoIndicatorTable
 
+-------------------------------------------------------------------------------
+-- Check if the provided variable's shape indicator matches the provided
+-- variable declaration shape indicator, if so, return the expression table,
+-- otherwise exit the program with array matrix dimension typed error.
+-------------------------------------------------------------------------------
 checkVariableIndicator ::
   Identifier -> Variable -> VariableDeclaration -> BaseType -> ParameterMap ->
   VariableMap -> Either (IO Task) ExpressionTable
 checkVariableIndicator procName var varDecl varBaseType paramMap varMap = do
-  case (varIndicator, declIndicator)of
+  let id = varId var
+      varIndicator  = varShapeIndicator var
+      declarationVarIndicator = varShapeIndicator $ declarationVariable varDecl
+      varSubTable   = VariableSubTable id NoIndicatorTable
+  case (varIndicator, declarationVarIndicator)of
     (NoIndicator, NoIndicator) -> Right $ VariableTable varSubTable varBaseType
-    (Array  n   , Array  _   ) ->
-        checkArrayDimension procName n var varBaseType paramMap varMap
-    (Matrix m n , Matrix _ _ ) ->
-        checkMatrixDimensions procName (m, n) var varBaseType paramMap varMap
+    (Array  n   , Array  _   ) -> checkArrayDimension
+                                  procName
+                                  n
+                                  var
+                                  varBaseType
+                                  paramMap
+                                  varMap
+    (Matrix m n , Matrix _ _ ) -> checkMatrixDimensions
+                                  procName
+                                  (m, n)
+                                  var
+                                  varBaseType
+                                  paramMap
+                                  varMap
     otherwise -> Left  $ exitWithVarIndicatorNotSame procName id
-  where id = varId var
-        varIndicator  = varShapeIndicator var
-        declIndicator = varShapeIndicator $ declarationVariable varDecl
-        varSubTable   = VariableSubTable id NoIndicatorTable
 
+-------------------------------------------------------------------------------
+-- Check if the provided expression for array is IntType, if so, return the
+-- expression table, otherwise exit the program with array matrix dimension
+-- typed error.
+-------------------------------------------------------------------------------
 checkArrayDimension ::
   Identifier -> Expression -> Variable -> BaseType -> ParameterMap ->
   VariableMap -> Either (IO Task) ExpressionTable
 checkArrayDimension procName expr var varBaseType paramMap varMap = do
   let varName = varId var
-      eitherExpressionTable = checkDimension procName expr varName paramMap varMap
+      eitherExpressionTable = checkDimension
+                              procName
+                              expr
+                              varName
+                              paramMap
+                              varMap
   case eitherExpressionTable of
     Left  err             -> Left err
     Right expressionTable -> do
@@ -540,16 +620,32 @@ checkArrayDimension procName expr var varBaseType paramMap varMap = do
             varSubTable = VariableSubTable varName arrayTable
         Right $ VariableTable varSubTable varBaseType
 
+-------------------------------------------------------------------------------
+-- Check if the provided expressions are IntType, if so, return the expression
+-- table, otherwise exit the program with array matrix dimension typed error.
+-------------------------------------------------------------------------------
 checkMatrixDimensions ::
   Identifier -> (Expression, Expression) -> Variable -> BaseType ->
   ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
 checkMatrixDimensions procName (exprM, exprN) var varBaseType paramMap varMap = do
+  -- check expression m first.
   let varName = varId var
-      eitherExpressionTableM = checkDimension procName exprM varName paramMap varMap
+      eitherExpressionTableM = checkDimension
+                               procName
+                               exprM
+                               varName
+                               paramMap
+                               varMap
   case eitherExpressionTableM of
     Left  err             -> Left err
     Right expressionTableM -> do
-      let eitherExpressionTableN = checkDimension procName exprN varName paramMap varMap
+      -- if express m passed, check expression n.
+      let eitherExpressionTableN = checkDimension
+                                   procName
+                                   exprN
+                                   varName
+                                   paramMap
+                                   varMap
       case eitherExpressionTableN of
         Left  err             -> Left err
         Right expressionTableN -> do
@@ -557,6 +653,10 @@ checkMatrixDimensions procName (exprM, exprN) var varBaseType paramMap varMap = 
               varSubTable = VariableSubTable varName matrixTable
           Right $ VariableTable varSubTable varBaseType
 
+-------------------------------------------------------------------------------
+-- Check if the given expression is IntType, if so, return the expression
+-- table, otherwise exit the program with array matrix dimension typed error.
+-------------------------------------------------------------------------------
 checkDimension ::
   Identifier -> Expression -> String -> ParameterMap -> VariableMap ->
   Either (IO Task) ExpressionTable
@@ -565,15 +665,19 @@ checkDimension procName expr varName paramMap varMap = do
   case eitherExpressionTable of
     Left  err             -> Left err
     Right expressionTable -> do
-      let exprType = getAssignBaseType expressionTable
+      let exprType = getExpressionBaseType expressionTable
       case exprType of
         IntType   -> Right expressionTable
         otherwise -> Left $ exitArrayMatrixDimensionTypeError procName varName
 
-checkOperationExpression ::
+-------------------------------------------------------------------------------
+-- Given the operator, left and right expression tables, and the base type,
+-- return the expression table for the arthmetic operation.
+-------------------------------------------------------------------------------
+checkArthmeticOperation ::
   Identifier -> String -> Expression -> Expression -> ParameterMap ->
   VariableMap -> Either (IO Task) ExpressionTable
-checkOperationExpression procName operator lExpr rExpr paramMap varMap = do
+checkArthmeticOperation procName operator lExpr rExpr paramMap varMap = do
   let eitherLeftExprTable = checkExpression procName lExpr paramMap varMap
   case eitherLeftExprTable of
     Left err -> Left err
@@ -582,10 +686,17 @@ checkOperationExpression procName operator lExpr rExpr paramMap varMap = do
       case eitherRightExprTable of
         Left err -> Left err
         Right rightExprTable -> do
-          let eitherBaseType = getExpressionTableType procName leftExprTable rightExprTable
+          let eitherBaseType = getExpressionTableType
+                               procName
+                               leftExprTable
+                               rightExprTable
           case eitherBaseType of
             Left err -> Left err
-            Right baseType -> Right $ insertExpressionTableByOperator operator leftExprTable rightExprTable baseType
+            Right baseType -> Right $ insertExpressionTableByOperator
+                                      operator
+                                      leftExprTable
+                                      rightExprTable
+                                      baseType
 
 -------------------------------------------------------------------------------
 -- Given the operator, left and right expression tables, and the base type,

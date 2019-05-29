@@ -72,8 +72,10 @@ myReservedWords = ["begin", "bool",  "call", "do",  "else",  "end",  "false"
 -- Define reserved operator
 -------------------------------------------------------------------------------
 myOperators :: [String]
-myOperators = [addSymbol, minusSymbol, timesSymbol, "<", ">", "<=", ">=", "=", "!=", "||", "&&" ,"!"
-              ,divSymbol, ":="]
+myOperators = [addSymbol, minusSymbol, timesSymbol, lessThanSymbol,
+              greaterThanSymbol, lessThanOrEqualSymbol,
+              greaterThanOrEqualSymbol, equalSymbol, notEqualSymbol,
+              "||", "&&" ,"!", divSymbol, ":="]
 
 -------------------------------------------------------------------------------
 -- This is the top-most parsing function. It looks for a program which contains
@@ -338,9 +340,10 @@ table :: [[Operator String Int Identity Expression]]
 table = [[prefix   minusSymbol UnaryMinus]
         ,[binary   timesSymbol Mul, binary   divSymbol  Div]
         ,[binary   addSymbol Add, binary   minusSymbol  Sub]
-        ,[relation "=" Eq,  relation "!=" NotEq
-        , relation "<" Les, relation "<=" LesEq
-        , relation ">" Grt, relation ">=" GrtEq]
+        ,[relation equalSymbol Eq,  relation notEqualSymbol NotEq
+        , relation lessThanSymbol Les, relation lessThanOrEqualSymbol LesEq
+        , relation greaterThanSymbol Grt
+        , relation greaterThanOrEqualSymbol GrtEq]
         ,[prefix   "!" UnaryNot]
         ,[binary   "&&" And]
         ,[binary   "||" Or]]
