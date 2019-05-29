@@ -23,10 +23,114 @@ import           Util
 
 -------------------------------- Documentation --------------------------------
 
+
+-------------------------------------------------------------------------------
+-- Note: Please filter the StringTable before using this function
+--       Cannot be used for String
+-- Return the BaseType of given ExpressionTable
+-------------------------------------------------------------------------------
+getExpressionTableBaseType :: ExpressionTable -> BaseType
+getExpressionTableBaseType exprTable =
+  case exprTable of
+    VariableTable _ exprType -> exprType
+    BoolTable  _             -> BoolType
+    IntTable   _             -> IntType
+    FloatTable _             -> FloatType
+    AddTable   _ _  exprType -> exprType
+    SubTable   _ _  exprType -> exprType
+    MulTable   _ _  exprType -> exprType
+    DivTable   _ _  exprType -> exprType
+    OrTable    _ _  exprType -> exprType
+    AndTable   _ _  exprType -> exprType
+    EqTable    _ _  exprType -> exprType
+    NotEqTable _ _  exprType -> exprType
+    LesTable   _ _  exprType -> exprType
+    LesEqTable _ _  exprType -> exprType
+    GrtTable   _ _  exprType -> exprType
+    GrtEqTable _ _  exprType -> exprType
+    NegativeTable _ exprType -> exprType
+    NotTable      _ exprType -> exprType
+
+-------------------------------------------------------------------------------
+-- Given name of the procedure, which expressions table belongs to, and the
+-- left and right expression table, return the expression table's output type.
+-------------------------------------------------------------------------------
+getExpressionTableType ::
+  Identifier -> ExpressionTable -> ExpressionTable -> Either (IO Task) BaseType
+getExpressionTableType procName lExprTable rExprTable = do
+  case lExprTable of
+    IntTable _ -> do
+      case rExprTable of
+        IntTable _               -> Right IntType
+        FloatTable _             -> Right FloatType
+        VariableTable _ rVarType -> Right rVarType
+        AddTable _ _ rAddType    -> Right rAddType
+        SubTable _ _ rSubType    -> Right rSubType
+        MulTable _ _ rMulType    -> Right rMulType
+        DivTable _ _ rDivType    -> Right rDivType
+        NegativeTable _ rVarType -> Right rVarType
+        otherwise                -> Left $ exitWithTypeError procName
+    FloatTable _ -> Right FloatType
+    VariableTable _ lVarType -> getSubExpressionTableType
+                                procName
+                                lVarType
+                                rExprTable
+    AddTable    _ _ lAddType -> getSubExpressionTableType
+                                procName
+                                lAddType
+                                rExprTable
+    SubTable    _ _ lSubType -> getSubExpressionTableType
+                                procName
+                                lSubType
+                                rExprTable
+    MulTable    _ _ lMulType -> getSubExpressionTableType
+                                procName
+                                lMulType
+                                rExprTable
+    DivTable    _ _ lDivType -> getSubExpressionTableType
+                                procName
+                                lDivType
+                                rExprTable
+    NegativeTable _ lVarType -> getSubExpressionTableType
+                                procName
+                                lVarType
+                                rExprTable
+    otherwise                -> Left $ exitWithTypeError procName
+
+-------------------------------------------------------------------------------
+-- Given the base type and expression table, return the expression table's
+-- output type.
+-------------------------------------------------------------------------------
+getSubExpressionTableType ::
+  Identifier -> BaseType -> ExpressionTable -> Either (IO Task) BaseType
+getSubExpressionTableType procName baseType expressionTable = do
+  case expressionTable of
+    IntTable _               -> Right baseType
+    FloatTable _             -> Right FloatType
+    VariableTable _ rVarType -> chooseType procName baseType rVarType
+    AddTable _ _ rAddType    -> chooseType procName baseType rAddType
+    SubTable _ _ rSubType    -> chooseType procName baseType rSubType
+    MulTable _ _ rMulType    -> chooseType procName baseType rMulType
+    DivTable _ _ rDivType    -> chooseType procName baseType rDivType
+    NegativeTable _ rVarType -> chooseType procName baseType rVarType
+    otherwise                -> Left $ exitWithTypeError procName
+
+-------------------------------------------------------------------------------
+-- Check if there is bool type found, if so, exit with type error message,
+-- otherwise return the proper base type.
+-------------------------------------------------------------------------------
+chooseType :: Identifier -> BaseType -> BaseType -> Either (IO Task) BaseType
+chooseType _ IntType IntType   = Right IntType
+chooseType _ FloatType _       = Right FloatType
+chooseType _ _ FloatType       = Right FloatType
+chooseType procName BoolType _ = Left $ exitWithTypeError procName
+chooseType procName _ BoolType = Left $ exitWithTypeError procName
+
 -------------------------------------------------------------------------------
 -- lookup parameter Map, It must have a base type
 -------------------------------------------------------------------------------
-lookupBaseTypeParamMap :: Identifier -> M.Map Identifier (Int, Parameter) -> BaseType
+lookupBaseTypeParamMap ::
+  Identifier -> M.Map Identifier (Int, Parameter) -> BaseType
 lookupBaseTypeParamMap varName paramMap =
     case M.lookup varName paramMap of
       Just parameter -> passingType (snd parameter)
