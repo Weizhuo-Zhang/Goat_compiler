@@ -89,6 +89,9 @@ exitWithConditionTypeError procName =
   (getConditionTypeErrorMessage procName)
   IfCondError
 
+-------------------------------------------------------------------------------
+-- Get the error message for logic type error.
+-------------------------------------------------------------------------------
 getLogicExprTypeErrorMessage :: Identifier -> String -> String
 getLogicExprTypeErrorMessage procName operator =
   operatorWithQuotationMarks ++
@@ -98,33 +101,52 @@ getLogicExprTypeErrorMessage procName operator =
   (wrapWithDoubleQuotations procName)
   where operatorWithQuotationMarks = wrapWithDoubleQuotations operator
 
+-------------------------------------------------------------------------------
+-- Exit the program with error message indicating logic type error.
+-------------------------------------------------------------------------------
 exitWithLogicExprTypeError :: Identifier -> String -> IO Task
 exitWithLogicExprTypeError procName operator =
   exitWithError
   (getLogicExprTypeErrorMessage procName operator)
   LogicOpTypeError
 
+-------------------------------------------------------------------------------
+-- Get the error message for variable undefined error.
+-------------------------------------------------------------------------------
 getUndefinedVariableErrorMessage :: Identifier -> String
 getUndefinedVariableErrorMessage varName =
   "There is a undefined variable named " ++
   (wrapWithDoubleQuotations varName) ++
   " in the statement"
 
+-------------------------------------------------------------------------------
+-- Exit the program with error message of undefined variable error.
+-------------------------------------------------------------------------------
 exitWithUndefinedVariable :: Identifier -> IO Task
 exitWithUndefinedVariable varName =
   exitWithError
   (getUndefinedVariableErrorMessage varName)
   UndefinedVar
 
+-------------------------------------------------------------------------------
+-- Exit the program with error message of read statement with
+-- non-variable expression
+-------------------------------------------------------------------------------
 exitWithReadIncorrect :: IO Task
 exitWithReadIncorrect =
   exitWithError "Cannot read into non-variable" ReadIncorrect
 
+-------------------------------------------------------------------------------
+-- Exit the program with error message of unmatched variable type error.
+-------------------------------------------------------------------------------
 exitWithTypeError :: Identifier -> IO Task
 exitWithTypeError procName =
   exitWithError ("There is a Type Error in the Statment in proc: " ++
                 (wrapWithDoubleQuotations procName)) UnmatchedType
 
+-------------------------------------------------------------------------------
+-- Get the error message for procedure not found error.
+-------------------------------------------------------------------------------
 getProcNotFoundMessage :: Identifier -> String -> String
 getProcNotFoundMessage procName calledProcName =
   "Call Statement Error! Called Procedure " ++
@@ -132,12 +154,18 @@ getProcNotFoundMessage procName calledProcName =
   " is not found in procedure " ++
   (wrapWithDoubleQuotations procName)
 
+-------------------------------------------------------------------------------
+-- Exit the program with error message of procedure not found error.
+-------------------------------------------------------------------------------
 exitWithProcNotFound :: Identifier -> String -> IO Task
 exitWithProcNotFound procName calledProcName =
   exitWithError
   (getProcNotFoundMessage procName calledProcName)
   UndefinedProc
 
+-------------------------------------------------------------------------------
+-- Get the error message for called procedure name unmatched error.
+-------------------------------------------------------------------------------
 getCallParamLengthDiffMessage :: Identifier -> String -> String
 getCallParamLengthDiffMessage procName calledProcId =
   "Call Statement Error! The parameter of called procedure " ++
@@ -145,12 +173,18 @@ getCallParamLengthDiffMessage procName calledProcId =
   " does not match the declaration in procedure " ++
   (wrapWithDoubleQuotations procName)
 
+-------------------------------------------------------------------------------
+-- Exit the program with error message of called procedure name unmatched error.
+-------------------------------------------------------------------------------
 exitWithCallParamLengthDiff :: Identifier -> String -> IO Task
 exitWithCallParamLengthDiff procName calledProcId =
   exitWithError
   (getCallParamLengthDiffMessage procName calledProcId)
   CallParamNotMatch
 
+-------------------------------------------------------------------------------
+-- Get the error message for type error in comparision.
+-------------------------------------------------------------------------------
 getComparisonExprTypeErrorMessage :: Identifier -> String -> String
 getComparisonExprTypeErrorMessage procName operator =
   operatorWithQuotationMarks ++
@@ -160,12 +194,18 @@ getComparisonExprTypeErrorMessage procName operator =
   (wrapWithDoubleQuotations procName)
   where operatorWithQuotationMarks = wrapWithDoubleQuotations operator
 
+-------------------------------------------------------------------------------
+-- Exit the program with error message of type error in comparision.
+-------------------------------------------------------------------------------
 exitWithComparisonTypeError :: Identifier -> String -> IO Task
 exitWithComparisonTypeError procName operator =
   exitWithError
   (getComparisonExprTypeErrorMessage procName operator)
   ComparisonError
 
+-------------------------------------------------------------------------------
+-- Get the error message for different type error.
+-------------------------------------------------------------------------------
 getNotSameTypeErrorMessage :: Identifier -> String -> String
 getNotSameTypeErrorMessage procName operator =
   operatorWithQuotationMarks ++
@@ -175,12 +215,18 @@ getNotSameTypeErrorMessage procName operator =
   (wrapWithDoubleQuotations procName)
   where operatorWithQuotationMarks = wrapWithDoubleQuotations operator
 
+-------------------------------------------------------------------------------
+-- Exit the program with error message of different type error.
+-------------------------------------------------------------------------------
 exitWithNotSameTypeError :: Identifier -> String -> IO Task
 exitWithNotSameTypeError procName operator =
   exitWithError
   (getNotSameTypeErrorMessage procName operator)
   NotSameTypeError
 
+-------------------------------------------------------------------------------
+-- Get the error message for Unary Minus type error.
+-------------------------------------------------------------------------------
 getUnaryMinusTypeErrorMessage :: Identifier -> String
 getUnaryMinusTypeErrorMessage procName =
   unaryMinusString ++
@@ -190,13 +236,18 @@ getUnaryMinusTypeErrorMessage procName =
   (wrapWithDoubleQuotations procName)
   where unaryMinusString = "\"-\" (Unary Minus)"
 
-
+-------------------------------------------------------------------------------
+-- Exit the program with error message of Unary Minus type error.
+-------------------------------------------------------------------------------
 exitWithUnaryMinusError :: Identifier -> IO Task
 exitWithUnaryMinusError procName =
   exitWithError
   (getUnaryMinusTypeErrorMessage procName)
   UnaryMinusError
 
+-------------------------------------------------------------------------------
+-- Get the error message for type error in Assignment.
+-------------------------------------------------------------------------------
 getAssignTypeErrorMessage :: Identifier -> String -> String
 getAssignTypeErrorMessage procName varName =
   "Assign Type Error! The type of " ++
@@ -205,12 +256,18 @@ getAssignTypeErrorMessage procName varName =
   (wrapWithDoubleQuotations procName) ++
   " is not match."
 
+-------------------------------------------------------------------------------
+-- Exit the program with error message of type error in Assignment.
+-------------------------------------------------------------------------------
 exitWithAssignTypeError :: Identifier -> String -> IO Task
 exitWithAssignTypeError procName varName =
   exitWithError
   (getAssignTypeErrorMessage procName varName)
   AssignTypeError
 
+-------------------------------------------------------------------------------
+-- Get the error message for variable indicator not match error.
+-------------------------------------------------------------------------------
 getVarIndicatorErrorMessage :: Identifier -> String -> String
 getVarIndicatorErrorMessage procName varName =
   "Variable indicator Error! The variable " ++
@@ -218,12 +275,18 @@ getVarIndicatorErrorMessage procName varName =
   " should not be Array or Matrix in procedure " ++
   (wrapWithDoubleQuotations procName)
 
+-------------------------------------------------------------------------------
+-- Exit the program with error message of variable indicator not match error.
+-------------------------------------------------------------------------------
 exitWithVarIndicatorError :: Identifier -> String -> IO Task
 exitWithVarIndicatorError procName varName =
   exitWithError
   (getVarIndicatorErrorMessage procName varName)
   VarIndicatorError
 
+-------------------------------------------------------------------------------
+-- Get the error message for variable indicator type unmatched error.
+-------------------------------------------------------------------------------
 getVarIndicatorNotSameMessage :: Identifier -> String -> String
 getVarIndicatorNotSameMessage procName varName =
   "Variable indicator Error! The indicator of variable " ++
@@ -232,12 +295,19 @@ getVarIndicatorNotSameMessage procName varName =
   " in procedure " ++
   (wrapWithDoubleQuotations procName)
 
+-------------------------------------------------------------------------------
+-- Exit the program with error message of variable
+-- indicator type unmatched error.
+-------------------------------------------------------------------------------
 exitWithVarIndicatorNotSame :: Identifier -> String -> IO Task
 exitWithVarIndicatorNotSame procName varName =
   exitWithError
   (getVarIndicatorNotSameMessage procName varName)
   VarIndicatorError
 
+-------------------------------------------------------------------------------
+-- Get the error message for array and matrix base type error.
+-------------------------------------------------------------------------------
 getArrayMatrixIndicatorTypeErrorMessage :: Identifier -> String -> String
 getArrayMatrixIndicatorTypeErrorMessage procName varName =
   "Array and Matrix dimension type Error! The dimension of Array and Matrix" ++
@@ -246,23 +316,34 @@ getArrayMatrixIndicatorTypeErrorMessage procName varName =
   " in procedure " ++
   (wrapWithDoubleQuotations procName)
 
+-------------------------------------------------------------------------------
+-- Exit the program with error message of array and matrix base type error.
+-------------------------------------------------------------------------------
 exitArrayMatrixDimensionTypeError :: Identifier -> String -> IO Task
 exitArrayMatrixDimensionTypeError procName varName =
   exitWithError
   (getArrayMatrixIndicatorTypeErrorMessage procName varName)
   VarIndicatorError
 
+-------------------------------------------------------------------------------
+-- Get the error message for duplicate procedure names error.
+-------------------------------------------------------------------------------
 getDuplicateProcedureErrorMessage :: Identifier -> String
 getDuplicateProcedureErrorMessage procName =
   "There are multiple procedures named " ++ (wrapWithDoubleQuotations procName)
 
-
+-------------------------------------------------------------------------------
+-- Exit the program with error message of duplicate procedure names error.
+-------------------------------------------------------------------------------
 exitWithDuplicateProcedure :: Identifier -> IO Task
 exitWithDuplicateProcedure procName =
   exitWithError
   (getDuplicateProcedureErrorMessage procName)
   MultipleProc
 
+-------------------------------------------------------------------------------
+-- Get the error message for call expression invalid error.
+-------------------------------------------------------------------------------
 getInvalidCallExprMessage :: Identifier -> Identifier -> String
 getInvalidCallExprMessage procName calledProcId =
   "Invalid Call statement arguments! The argument of call statement for " ++
@@ -271,6 +352,9 @@ getInvalidCallExprMessage procName calledProcId =
   " should only be variable in procedure " ++
   (wrapWithDoubleQuotations procName)
 
+-------------------------------------------------------------------------------
+-- Exit the program with error message of call expression invalid error.
+-------------------------------------------------------------------------------
 exitWithInvalidCallExpr :: Identifier -> Identifier -> IO Task
 exitWithInvalidCallExpr procName calledProcId =
   exitWithError
