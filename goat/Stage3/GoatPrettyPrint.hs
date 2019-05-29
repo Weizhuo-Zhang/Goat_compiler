@@ -331,7 +331,7 @@ getTopExpr expression =
         Grt   lExpr rExpr      -> getInfixOpResult  lExpr " > "  rExpr
         GrtEq lExpr rExpr      -> getInfixOpResult  lExpr " >= " rExpr
         UnaryMinus  expression -> getPrefixOpResult expression minusSymbol
-        UnaryNot    expression -> getPrefixOpResult expression "!"
+        UnaryNot    expression -> getPrefixOpResult expression unaryNotSymbol
 
 -------------------------------------------------------------------------------
 -- Wrap the given string with parenthesis.

@@ -75,7 +75,7 @@ myOperators :: [String]
 myOperators = [addSymbol, minusSymbol, timesSymbol, lessThanSymbol,
               greaterThanSymbol, lessThanOrEqualSymbol,
               greaterThanOrEqualSymbol, equalSymbol, notEqualSymbol,
-              "||", "&&" ,"!", divSymbol, ":="]
+              orSymbol, andSymbol ,unaryNotSymbol, divSymbol, ":="]
 
 -------------------------------------------------------------------------------
 -- This is the top-most parsing function. It looks for a program which contains
@@ -344,9 +344,9 @@ table = [[prefix   minusSymbol UnaryMinus]
         , relation lessThanSymbol Les, relation lessThanOrEqualSymbol LesEq
         , relation greaterThanSymbol Grt
         , relation greaterThanOrEqualSymbol GrtEq]
-        ,[prefix   "!" UnaryNot]
-        ,[binary   "&&" And]
-        ,[binary   "||" Or]]
+        ,[prefix   unaryNotSymbol UnaryNot]
+        ,[binary   andSymbol And]
+        ,[binary   orSymbol Or]]
 
 -------------------------------------------------------------------------------
 -- Prefix operator

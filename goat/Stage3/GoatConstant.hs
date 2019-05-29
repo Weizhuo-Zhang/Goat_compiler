@@ -43,9 +43,18 @@ lessThanSymbol = "<"
 lessThanOrEqualSymbol :: String
 lessThanOrEqualSymbol = "<="
 
-greaterThanSymbol ::String
+greaterThanSymbol :: String
 greaterThanSymbol = ">"
 
 greaterThanOrEqualSymbol :: String
 greaterThanOrEqualSymbol = ">="
 ----------------------------- Comparison symbols ------------------------------
+
+unaryNotSymbol :: String
+unaryNotSymbol = "!"
+
+orSymbol :: String
+orSymbol = "||"
+
+andSymbol :: String
+andSymbol = "&&"
