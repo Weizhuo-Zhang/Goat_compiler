@@ -25,88 +25,9 @@ import           Util
 -------------------------------- Documentation --------------------------------
 
 
--------------------------------- Analyzer Code --------------------------------
-
--------------------------------------------------------------------------------
--- analyze Procedure
--------------------------------------------------------------------------------
-analyze :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
-analyze procedures procMap = do
-    let procMapWithoutStatements = insertProcListWithoutStatements procedures procMap
-    case procMapWithoutStatements of
-        Left err         -> Left err
-        Right programMap -> insertStatementsInProcList procedures programMap
-
-insertStatementsInProcList :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
-insertStatementsInProcList (proc:[]) procMap = do
-    let statementsEither = insertStatementList procedureName (bodyStatements procedureBody) paramMap varMap procMap
-        procedureName = getProcedureIdentifier proc
-        procedureBody = (body proc)
-        procedureTable = procMap M.! procedureName
-        paramMap = parameterMap procedureTable
-        varMap = variableMap procedureTable
-    case statementsEither of
-        Left err -> Left err
-        Right statements -> do
-              let newProcTable = ProcedureTable paramMap varMap statements
-              Right $ M.insert procedureName newProcTable procMap
-
-insertStatementsInProcList (proc:procs) procMap = do
-    let statementsEither = insertStatementList procedureName (bodyStatements procedureBody) paramMap varMap procMap
-        procedureName = getProcedureIdentifier proc
-        procedureBody = (body proc)
-        procedureTable = procMap M.! procedureName
-        paramMap = parameterMap procedureTable
-        varMap = variableMap procedureTable
-    case statementsEither of
-        Left err -> Left err
-        Right statements -> do
-              let newProcMapEither = insertStatementsInProcList procs procMap
-                  newProcTable = ProcedureTable paramMap varMap statements
-              case newProcMapEither of
-                Left err -> Left err
-                Right newProcMap -> Right $ M.insert procedureName newProcTable newProcMap
 
 
-insertProcListWithoutStatements :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
-insertProcListWithoutStatements (proc:[]) procMap = do
-    let procTable = insertProcedureTableWithoutStatement proc procMap
-    case procTable of
-        Left err           -> Left err
-        Right subProcTable -> Right $ M.insert procName subProcTable procMap
-    where procName = getProcedureIdentifier proc
-insertProcListWithoutStatements (proc:procs) procMap = do
-  let newProcMap = insertProcListWithoutStatements procs procMap
-  case newProcMap of
-    Left err -> Left err
-    Right subProcMap -> do
-      let procName = getProcedureIdentifier proc
-      case (M.member procName subProcMap) of
-        True  -> Left $ exitWithDuplicateProcedure procName
-        False -> do
-          let procTable = insertProcedureTableWithoutStatement proc procMap
-          case procTable of
-            Left err -> Left err
-            Right subProcTable ->
-              Right $ M.insert procName subProcTable subProcMap
 
-insertProcedureTableWithoutStatement :: Procedure -> ProgramMap -> Either (IO Task) ProcedureTable
-insertProcedureTableWithoutStatement procedure procMap = do
-  let  paramMap = insertParameterMap procedureName procedureParameters 0 M.empty
-       procedureBody = (body procedure)
-       procedureName = getProcedureIdentifier procedure
-       procedureParameters = getProcedureParameters procedure
-  case paramMap of
-          Left err -> Left err
-          Right subParamMap -> do
-              let varMap = insertVariableMap
-                            procedureName
-                            (bodyVarDeclarations procedureBody)
-                            subParamMap
-                            M.empty
-              case varMap of
-                  Left err -> Left err
-                  Right subVarMap -> Right $ ProcedureTable subParamMap subVarMap []
 
 insertParameterMap ::
   Identifier -> [Parameter] -> Int -> ParameterMap -> Either (IO Task) ParameterMap
@@ -771,8 +692,103 @@ checkMainProc program = do
   ; return ()
   }
 
+
+insertStatementsInProcList :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
+insertStatementsInProcList (proc:[]) procMap = do
+    let statementsEither = insertStatementList procedureName (bodyStatements procedureBody) paramMap varMap procMap
+        procedureName = getProcedureIdentifier proc
+        procedureBody = (body proc)
+        procedureTable = procMap M.! procedureName
+        paramMap = parameterMap procedureTable
+        varMap = variableMap procedureTable
+    case statementsEither of
+        Left err -> Left err
+        Right statements -> do
+              let newProcTable = ProcedureTable paramMap varMap statements
+              Right $ M.insert procedureName newProcTable procMap
+
+insertStatementsInProcList (proc:procs) procMap = do
+    let statementsEither = insertStatementList procedureName (bodyStatements procedureBody) paramMap varMap procMap
+        procedureName = getProcedureIdentifier proc
+        procedureBody = (body proc)
+        procedureTable = procMap M.! procedureName
+        paramMap = parameterMap procedureTable
+        varMap = variableMap procedureTable
+    case statementsEither of
+        Left err -> Left err
+        Right statements -> do
+              let newProcMapEither = insertStatementsInProcList procs procMap
+                  newProcTable = ProcedureTable paramMap varMap statements
+              case newProcMapEither of
+                Left err -> Left err
+                Right newProcMap -> Right $ M.insert procedureName newProcTable newProcMap
+
+
+insertProcedureTableWithoutStatements ::
+  Procedure -> ProgramMap -> Either (IO Task) ProcedureTable
+insertProcedureTableWithoutStatements procedure procMap = do
+  let  paramMap = insertParameterMap procedureName procedureParameters 0 M.empty
+       procedureBody = (body procedure)
+       procedureName = getProcedureIdentifier procedure
+       procedureParameters = getProcedureParameters procedure
+  case paramMap of
+    Left err -> Left err
+    Right subParamMap -> do
+      let varMap = insertVariableMap
+                   procedureName
+                   (bodyVarDeclarations procedureBody)
+                   subParamMap
+                   M.empty
+      case varMap of
+        Left err        -> Left err
+        Right subVarMap -> Right $ ProcedureTable subParamMap subVarMap []
+
+
+-------------------------------------------------------------------------------
+-- Get the procedure table which does not contain procedure statements, and
+-- insert it into the map storing program table, and return a new copy of the
+-- map.
+-------------------------------------------------------------------------------
+insertProcWithoutStatements ::
+  Procedure -> ProgramMap -> Either (IO Task) ProgramMap
+insertProcWithoutStatements procedure procMap = do
+  let eitherProcTable = insertProcedureTableWithoutStatements procedure procMap
+      procName = getProcedureIdentifier procedure
+  case eitherProcTable of
+    Left err        -> Left err
+    Right procTable -> Right $ M.insert procName procTable procMap
+
+-------------------------------------------------------------------------------
+-- Get the procedure tables for provided procedure list, insert them into the
+-- map provided, and return a new copy of the new map containing all
+-- information.
+-------------------------------------------------------------------------------
+insertProcListWithoutStatements ::
+  [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
+insertProcListWithoutStatements (proc:[]) procMap =
+  insertProcWithoutStatements proc procMap
+insertProcListWithoutStatements (proc:procs) procMap = do
+  let newProcMap = insertProcListWithoutStatements procs procMap
+  case newProcMap of
+    Left err -> Left err
+    Right subProcMap -> do
+      let procName = getProcedureIdentifier proc
+      case (M.member procName subProcMap) of
+        True  -> Left $ exitWithDuplicateProcedure procName
+        False -> insertProcWithoutStatements proc subProcMap
+
+-------------------------------------------------------------------------------
+-- analyze procedure list.
+-------------------------------------------------------------------------------
+analyze :: [Procedure] -> Either (IO Task) ProgramMap
+analyze procedures = do
+  let eitherProgramMap = insertProcListWithoutStatements procedures M.empty
+  case eitherProgramMap of
+      Left err         -> Left err
+      Right programMap -> insertStatementsInProcList procedures programMap
+
 -------------------------------------------------------------------------------
 -- Main entry of semantic Analyze module.
 -------------------------------------------------------------------------------
 semanticAnalyse :: GoatProgram -> Either (IO Task) ProgramMap
-semanticAnalyse program = analyze (procedures program) M.empty
+semanticAnalyse program = analyze $ procedures program
