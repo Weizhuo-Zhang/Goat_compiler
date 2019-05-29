@@ -45,13 +45,13 @@ data StatementTable = WriteTable     { writeExprTable    :: ExpressionTable }
                                      }
                     | WhileTable     { whileExprTable  :: ExpressionTable
                                      , whileStmtTables :: [StatementTable]
-                                     } 
+                                     }
                     | CallTable      { procIdentifier :: Identifier
                                      , argExprTables  :: [ExpressionTable]
                                      , callParamList  :: [Parameter]
                                      } deriving (Show, Eq)
 
-data VariableSubTable = VariableSubTable { varName                :: Identifier
+data VariableSubTable = VariableSubTable { varName :: Identifier
                                          , varShapeIndicatorTable :: ShapeIndicatorTable
                                          } deriving (Show, Eq)
 

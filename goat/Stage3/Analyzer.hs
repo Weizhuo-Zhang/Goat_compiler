@@ -170,48 +170,62 @@ checkStatement procName stmt paramMap varMap procMap =
 checkArguments ::
   Identifier -> Identifier -> [Expression] -> [BaseType] -> [Parameter] ->
   ParameterMap -> VariableMap -> Either (IO Task) [ExpressionTable]
-checkArguments procName procId (expression:[]) (baseType:[]) (parameter:[]) paramMap varMap = do
-  let paramIndicator  = (passingIndicator parameter)
-      eitherExprTable = checkCallExpr
-                        procName
-                        procId
-                        paramIndicator
-                        expression
-                        paramMap
-                        varMap
-  case eitherExprTable of
-    Left err -> Left err
-    Right expressionTable -> do
-      let exprBaseType = getExpressionBaseType expressionTable
-      if (exprBaseType == baseType) then
-        Right [expressionTable]
-      else
-        case paramIndicator of
-          RefType -> Left $ exitWithCallParamLengthDiff procName procId
-          VarType -> if (FloatType == baseType && IntType == exprBaseType) then
-                       Right [expressionTable]
-                     else Left $ exitWithCallParamLengthDiff procName procId
-checkArguments procName procId (expression:expressions) (baseType:baseTypeList) (parameter:parameters) paramMap varMap = do
-  let expressionTables = checkArguments procName procId expressions baseTypeList parameters paramMap varMap
-  case expressionTables of
-    Left err -> Left err
-    Right exprTables -> do
-      let paramIndicator  = (passingIndicator parameter)
-          eitherExprTable =
-                checkCallExpr procName procId paramIndicator expression paramMap varMap
-      case eitherExprTable of
-        Left err -> Left err
-        Right expressionTable -> do
-          let exprBaseType = getExpressionBaseType expressionTable
-          if (exprBaseType == baseType) then
-            Right $ [expressionTable] ++ exprTables
-          else
-            case paramIndicator of
-              RefType -> Left $ exitWithCallParamLengthDiff procName procId
-              VarType -> do
-                if (FloatType == baseType && IntType == exprBaseType) then
-                  Right $ [expressionTable] ++ exprTables
-                else Left $ exitWithCallParamLengthDiff procName procId
+checkArguments procName procId (expression:[]) (baseType:[]) (parameter:[])
+  paramMap varMap = do
+    let paramIndicator  = (passingIndicator parameter)
+        eitherExprTable = checkCallExpr
+                          procName
+                          procId
+                          paramIndicator
+                          expression
+                          paramMap
+                          varMap
+    case eitherExprTable of
+      Left err -> Left err
+      Right expressionTable -> do
+        let exprBaseType = getExpressionBaseType expressionTable
+        if (exprBaseType == baseType) then
+          Right [expressionTable]
+        else
+          case paramIndicator of
+            RefType -> Left $ exitWithCallParamLengthDiff procName procId
+            VarType -> if (FloatType == baseType && IntType == exprBaseType)
+                       then Right [expressionTable]
+                       else Left $ exitWithCallParamLengthDiff procName procId
+checkArguments procName procId (expression:expressions) (baseType:baseTypeList)
+  (parameter:parameters) paramMap varMap = do
+    let expressionTables = checkArguments
+                           procName
+                           procId
+                           expressions
+                           baseTypeList
+                           parameters
+                           paramMap
+                           varMap
+    case expressionTables of
+      Left err -> Left err
+      Right exprTables -> do
+        let paramIndicator  = (passingIndicator parameter)
+            eitherExprTable = checkCallExpr
+                              procName
+                              procId
+                              paramIndicator
+                              expression
+                              paramMap
+                              varMap
+        case eitherExprTable of
+          Left err -> Left err
+          Right expressionTable -> do
+            let exprBaseType = getExpressionBaseType expressionTable
+            if (exprBaseType == baseType) then
+              Right $ [expressionTable] ++ exprTables
+            else
+              case paramIndicator of
+                RefType -> Left $ exitWithCallParamLengthDiff procName procId
+                VarType -> do
+                  if (FloatType == baseType && IntType == exprBaseType) then
+                    Right $ [expressionTable] ++ exprTables
+                  else Left $ exitWithCallParamLengthDiff procName procId
 
 -------------------------------------------------------------------------------
 -- Check the call expression, and return the expression table if it's correct,
@@ -822,31 +836,32 @@ checkArrayDimension procName expr var varBaseType paramMap varMap = do
 checkMatrixDimensions ::
   Identifier -> (Expression, Expression) -> Variable -> BaseType ->
   ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
-checkMatrixDimensions procName (exprM, exprN) var varBaseType paramMap varMap = do
-  -- check expression m first.
-  let varName = varId var
-      eitherExpressionTableM = checkDimension
-                               procName
-                               exprM
-                               varName
-                               paramMap
-                               varMap
-  case eitherExpressionTableM of
-    Left  err             -> Left err
-    Right expressionTableM -> do
-      -- if express m passed, check expression n.
-      let eitherExpressionTableN = checkDimension
-                                   procName
-                                   exprN
-                                   varName
-                                   paramMap
-                                   varMap
-      case eitherExpressionTableN of
-        Left  err             -> Left err
-        Right expressionTableN -> do
-          let matrixTable = MatrixTable expressionTableM expressionTableN
-              varSubTable = VariableSubTable varName matrixTable
-          Right $ VariableTable varSubTable varBaseType
+checkMatrixDimensions procName (exprM, exprN) var varBaseType paramMap
+  varMap = do
+    -- check expression m first.
+    let varName = varId var
+        eitherExpressionTableM = checkDimension
+                                 procName
+                                 exprM
+                                 varName
+                                 paramMap
+                                 varMap
+    case eitherExpressionTableM of
+      Left  err             -> Left err
+      Right expressionTableM -> do
+        -- if express m passed, check expression n.
+        let eitherExpressionTableN = checkDimension
+                                     procName
+                                     exprN
+                                     varName
+                                     paramMap
+                                     varMap
+        case eitherExpressionTableN of
+          Left  err             -> Left err
+          Right expressionTableN -> do
+            let matrixTable = MatrixTable expressionTableM expressionTableN
+                varSubTable = VariableSubTable varName matrixTable
+            Right $ VariableTable varSubTable varBaseType
 
 -------------------------------------------------------------------------------
 -- Check if the given expression is IntType, if so, return the expression
