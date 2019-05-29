@@ -6,6 +6,7 @@ import           GoatAST
 import           GoatExit
 import           GoatParser
 import           GoatPrettyPrint
+import           MainAnalyzer
 import           System.Environment (getArgs, getProgName)
 import           Text.Parsec        (runParser)
 
@@ -66,9 +67,10 @@ main
                                     ; return ()
                                     }
                            }
-           Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
-                           ; return ()
-                           }
+           Left  err -> do
+             { exitWithError ("Parse error at " ++ show(err)) ParseError
+             ; return ()
+             }
          exitWithSuccess
      else
        if task == Parse then
@@ -78,9 +80,10 @@ main
            let output = runParser pMain 0 "" input
            case output of
              Right ast -> print ast -- print ast
-             Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
-                             ; return ()
-                             }
+             Left  err -> do
+               { exitWithError ("Parse error at " ++ show(err)) ParseError
+               ; return ()
+               }
        else
          if task == Analyze then
            do
@@ -100,9 +103,10 @@ main
                                         ; return ()
                                         }
                                }
-               Left err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
-                               ; return ()
-                               }
+               Left err -> do
+                 { exitWithError ("Parse error at " ++ show(err)) ParseError
+                 ; return ()
+                 }
          else
            do
              let [_, filename] = args
@@ -111,6 +115,7 @@ main
              let output = runParser pMain 0 "" input
              case output of
                Right ast -> prettyPrint ast -- pretty print ast
-               Left  err -> do { exitWithError ("Parse error at " ++ show(err)) ParseError
-                               ; return ()
-                               }
+               Left  err -> do
+                 { exitWithError ("Parse error at " ++ show(err)) ParseError
+                 ; return ()
+                 }

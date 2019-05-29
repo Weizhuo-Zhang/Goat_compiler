@@ -72,8 +72,10 @@ myReservedWords = ["begin", "bool",  "call", "do",  "else",  "end",  "false"
 -- Define reserved operator
 -------------------------------------------------------------------------------
 myOperators :: [String]
-myOperators = [addSymbol, minusSymbol, timesSymbol, "<", ">", "<=", ">=", "=", "!=", "||", "&&" ,"!"
-              ,divSymbol, ":="]
+myOperators = [addSymbol, minusSymbol, timesSymbol, lessThanSymbol,
+              greaterThanSymbol, lessThanOrEqualSymbol,
+              greaterThanOrEqualSymbol, equalSymbol, notEqualSymbol,
+              orSymbol, andSymbol ,unaryNotSymbol, divSymbol, ":="]
 
 -------------------------------------------------------------------------------
 -- This is the top-most parsing function. It looks for a program which contains
@@ -81,9 +83,9 @@ myOperators = [addSymbol, minusSymbol, timesSymbol, "<", ">", "<=", ">=", "=", "
 -------------------------------------------------------------------------------
 pProgram :: Parser GoatProgram
 pProgram = do
-    procedures <- many1 pProcedure
-    return (GoatProgram procedures)
-    <?> "program procedure"
+  procedures <- many1 pProcedure
+  return (GoatProgram procedures)
+  <?> "program procedure"
 
 -------------------------------------------------------------------------------
 -- pProcedure looks for a procedure, whose structure should be:
@@ -91,11 +93,11 @@ pProgram = do
 -------------------------------------------------------------------------------
 pProcedure :: Parser Procedure
 pProcedure = do
-    reserved "proc"
-    header    <- pProcedureHeader
-    body      <- pProcedureBody
-    return (Procedure header body)
-    <?> "procedure"
+  reserved "proc"
+  header    <- pProcedureHeader
+  body      <- pProcedureBody
+  return (Procedure header body)
+  <?> "procedure"
 
 -------------------------------------------------------------------------------
 -- pProcedureHeader looks for the procedure header, which contains a
@@ -149,12 +151,12 @@ pParameterType = do { reserved "bool"; return BoolType }
 -------------------------------------------------------------------------------
 pProcedureBody :: Parser Body
 pProcedureBody = do
-    variableDeclarations <- many pVariableDeclaration
-    reserved "begin"
-    statements           <- many1 pStatement
-    reserved "end"
-    return (Body variableDeclarations statements)
-    <?> "procedure body"
+  variableDeclarations <- many pVariableDeclaration
+  reserved "begin"
+  statements           <- many1 pStatement
+  reserved "end"
+  return (Body variableDeclarations statements)
+  <?> "procedure body"
 
 -------------------------------------------------------------------------------
 -- pVariableDeclaration looks for the variable declaration, whose pattern
@@ -164,13 +166,13 @@ pProcedureBody = do
 -------------------------------------------------------------------------------
 pVariableDeclaration :: Parser VariableDeclaration
 pVariableDeclaration = do
-    parameterType  <- pParameterType
-    id             <- identifier
-    shapeIndicator <- pShapeIndicator
-    whiteSpace
-    semi
-    return (VariableDeclaration parameterType (Variable id shapeIndicator))
-    <?> "procedure variable declaration"
+  parameterType  <- pParameterType
+  id             <- identifier
+  shapeIndicator <- pShapeIndicator
+  whiteSpace
+  semi
+  return (VariableDeclaration parameterType (Variable id shapeIndicator))
+  <?> "procedure variable declaration"
 
 
 -------------------------------------------------------------------------------
@@ -179,17 +181,17 @@ pVariableDeclaration = do
 -------------------------------------------------------------------------------
 pShapeIndicator :: Parser ShapeIndicator
 pShapeIndicator =
-    try (do { n <- brackets pInt
-            ; return (Array n)
-            }
-        )
-    <|>
-    try (do { (intM, intN) <- brackets $ pMatrix IntMatrix
-            ; return (Matrix intM intN)
-            }
-        )
-    <|>  do { return (NoIndicator) }
-    <?> "shape indicator"
+  try (do { n <- brackets pInt
+          ; return (Array n)
+          }
+      )
+  <|>
+  try (do { (intM, intN) <- brackets $ pMatrix IntMatrix
+          ; return (Matrix intM intN)
+          }
+      )
+  <|>  do { return (NoIndicator) }
+  <?> "shape indicator"
 
 
 -------------------------------------------------------------------------------
@@ -198,15 +200,15 @@ pShapeIndicator =
 data MatrixType = IntMatrix | ExpressionMatrix
 pMatrix :: MatrixType -> Parser (Expression, Expression)
 pMatrix IntMatrix = do
-    intM <- pInt
-    comma
-    intN <- pInt
-    return (intM, intN)
+  intM <- pInt
+  comma
+  intN <- pInt
+  return (intM, intN)
 pMatrix ExpressionMatrix = do
-    expressionM <- pExpression
-    comma
-    expressionN <- pExpression
-    return (expressionM, expressionN)
+  expressionM <- pExpression
+  comma
+  expressionN <- pExpression
+  return (expressionM, expressionN)
 
 -------------------------------------------------------------------------------
 -- Define statement.
@@ -220,52 +222,52 @@ pStatement = choice [pAssignment, pRead, pWrite, pCall, pIf, pWhile]
 -------------------------------------------------------------------------------
 pRead :: Parser Statement
 pRead = do
-    reserved "read"
-    id             <- identifier
-    shapeIndicator <- pExpressionShapeIndicator
-    semi
-    return (Read (Variable id shapeIndicator))
-    <?> "read statement"
+  reserved "read"
+  id             <- identifier
+  shapeIndicator <- pExpressionShapeIndicator
+  semi
+  return (Read (Variable id shapeIndicator))
+  <?> "read statement"
 
 -------------------------------------------------------------------------------
 -- Define the write statement.
 -------------------------------------------------------------------------------
 pWrite :: Parser Statement
 pWrite = do
-    reserved "write"
-    expression <- (pString <|> pExpression)
-    whiteSpace
-    semi
-    return (Write expression)
-    <?> "write statement"
+  reserved "write"
+  expression <- (pString <|> pExpression)
+  whiteSpace
+  semi
+  return (Write expression)
+  <?> "write statement"
 
 -------------------------------------------------------------------------------
 -- Define the assignment statement.
 -------------------------------------------------------------------------------
 pAssignment :: Parser Statement
 pAssignment = do
-    id  <- identifier
-    shapeIndicator <- pExpressionShapeIndicator
-    whiteSpace
-    reservedOp ":="
-    rvalue <- pExpression
-    whiteSpace
-    semi
-    return (Assign (Variable id shapeIndicator) rvalue)
-    <?> "Assign statement"
+  id  <- identifier
+  shapeIndicator <- pExpressionShapeIndicator
+  whiteSpace
+  reservedOp ":="
+  rvalue <- pExpression
+  whiteSpace
+  semi
+  return (Assign (Variable id shapeIndicator) rvalue)
+  <?> "Assign statement"
 
 -------------------------------------------------------------------------------
 -- Define the call statement.
 -------------------------------------------------------------------------------
 pCall :: Parser Statement
 pCall = do
-    reserved "call"
-    id      <- identifier
-    expressionList <- parens $ sepBy pExpression comma
-    whiteSpace
-    semi
-    return (Call id expressionList)
-    <?> "Call statement"
+  reserved "call"
+  id      <- identifier
+  expressionList <- parens $ sepBy pExpression comma
+  whiteSpace
+  semi
+  return (Call id expressionList)
+  <?> "Call statement"
 
 -------------------------------------------------------------------------------
 -- Define the if statement.
@@ -296,13 +298,13 @@ pIf =
 -------------------------------------------------------------------------------
 pWhile :: Parser Statement
 pWhile = do
-    reserved "while"
-    expression <- pExpression
-    reserved "do"
-    statements <- many1 pStatement
-    reserved "od"
-    return (While expression statements)
-    <?> "While statement"
+  reserved "while"
+  expression <- pExpression
+  reserved "do"
+  statements <- many1 pStatement
+  reserved "od"
+  return (While expression statements)
+  <?> "While statement"
 
 -------------------------------------------------------------------------------
 -- define expressions
@@ -338,12 +340,13 @@ table :: [[Operator String Int Identity Expression]]
 table = [[prefix   minusSymbol UnaryMinus]
         ,[binary   timesSymbol Mul, binary   divSymbol  Div]
         ,[binary   addSymbol Add, binary   minusSymbol  Sub]
-        ,[relation "=" Eq,  relation "!=" NotEq
-        , relation "<" Les, relation "<=" LesEq
-        , relation ">" Grt, relation ">=" GrtEq]
-        ,[prefix   "!" UnaryNot]
-        ,[binary   "&&" And]
-        ,[binary   "||" Or]]
+        ,[relation equalSymbol Eq,  relation notEqualSymbol NotEq
+        , relation lessThanSymbol Les, relation lessThanOrEqualSymbol LesEq
+        , relation greaterThanSymbol Grt
+        , relation greaterThanOrEqualSymbol GrtEq]
+        ,[prefix   unaryNotSymbol UnaryNot]
+        ,[binary   andSymbol And]
+        ,[binary   orSymbol Or]]
 
 -------------------------------------------------------------------------------
 -- Prefix operator
