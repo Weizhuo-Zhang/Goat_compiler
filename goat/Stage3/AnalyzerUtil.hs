@@ -276,5 +276,3 @@ exitWithInvalidCallExpr procName calledProcId =
   exitWithError
   (getInvalidCallExprMessage procName calledProcId)
   MultipleProc
-
--------------------------------- Utility Code ---------------------------------

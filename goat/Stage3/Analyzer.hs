@@ -636,71 +636,48 @@ chooseType procName BoolType _ = Left $ exitWithTypeError procName
 chooseType procName _ BoolType = Left $ exitWithTypeError procName
 
 -------------------------------------------------------------------------------
--- Check whether the main procedure is parameter-less.
----------------------------------------------------------------------------------
-checkMainParam :: [Parameter] -> IO Task
-checkMainParam [] = return Unit
-checkMainParam _  = do
-  exitWithError "'main()' procedure should be parameter-less." MainWithParam
+-- Insert statements tables into provided procedure' existing procedure table,
+-- and return the new procedure table containing statements.
+-------------------------------------------------------------------------------
+insertStatementsIntoProcedureTable ::
+  Procedure -> ProgramMap -> Either (IO Task) ProcedureTable
+insertStatementsIntoProcedureTable procedure procMap =  do
+  let eitherStatements = insertStatementList
+                         procedureName
+                         (bodyStatements $ body procedure)
+                         paramMap
+                         varMap
+                         procMap
+      procedureName = getProcedureIdentifier procedure
+      procedureTable = procMap M.! procedureName
+      paramMap = parameterMap procedureTable
+      varMap = variableMap procedureTable
+  case eitherStatements of
+    Left err         -> Left err
+    Right statements -> Right $ ProcedureTable paramMap varMap statements
 
 -------------------------------------------------------------------------------
--- Check the number of main procedure.
+-- Insert statements tables into provided procedures' existing procedure
+-- tables, and return the new procedure table containing statements.
 -------------------------------------------------------------------------------
-checkMainNum :: Int -> IO Task
-checkMainNum numMain
-  | 0 == numMain = do
-      exitWithError "There is no 'main()' procedure." MissingMain
-  | 1 == numMain = return Unit
-  | otherwise = do
-      exitWithError "There is more than one 'main()' procedure" MultipleMain
-
--------------------------------------------------------------------------------
--- Get the list of main procedure.
--------------------------------------------------------------------------------
-getMainProcedureList :: [Procedure] -> [Procedure]
-getMainProcedureList [] = []
-getMainProcedureList (proc:procs)
-  | "main" == (getProcedureIdentifier proc) = proc : getMainProcedureList procs
-  | otherwise = getMainProcedureList procs
-
-checkMainProc :: GoatProgram -> IO ()
-checkMainProc program = do
-  { let mainList = getMainProcedureList $ procedures program
-  ; checkMainNum $ length $ mainList
-  ; checkMainParam $ parameters $ header $ head mainList
-  ; return ()
-  }
-
-
-insertStatementsInProcList :: [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
+insertStatementsInProcList ::
+  [Procedure] -> ProgramMap -> Either (IO Task) ProgramMap
 insertStatementsInProcList (proc:[]) procMap = do
-    let statementsEither = insertStatementList procedureName (bodyStatements procedureBody) paramMap varMap procMap
-        procedureName = getProcedureIdentifier proc
-        procedureBody = (body proc)
-        procedureTable = procMap M.! procedureName
-        paramMap = parameterMap procedureTable
-        varMap = variableMap procedureTable
-    case statementsEither of
-        Left err -> Left err
-        Right statements -> do
-              let newProcTable = ProcedureTable paramMap varMap statements
-              Right $ M.insert procedureName newProcTable procMap
-
+  let eitherProcedureTable = insertStatementsIntoProcedureTable proc procMap
+      procName = getProcedureIdentifier proc
+  case eitherProcedureTable of
+    Left err             -> Left err
+    Right procedureTable -> Right $ M.insert procName procedureTable procMap
 insertStatementsInProcList (proc:procs) procMap = do
-    let statementsEither = insertStatementList procedureName (bodyStatements procedureBody) paramMap varMap procMap
-        procedureName = getProcedureIdentifier proc
-        procedureBody = (body proc)
-        procedureTable = procMap M.! procedureName
-        paramMap = parameterMap procedureTable
-        varMap = variableMap procedureTable
-    case statementsEither of
+  let eitherProcedureTable = insertStatementsIntoProcedureTable proc procMap
+      procName = getProcedureIdentifier proc
+  case eitherProcedureTable of
+    Left err -> Left err
+    Right procedureTable -> do
+      let eitherNewProcMap = insertStatementsInProcList procs procMap
+      case eitherNewProcMap of
         Left err -> Left err
-        Right statements -> do
-              let newProcMapEither = insertStatementsInProcList procs procMap
-                  newProcTable = ProcedureTable paramMap varMap statements
-              case newProcMapEither of
-                Left err -> Left err
-                Right newProcMap -> Right $ M.insert procedureName newProcTable newProcMap
+        Right newProcMap -> Right $ M.insert procName procedureTable newProcMap
 
 -------------------------------------------------------------------------------
 -- Analyze the given parameter list, insert them into a new parameter table and

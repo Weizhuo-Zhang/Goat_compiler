@@ -6,6 +6,7 @@ import           GoatAST
 import           GoatExit
 import           GoatParser
 import           GoatPrettyPrint
+import           MainAnalyzer
 import           System.Environment (getArgs, getProgName)
 import           Text.Parsec        (runParser)
 
