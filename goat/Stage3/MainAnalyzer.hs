@@ -21,7 +21,7 @@ import           GoatExit
 
 -------------------------------------------------------------------------------
 -- Check whether the main procedure is parameter-less.
----------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 checkMainParam :: [Parameter] -> IO Task
 checkMainParam [] = return Unit
 checkMainParam _  = do

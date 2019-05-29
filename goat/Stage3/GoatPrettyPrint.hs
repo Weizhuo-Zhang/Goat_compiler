@@ -365,25 +365,26 @@ getExpr expression =
 -- Print Body.
 -------------------------------------------------------------------------------
 printBody :: Body -> IO ()
-printBody body = do { printVariableDeclaration $ bodyVarDeclarations body
-                    ; putStrLn "begin"
-                    ; printStatements (bodyStatements body) indentationSpaceNumber
-                    ; putStrLn "end"
-                    }
+printBody body = do
+  printVariableDeclaration $ bodyVarDeclarations body
+  putStrLn "begin"
+  printStatements (bodyStatements body) indentationSpaceNumber
+  putStrLn "end"
 
 -------------------------------------------------------------------------------
 -- print Procedure
 -------------------------------------------------------------------------------
 printProc :: [Procedure] -> IO ()
 printProc []           = return ()
-printProc (proc:[])    = do { printHeader $ header proc
-                            ; printBody $ body proc
-                            }
-printProc (proc:procs) = do { printHeader $ header proc
-                            ; printBody $ body proc
-                            ; putStrLn "" -- print new line character
-                            ; printProc (procs)
-                            }
+printProc (proc:[])    = do
+  printHeader $ header proc
+  printBody $ body proc
+printProc (proc:procs) = do
+  printHeader $ header proc
+  printBody $ body proc
+  putStrLn "" -- print new line character
+  printProc (procs)
+
 
 -------------------------------------------------------------------------------
 -- Main entry of prettyPrint module.
