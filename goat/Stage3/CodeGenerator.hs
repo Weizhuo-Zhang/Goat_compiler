@@ -224,7 +224,7 @@ generateCallStatement procName (exprTable:exprTables) (param:params) registerNum
 
 checkCallParameter :: Parameter -> ExpressionTable -> Int -> ParameterMap -> VariableMap -> StackMap -> IO ()
 checkCallParameter param exprTable registerNum paramMap varMap stackMap = do
-  let  varType   = getAssignBaseType exprTable
+  let  varType   = getExpressionBaseType exprTable
        paramType = passingType param
        paramIndicator = passingIndicator param
   case paramIndicator of
@@ -263,7 +263,7 @@ generateAssignStatement procName paramMap varMap varTable exprTable stackMap = d
   { let var     = variable varTable
         varType = variableType varTable
         varId   = varName  var
-        exprType = getAssignBaseType exprTable
+        exprType = getExpressionBaseType exprTable
         varShape = varShapeIndicatorTable var
         varSlotNum = getVariableSlotNum var stackMap
         varSlotNumStr = show varSlotNum
@@ -343,7 +343,7 @@ generateWriteChooseType exprType paramMap varMap exprTable stackMap =
 -------------------------------------------------------------------------------
 generateReadStatement :: ExpressionTable -> ParameterMap -> VariableMap -> StackMap -> IO ()
 generateReadStatement exprTable paramMap varMap stackMap = do
-    let exprType = getAssignBaseType exprTable
+    let exprType = getExpressionBaseType exprTable
         slotNum = stackMap Map.! (varName $ variable exprTable)
     case exprType of
         BoolType  -> generateReadStatementByType "bool" slotNum exprTable paramMap varMap stackMap
@@ -794,8 +794,8 @@ generateOperationString operator opType registerNum = do
 -------------------------------------------------------------------------------
 generateIntToFloat :: ExpressionTable -> ExpressionTable -> Int -> IO ()
 generateIntToFloat lExpr rExpr registerNum = do
-    let lType = getAssignBaseType lExpr
-        rType = getAssignBaseType rExpr
+    let lType = getExpressionBaseType lExpr
+        rType = getExpressionBaseType rExpr
     case (lType,rType) of
         (FloatType,FloatType) -> return ()
         (IntType,FloatType) -> printIntToRealInSameRegister registerNum

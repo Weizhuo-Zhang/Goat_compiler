@@ -19,8 +19,11 @@ import           SymbolTable
 
 -------------------------------- Documentation --------------------------------
 
-getAssignBaseType :: ExpressionTable -> BaseType
-getAssignBaseType exprTable =
+-------------------------------------------------------------------------------
+-- Given the expression table, return the base type.
+-------------------------------------------------------------------------------
+getExpressionBaseType :: ExpressionTable -> BaseType
+getExpressionBaseType exprTable =
   case exprTable of
     VariableTable _ exprType -> exprType
     BoolTable  _             -> BoolType
