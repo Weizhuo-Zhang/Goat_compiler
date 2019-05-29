@@ -1,9 +1,7 @@
 module AnalyzerUtil where
 
 import qualified Data.Map.Strict as M
-import           Data.Maybe
 import           GoatAST
-import           GoatConstant
 import           GoatExit
 import           SymbolTable
 import           Util

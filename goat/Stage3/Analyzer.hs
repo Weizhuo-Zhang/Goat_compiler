@@ -2,7 +2,6 @@ module Analyzer where
 
 import           AnalyzerUtil
 import qualified Data.Map.Strict as M
-import           Data.Maybe
 import           GoatAST
 import           GoatConstant
 import           GoatExit
@@ -24,6 +23,10 @@ import           Util
 
 -------------------------------- Documentation --------------------------------
 
+-------------------------------------------------------------------------------
+-- Check the provided variable list, and return the variable map if they are
+-- all correct, otherwise exit the program with error.
+-------------------------------------------------------------------------------
 insertVariableMap ::
   Identifier -> [VariableDeclaration] -> ParameterMap -> VariableMap ->
   Either (IO Task) VariableMap
@@ -46,6 +49,10 @@ insertVariableMap procName (bodyVarDecl:bodyVarDecls) paramMap varMap = do
             True  -> Left $ exitWithMultipleVarDeclaration varName procName
             False -> Right $ M.insert varName bodyVarDecl subVarMap
 
+-------------------------------------------------------------------------------
+-- Check the provided statement list, and return the statement table list if
+-- it's correct, otherwise exit the program with error.
+-------------------------------------------------------------------------------
 insertStatementList ::
   Identifier -> [Statement] -> ParameterMap -> VariableMap -> ProgramMap ->
   Either (IO Task) [StatementTable]
@@ -53,9 +60,14 @@ insertStatementList procName (stmt:[]) paramMap varMap procMap = do
   let newStmtTable = checkStatement procName stmt paramMap varMap procMap
   case newStmtTable of
     Left err        -> Left err
-    Right stmtTable -> Right $ (stmtTable):[]
+    Right stmtTable -> Right $ [stmtTable]
 insertStatementList procName (stmt:stmts) paramMap varMap procMap = do
-  let newStatements = insertStatementList procName stmts paramMap varMap procMap
+  let newStatements = insertStatementList
+                      procName
+                      stmts
+                      paramMap
+                      varMap
+                      procMap
   case newStatements of
     Left err            -> Left err
     Right subStatements -> do
@@ -64,6 +76,10 @@ insertStatementList procName (stmt:stmts) paramMap varMap procMap = do
         Left err        -> Left err
         Right stmtTable -> Right $ (stmtTable):subStatements
 
+-------------------------------------------------------------------------------
+-- Check the statement, and return the statement table if it's correct,
+-- otherwise exit the program with error.
+-------------------------------------------------------------------------------
 checkStatement ::
   Identifier -> Statement -> ParameterMap -> VariableMap -> ProgramMap ->
   Either (IO Task) StatementTable
@@ -87,7 +103,12 @@ checkStatement procName stmt paramMap varMap procMap =
       case exprEither of
         Left err -> Left err
         Right exprTable -> do
-          let stmtTablesEither = insertStatementList procName stmts paramMap varMap procMap
+          let stmtTablesEither = insertStatementList
+                                 procName
+                                 stmts
+                                 paramMap
+                                 varMap
+                                 procMap
           case stmtTablesEither of
             Left err         -> Left err
             Right stmtTables -> Right $ IfTable exprTable stmtTables
@@ -96,11 +117,21 @@ checkStatement procName stmt paramMap varMap procMap =
       case exprEither of
         Left err -> Left err
         Right exprTable -> do
-          let stmtTablesEither1 = insertStatementList procName stmts1 paramMap varMap procMap
+          let stmtTablesEither1 = insertStatementList
+                                  procName
+                                  stmts1
+                                  paramMap
+                                  varMap
+                                  procMap
           case stmtTablesEither1 of
             Left err -> Left err
             Right stmtTables1 -> do
-              let stmtTablesEither2 = insertStatementList procName stmts2 paramMap varMap procMap
+              let stmtTablesEither2 = insertStatementList
+                                      procName
+                                      stmts2
+                                      paramMap
+                                      varMap
+                                      procMap
               case stmtTablesEither2 of
                 Left err -> Left err
                 Right stmtTables2 -> do
@@ -110,55 +141,82 @@ checkStatement procName stmt paramMap varMap procMap =
       case exprEither of
         Left err -> Left err
         Right exprTable -> do
-          let stmtTablesEither = insertStatementList procName stmts paramMap varMap procMap
+          let stmtTablesEither = insertStatementList
+                                 procName
+                                 stmts
+                                 paramMap
+                                 varMap
+                                 procMap
           case stmtTablesEither of
             Left err         -> Left err
             Right stmtTables -> Right $ WhileTable exprTable stmtTables
     Call procId argExprs -> do
-      let exprsEither = checkCallStmt procName procId argExprs procMap paramMap varMap
+      let exprsEither = checkCallStmt
+                        procName
+                        procId
+                        argExprs
+                        procMap
+                        paramMap
+                        varMap
       case exprsEither of
         Left err -> Left err
-        Right (expreTables, params) -> Right $ CallTable procId expreTables params
+        Right (expreTables, params) ->
+          Right $ CallTable procId expreTables params
 
+-------------------------------------------------------------------------------
+-- Check arguments, and return the expression table list if it's correct,
+-- otherwise exit the program with error.
+-------------------------------------------------------------------------------
 checkArguments ::
   Identifier -> Identifier -> [Expression] -> [BaseType] -> [Parameter] ->
   ParameterMap -> VariableMap -> Either (IO Task) [ExpressionTable]
---checkArguments procName procId [e] [b] paramMap varMap = do
-checkArguments procName procId (e:[]) (b:[]) (parameter:[]) paramMap varMap = do
+checkArguments procName procId (expression:[]) (baseType:[]) (parameter:[]) paramMap varMap = do
   let paramIndicator  = (passingIndicator parameter)
-      eitherExprTable =
-            checkCallExpr procName procId paramIndicator e paramMap varMap
+      eitherExprTable = checkCallExpr
+                        procName
+                        procId
+                        paramIndicator
+                        expression
+                        paramMap
+                        varMap
   case eitherExprTable of
     Left err -> Left err
     Right expressionTable -> do
       let exprBaseType = getExpressionBaseType expressionTable
-      if (exprBaseType == b)
-      then Right [expressionTable]
-      else case paramIndicator of
-             RefType -> Left $ exitWithCallParamLengthDiff procName procId
-             varType -> if (FloatType == b && IntType == exprBaseType)
-                            then Right [expressionTable]
-                            else Left $ exitWithCallParamLengthDiff procName procId
-checkArguments procName procId (e:es) (b:bs) (parameter:parameters) paramMap varMap = do
-  let expressionTables = checkArguments procName procId es bs parameters paramMap varMap
+      if (exprBaseType == baseType) then
+        Right [expressionTable]
+      else
+        case paramIndicator of
+          RefType -> Left $ exitWithCallParamLengthDiff procName procId
+          VarType -> if (FloatType == baseType && IntType == exprBaseType) then
+                       Right [expressionTable]
+                     else Left $ exitWithCallParamLengthDiff procName procId
+checkArguments procName procId (expression:expressions) (baseType:baseTypeList) (parameter:parameters) paramMap varMap = do
+  let expressionTables = checkArguments procName procId expressions baseTypeList parameters paramMap varMap
   case expressionTables of
     Left err -> Left err
     Right exprTables -> do
       let paramIndicator  = (passingIndicator parameter)
           eitherExprTable =
-                checkCallExpr procName procId paramIndicator e paramMap varMap
+                checkCallExpr procName procId paramIndicator expression paramMap varMap
       case eitherExprTable of
         Left err -> Left err
         Right expressionTable -> do
           let exprBaseType = getExpressionBaseType expressionTable
-          if (exprBaseType == b)
-          then Right $ [expressionTable] ++ exprTables
-          else case paramIndicator of
-                 RefType -> Left $ exitWithCallParamLengthDiff procName procId
-                 varType -> if (FloatType == b && IntType == exprBaseType)
-                                then Right $ [expressionTable] ++ exprTables
-                                else Left $ exitWithCallParamLengthDiff procName procId
+          if (exprBaseType == baseType) then
+            Right $ [expressionTable] ++ exprTables
+          else
+            case paramIndicator of
+              RefType -> Left $ exitWithCallParamLengthDiff procName procId
+              VarType -> do
+                if (FloatType == baseType && IntType == exprBaseType) then
+                  Right $ [expressionTable] ++ exprTables
+                else Left $ exitWithCallParamLengthDiff procName procId
 
+-------------------------------------------------------------------------------
+-- Check the call expression, and return the expression table if it's correct,
+-- otherwise exit the program with error.
+-------------------------------------------------------------------------------
 checkCallExpr ::
   Identifier -> Identifier -> ParameterIndicator -> Expression ->
   ParameterMap -> VariableMap -> Either (IO Task) ExpressionTable
@@ -171,17 +229,13 @@ checkCallExpr procName procId paramIndicator expr paramMap varMap = do
         VarType -> Right expressionTable
         RefType -> do
           case expressionTable of
-             VariableTable _ _ -> Right  expressionTable
-             otherwise         -> Left $ exitWithInvalidCallExpr procName procId
+            VariableTable _ _ -> Right  expressionTable
+            otherwise         -> Left $ exitWithInvalidCallExpr procName procId
 
-
-paramMapToList :: ParameterMap -> [Parameter]
-paramMapToList paramMap =
-  [(snd param) | param <- paramNewList]
-  where paramList = M.toList paramMap;
-        paramOrderedMap = M.fromList [snd param | param <- paramList]
-        paramNewList = M.toList paramOrderedMap
-
+-------------------------------------------------------------------------------
+-- Check the call statement, and return the statement table if it's correct,
+-- otherwise exit the program with error.
+-------------------------------------------------------------------------------
 checkCallStmt ::
   Identifier -> Identifier -> [Expression] -> ProgramMap -> ParameterMap ->
   VariableMap -> Either (IO Task) ([ExpressionTable], [Parameter])
@@ -195,13 +249,24 @@ checkCallStmt procName calledProcId argExprs procMap paramMap varMap = do
           case ((length argExprs) == 0) of
             True -> Right ([], [])
             otherwise -> do
-              let expreTables = checkArguments procName calledProcId argExprs paramBaseTypes paramList paramMap varMap
+              let expreTables = checkArguments
+                                procName
+                                calledProcId
+                                argExprs
+                                paramBaseTypes
+                                paramList
+                                paramMap
+                                varMap
               case expreTables of
                 Left err               -> Left err
                 Right expressionTables -> Right (expressionTables, paramList)
         otherwise -> Left $ exitWithCallParamLengthDiff procName calledProcId
     Nothing -> Left $ exitWithProcNotFound procName calledProcId
 
+-------------------------------------------------------------------------------
+-- Check the write statement, and return the statement table if it's correct,
+-- otherwise exit the program with error.
+-------------------------------------------------------------------------------
 checkWriteStmt ::
   Identifier -> Expression -> ParameterMap -> VariableMap ->
   Either (IO Task) StatementTable
@@ -211,6 +276,10 @@ checkWriteStmt procName expr paramMap varMap = do
     Left err        -> Left err
     Right exprTable -> Right $ WriteTable exprTable
 
+-------------------------------------------------------------------------------
+-- Check the read statement, and return the statement table if it's correct,
+-- otherwise exit the program with error.
+-------------------------------------------------------------------------------
 checkReadStmt ::
   Identifier -> Variable -> ParameterMap -> VariableMap ->
   Either (IO Task) ExpressionTable
@@ -218,8 +287,12 @@ checkReadStmt procName var paramMap varMap = do
   let eitherExpressionTable = checkVariable procName var paramMap varMap
   case eitherExpressionTable of
     Left err        -> Left err
-    Right exprTable -> Right $ exprTable
+    Right exprTable -> Right exprTable
 
+-------------------------------------------------------------------------------
+-- Check the assignemnt statement, and return the statement table if it's
+-- correct, otherwise exit the program with error.
+-------------------------------------------------------------------------------
 checkAssignExpr ::
   Identifier -> Expression -> ExpressionTable -> ParameterMap ->
   VariableMap -> Either (IO Task) StatementTable
@@ -231,6 +304,10 @@ checkAssignExpr procName expr variableTable paramMap varMap = do
       let exprType = getExpressionBaseType expressionTable
       checkAssignType procName variableTable expressionTable exprType
 
+-------------------------------------------------------------------------------
+-- Check the condition and return the expression table if it's correct,
+-- otherwise exit the program.
+-------------------------------------------------------------------------------
 checkCondition ::
   Identifier -> Expression -> ParameterMap -> VariableMap ->
   Either (IO Task) ExpressionTable

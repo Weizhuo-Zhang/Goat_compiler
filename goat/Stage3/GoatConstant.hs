@@ -9,7 +9,8 @@ module GoatConstant where
 --   Mingyang Zhang (mingyangz) - 650242
 --   An Luo (aluo1) - 657605
 
--- This file contains the commonly used constants.
+-- This file contains the commonly used constants, constants' name should be
+-- self-explained.
 
 -- The aim of the project is to implement a compiler for a procedural (C-like)
 -- language called Goat.

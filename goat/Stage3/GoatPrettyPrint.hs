@@ -201,63 +201,64 @@ printIfEnd numberOfSpace = do { printIndentation numberOfSpace
 -------------------------------------------------------------------------------
 printIfStatement :: Expression -> [Statement] -> Int -> IO ()
 printIfStatement expression statements numberOfSpace = do
-    { printIfCommon expression statements numberOfSpace
-    ; printIfEnd numberOfSpace
-    }
+  { printIfCommon expression statements numberOfSpace
+  ; printIfEnd numberOfSpace
+  }
 
 -------------------------------------------------------------------------------
 -- Print If-Else Statements
 -------------------------------------------------------------------------------
-printIfElseStatement :: Expression -> [Statement] -> [Statement] -> Int -> IO ()
+printIfElseStatement ::
+  Expression -> [Statement] -> [Statement] -> Int -> IO ()
 printIfElseStatement expression statement1 statement2 numberOfSpace = do
-    { printIfCommon expression statement1 numberOfSpace
-    ; printIndentation numberOfSpace
-    ; putStrLn "else"
-    ; printStatements statement2 (numberOfSpace + indentationSpaceNumber)
-    ; printIfEnd numberOfSpace
-    }
+  { printIfCommon expression statement1 numberOfSpace
+  ; printIndentation numberOfSpace
+  ; putStrLn "else"
+  ; printStatements statement2 (numberOfSpace + indentationSpaceNumber)
+  ; printIfEnd numberOfSpace
+  }
 
 -------------------------------------------------------------------------------
 -- Print While Statements.
 -------------------------------------------------------------------------------
 printWhileStatement :: Expression -> [Statement] -> Int -> IO ()
 printWhileStatement expression statements numberOfSpace = do
-    { printIndentation numberOfSpace
-    ; putStr "while "
-    ; printExprs [expression] ""
-    ; putStrLn " do"
-    ; printStatements statements (numberOfSpace + indentationSpaceNumber)
-    ; printIndentation numberOfSpace
-    ; putStrLn "od"
-    }
+  { printIndentation numberOfSpace
+  ; putStr "while "
+  ; printExprs [expression] ""
+  ; putStrLn " do"
+  ; printStatements statements (numberOfSpace + indentationSpaceNumber)
+  ; printIndentation numberOfSpace
+  ; putStrLn "od"
+  }
 
 -------------------------------------------------------------------------------
 -- Print statement.
 -------------------------------------------------------------------------------
 printStatement :: Statement -> Int -> IO ()
 printStatement statement numberOfSpace = do
-    case statement of
-        Assign variable  expression    -> printAssignStatement variable
-                                                               expression
-                                                               numberOfSpace
-        Read   variable                -> printReadStatement   variable
-                                                               numberOfSpace
-        Write  expression              -> printWriteStatement  expression
-                                                               numberOfSpace
-        Call   id   expressions        -> printCallStatement   id
-                                                               expressions
-                                                               numberOfSpace
-        If     expression statements   -> printIfStatement     expression
-                                                               statements
-                                                               numberOfSpace
-        IfElse expression statement1 statement2
-                                       -> printIfElseStatement expression
-                                                               statement1
-                                                               statement2
-                                                               numberOfSpace
-        While  expression statements   -> printWhileStatement  expression
-                                                               statements
-                                                               numberOfSpace
+  case statement of
+    Assign variable  expression    -> printAssignStatement variable
+                                                           expression
+                                                           numberOfSpace
+    Read   variable                -> printReadStatement   variable
+                                                           numberOfSpace
+    Write  expression              -> printWriteStatement  expression
+                                                           numberOfSpace
+    Call   id   expressions        -> printCallStatement   id
+                                                           expressions
+                                                           numberOfSpace
+    If     expression statements   -> printIfStatement     expression
+                                                           statements
+                                                           numberOfSpace
+    IfElse expression statement1 statement2
+                                   -> printIfElseStatement expression
+                                                           statement1
+                                                           statement2
+                                                           numberOfSpace
+    While  expression statements   -> printWhileStatement  expression
+                                                           statements
+                                                           numberOfSpace
 
 -------------------------------------------------------------------------------
 -- Print statement list.
@@ -265,9 +266,9 @@ printStatement statement numberOfSpace = do
 printStatements :: [Statement] -> Int -> IO ()
 printStatements [] _                                 = return ()
 printStatements (statement:statements) numberOfSpace = do
-    { printStatement statement numberOfSpace
-    ; printStatements statements numberOfSpace
-    }
+  { printStatement statement numberOfSpace
+  ; printStatements statements numberOfSpace
+  }
 
 -------------------------------------------------------------------------------
 -- Convert constant variable to string.
@@ -302,36 +303,36 @@ getPrefixOpResult expression operator = operator ++ (getExpr expression)
 printExprs :: [Expression] -> String -> IO ()
 printExprs [] _                               = return ()
 printExprs (expression:expressions) seperator = do
-    { putStr seperator
-    ; putStr $ getTopExpr expression
-    ; printExprs expressions ", "
-    }
+  { putStr seperator
+  ; putStr $ getTopExpr expression
+  ; printExprs expressions ", "
+  }
 
 -------------------------------------------------------------------------------
 -- Print the root of expressionesssion which should no surrounded by ().
 -------------------------------------------------------------------------------
 getTopExpr :: Expression -> String
 getTopExpr expression =
-    case expression of
-        ExprVar     variable   -> getVariable variable
-        BoolConst   val        -> getBoolConst val
-        IntConst    val        -> getConst val
-        FloatConst  val        -> getConst val
-        StrConst    val        -> wrapWithDoubleQuotations val
-        Add   lExpr rExpr      -> getInfixOpResult  lExpr " + "  rExpr
-        Mul   lExpr rExpr      -> getInfixOpResult  lExpr " * "  rExpr
-        Sub   lExpr rExpr      -> getInfixOpResult  lExpr " - "  rExpr
-        Div   lExpr rExpr      -> getInfixOpResult  lExpr " / "  rExpr
-        Or    lExpr rExpr      -> getInfixOpResult  lExpr " || " rExpr
-        And   lExpr rExpr      -> getInfixOpResult  lExpr " && " rExpr
-        Eq    lExpr rExpr      -> getInfixOpResult  lExpr " = "  rExpr
-        NotEq lExpr rExpr      -> getInfixOpResult  lExpr " != " rExpr
-        Les   lExpr rExpr      -> getInfixOpResult  lExpr " < "  rExpr
-        LesEq lExpr rExpr      -> getInfixOpResult  lExpr " <= " rExpr
-        Grt   lExpr rExpr      -> getInfixOpResult  lExpr " > "  rExpr
-        GrtEq lExpr rExpr      -> getInfixOpResult  lExpr " >= " rExpr
-        UnaryMinus  expression -> getPrefixOpResult expression minusSymbol
-        UnaryNot    expression -> getPrefixOpResult expression unaryNotSymbol
+  case expression of
+    ExprVar     variable   -> getVariable variable
+    BoolConst   val        -> getBoolConst val
+    IntConst    val        -> getConst val
+    FloatConst  val        -> getConst val
+    StrConst    val        -> wrapWithDoubleQuotations val
+    Add   lExpr rExpr      -> getInfixOpResult  lExpr " + "  rExpr
+    Mul   lExpr rExpr      -> getInfixOpResult  lExpr " * "  rExpr
+    Sub   lExpr rExpr      -> getInfixOpResult  lExpr " - "  rExpr
+    Div   lExpr rExpr      -> getInfixOpResult  lExpr " / "  rExpr
+    Or    lExpr rExpr      -> getInfixOpResult  lExpr " || " rExpr
+    And   lExpr rExpr      -> getInfixOpResult  lExpr " && " rExpr
+    Eq    lExpr rExpr      -> getInfixOpResult  lExpr " = "  rExpr
+    NotEq lExpr rExpr      -> getInfixOpResult  lExpr " != " rExpr
+    Les   lExpr rExpr      -> getInfixOpResult  lExpr " < "  rExpr
+    LesEq lExpr rExpr      -> getInfixOpResult  lExpr " <= " rExpr
+    Grt   lExpr rExpr      -> getInfixOpResult  lExpr " > "  rExpr
+    GrtEq lExpr rExpr      -> getInfixOpResult  lExpr " >= " rExpr
+    UnaryMinus  expression -> getPrefixOpResult expression minusSymbol
+    UnaryNot    expression -> getPrefixOpResult expression unaryNotSymbol
 
 -------------------------------------------------------------------------------
 -- Wrap the given string with parenthesis.
@@ -344,21 +345,21 @@ wrapStringWithParen value = "(" ++ value ++ ")"
 -------------------------------------------------------------------------------
 getExpr :: Expression -> String
 getExpr expression =
-    let expressionString = getTopExpr expression
-    in case expression of
-        Add   _ _ -> wrapStringWithParen expressionString
-        Mul   _ _ -> wrapStringWithParen expressionString
-        Sub   _ _ -> wrapStringWithParen expressionString
-        Div   _ _ -> wrapStringWithParen expressionString
-        Or    _ _ -> wrapStringWithParen expressionString
-        And   _ _ -> wrapStringWithParen expressionString
-        Eq    _ _ -> wrapStringWithParen expressionString
-        NotEq _ _ -> wrapStringWithParen expressionString
-        Les   _ _ -> wrapStringWithParen expressionString
-        LesEq _ _ -> wrapStringWithParen expressionString
-        Grt   _ _ -> wrapStringWithParen expressionString
-        GrtEq _ _ -> wrapStringWithParen expressionString
-        otherwise -> expressionString
+  let expressionString = getTopExpr expression
+  in case expression of
+    Add   _ _ -> wrapStringWithParen expressionString
+    Mul   _ _ -> wrapStringWithParen expressionString
+    Sub   _ _ -> wrapStringWithParen expressionString
+    Div   _ _ -> wrapStringWithParen expressionString
+    Or    _ _ -> wrapStringWithParen expressionString
+    And   _ _ -> wrapStringWithParen expressionString
+    Eq    _ _ -> wrapStringWithParen expressionString
+    NotEq _ _ -> wrapStringWithParen expressionString
+    Les   _ _ -> wrapStringWithParen expressionString
+    LesEq _ _ -> wrapStringWithParen expressionString
+    Grt   _ _ -> wrapStringWithParen expressionString
+    GrtEq _ _ -> wrapStringWithParen expressionString
+    otherwise -> expressionString
 
 -------------------------------------------------------------------------------
 -- Print Body.

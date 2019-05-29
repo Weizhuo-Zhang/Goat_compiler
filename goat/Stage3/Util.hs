@@ -1,5 +1,6 @@
 module Util where
 
+import qualified Data.Map.Strict as M
 import           GoatAST
 import           SymbolTable
 
@@ -49,3 +50,12 @@ getExpressionBaseType exprTable =
 -------------------------------------------------------------------------------
 wrapWithDoubleQuotations :: String -> String
 wrapWithDoubleQuotations value = "\"" ++ value ++ "\""
+
+-------------------------------------------------------------------------------
+-- Get parameters list from the provided parameter map.
+-------------------------------------------------------------------------------
+paramMapToList :: ParameterMap -> [Parameter]
+paramMapToList paramMap = [(snd param) | param <- paramNewList]
+  where paramList = M.toList paramMap;
+        paramOrderedMap = M.fromList [snd param | param <- paramList]
+        paramNewList = M.toList paramOrderedMap

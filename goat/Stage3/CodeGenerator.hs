@@ -4,8 +4,6 @@ import           Analyzer
 import           Control.Monad.State
 import qualified Data.Map.Strict     as Map
 import           GoatAST
-import           GoatExit
-import           GoatPrettyPrint
 import           SymbolTable
 import           Util
 
@@ -39,7 +37,6 @@ type SlotNumber = Int
 -------------------------------------------------------------------------------
 data InputValue = Int | Float | String
 
--------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------
 -- The entry point for the code generation pipeline.
@@ -56,18 +53,18 @@ codeGeneration programMap = do { printLine "call proc_main"
 -------------------------------------------------------------------------------
 generateProcedureList :: [String] -> ProgramMap -> IO ()
 generateProcedureList (procedure:[]) programMap =
-    case Map.lookup procedure programMap of
-        Just procedureTable -> do { putStrLn $ "proc_" ++ procedure ++ ":"
-                                  ; generateProcedure procedure procedureTable
-                                  ; printLine "return"
-                                  }
+  case Map.lookup procedure programMap of
+    Just procedureTable -> do { putStrLn $ "proc_" ++ procedure ++ ":"
+                              ; generateProcedure procedure procedureTable
+                              ; printLine "return"
+                              }
 generateProcedureList (procedure:procedures) programMap =
-    case Map.lookup procedure programMap of
-        Just procedureTable -> do { putStrLn $ "proc_" ++ procedure ++ ":"
-                                  ; generateProcedure procedure procedureTable
-                                  ; printLine "return"
-                                  ; generateProcedureList procedures programMap
-                                  }
+  case Map.lookup procedure programMap of
+    Just procedureTable -> do { putStrLn $ "proc_" ++ procedure ++ ":"
+                              ; generateProcedure procedure procedureTable
+                              ; printLine "return"
+                              ; generateProcedureList procedures programMap
+                              }
 
 -------------------------------------------------------------------------------
 -- Generate an individual procedure for a given procedure name and the
@@ -75,29 +72,29 @@ generateProcedureList (procedure:procedures) programMap =
 -------------------------------------------------------------------------------
 generateProcedure :: Identifier -> ProcedureTable -> IO ()
 generateProcedure procName (ProcedureTable paramMap varMap statements) = do
-    let parameterNumber = Map.size paramMap
-        varList         = Map.keys varMap
-        variableNumber  = getVariableMapSize varList varMap
-        totalVarNumber  = parameterNumber + variableNumber
-    case totalVarNumber of
-        0         -> putStr ""
-        otherwise -> printLine $ "push_stack_frame " ++ (show totalVarNumber)
-    let stackMap = insertStackMap paramMap varMap
-        paramList = paramMapToList paramMap
-    case parameterNumber of
-        0         -> putStr ""
-        otherwise -> do { printComment "init parameters"
-                        ; initParameters paramList stackMap 0
-                        }
-    case variableNumber of
-        0         -> putStr ""
-        otherwise -> do { printComment "init variables"
-                        ; initVariables varList varMap stackMap
-                        }
-    generateStatements procName [0] paramMap varMap statements stackMap
-    case totalVarNumber of
-        0         -> putStr ""
-        otherwise -> printLine $ "pop_stack_frame " ++ (show totalVarNumber)
+  let parameterNumber = Map.size paramMap
+      varList         = Map.keys varMap
+      variableNumber  = getVariableMapSize varList varMap
+      totalVarNumber  = parameterNumber + variableNumber
+  case totalVarNumber of
+    0         -> putStr ""
+    otherwise -> printLine $ "push_stack_frame " ++ (show totalVarNumber)
+  let stackMap = insertStackMap paramMap varMap
+      paramList = paramMapToList paramMap
+  case parameterNumber of
+    0         -> putStr ""
+    otherwise -> do { printComment "init parameters"
+                    ; initParameters paramList stackMap 0
+                    }
+  case variableNumber of
+    0         -> putStr ""
+    otherwise -> do { printComment "init variables"
+                    ; initVariables varList varMap stackMap
+                    }
+  generateStatements procName [0] paramMap varMap statements stackMap
+  case totalVarNumber of
+    0         -> putStr ""
+    otherwise -> printLine $ "pop_stack_frame " ++ (show totalVarNumber)
 
 -------------------------------------------------------------------------------
 -- Generate oz code for initializing a list of parameters.
@@ -170,48 +167,90 @@ initSingleVar varSlotNum = printLine $ "store " ++ (show varSlotNum) ++ ", r0"
 -------------------------------------------------------------------------------
 initOffset :: Int -> Int -> IO ()
 initOffset varSlotNum offset = do
-  if offset > 0
-    then do { initSingleVar varSlotNum
-            ; initOffset (varSlotNum+1) (offset-1)
-            }
-    else putStr ""
+  if offset > 0 then do
+    initSingleVar varSlotNum
+    initOffset (varSlotNum+1) (offset-1)
+  else putStr ""
 
 -------------------------------------------------------------------------------
 -- Generate oz code for a set of statements, given the list of StatementTables.
 -------------------------------------------------------------------------------
-generateStatements :: String -> [Int] -> ParameterMap -> VariableMap -> [StatementTable] -> StackMap -> IO ()
+generateStatements ::
+  String -> [Int] -> ParameterMap -> VariableMap -> [StatementTable] ->
+  StackMap -> IO ()
 generateStatements _ _ _ _ [] _  = return ()
 generateStatements procName label paramMap varMap (stat:[]) stackMap = do
-    generateStatement procName (updateLabel label) paramMap varMap stat stackMap
+  generateStatement procName (updateLabel label) paramMap varMap stat stackMap
 generateStatements procName label paramMap varMap (stat:stats) stackMap = do
-    { generateStatement procName (updateLabel label) paramMap varMap stat stackMap
-    ; generateStatements procName (updateLabel label) paramMap varMap stats stackMap
-    }
+  generateStatement procName (updateLabel label) paramMap varMap stat stackMap
+  generateStatements procName (updateLabel label) paramMap varMap stats stackMap
+
 
 -------------------------------------------------------------------------------
 -- Generate oz code for a single statement.
 -------------------------------------------------------------------------------
-generateStatement :: String -> [Int] -> ParameterMap -> VariableMap -> StatementTable -> StackMap -> IO ()
+generateStatement ::
+  String -> [Int] -> ParameterMap -> VariableMap -> StatementTable ->
+  StackMap -> IO ()
 generateStatement procName label paramMap varMap statementTable stackMap = do
   case statementTable of
-    AssignTable varTable  exprTable  ->
-      generateAssignStatement procName paramMap varMap varTable exprTable stackMap
-    WriteTable  exprTable            -> generateWriteStatement paramMap varMap exprTable stackMap
-    IfTable     exprTable stmtTables ->
-      generateIfStatement procName label exprTable paramMap varMap stmtTables stackMap
-    IfElseTable exprTable stmtTables1 stmtTables2 ->
-      generateIfElseStatement procName label exprTable paramMap varMap stmtTables1 stmtTables2 stackMap
-    WhileTable  exprTable stmtTables ->
-      generateWhileStatement procName label exprTable paramMap varMap stmtTables stackMap
-    ReadTable exprTable ->
-      generateReadStatement exprTable paramMap varMap stackMap
-    CallTable procId expressionTables params ->
-        generateCallStatement procId expressionTables params 0 paramMap varMap stackMap
+    AssignTable varTable  exprTable  -> generateAssignStatement
+                                        procName
+                                        paramMap
+                                        varMap
+                                        varTable
+                                        exprTable
+                                        stackMap
+    WriteTable  exprTable            -> generateWriteStatement
+                                        paramMap
+                                        varMap
+                                        exprTable
+                                        stackMap
+    IfTable     exprTable stmtTables -> generateIfStatement
+                                        procName
+                                        label
+                                        exprTable
+                                        paramMap
+                                        varMap
+                                        stmtTables
+                                        stackMap
+    IfElseTable exprTable stmtTables1 stmtTables2 -> generateIfElseStatement
+                                                     procName
+                                                     label
+                                                     exprTable
+                                                     paramMap
+                                                     varMap
+                                                     stmtTables1
+                                                     stmtTables2
+                                                     stackMap
+    WhileTable  exprTable stmtTables -> generateWhileStatement
+                                        procName
+                                        label
+                                        exprTable
+                                        paramMap
+                                        varMap
+                                        stmtTables
+                                        stackMap
+    ReadTable exprTable -> generateReadStatement
+                           exprTable
+                           paramMap
+                           varMap
+                           stackMap
+    CallTable procId expressionTables params -> generateCallStatement
+                                                procId
+                                                expressionTables
+                                                params
+                                                0
+                                                paramMap
+                                                varMap
+                                                stackMap
 
 -------------------------------------------------------------------------------
 -- Genearate oz code for a procedure call statement.
 -------------------------------------------------------------------------------
-generateCallStatement :: Identifier -> [ExpressionTable] -> [Parameter] -> Int -> ParameterMap -> VariableMap -> StackMap -> IO ()
+generateCallStatement ::
+  Identifier -> [ExpressionTable] -> [Parameter] -> Int -> ParameterMap ->
+  VariableMap -> StackMap -> IO ()
 generateCallStatement procName [] [] _ _ _ _ = printLine $ "call proc_" ++ procName
 generateCallStatement procName (exprTable:[]) (param:[]) registerNum paramMap varMap stackMap = do
   checkCallParameter param exprTable registerNum paramMap varMap stackMap
@@ -222,7 +261,9 @@ generateCallStatement procName (exprTable:exprTables) (param:params) registerNum
   checkCallParameter param exprTable registerNum paramMap varMap stackMap
   generateCallStatement procName exprTables params (registerNum+1) paramMap varMap stackMap
 
-checkCallParameter :: Parameter -> ExpressionTable -> Int -> ParameterMap -> VariableMap -> StackMap -> IO ()
+checkCallParameter ::
+  Parameter -> ExpressionTable -> Int -> ParameterMap -> VariableMap ->
+  StackMap -> IO ()
 checkCallParameter param exprTable registerNum paramMap varMap stackMap = do
   let  varType   = getExpressionBaseType exprTable
        paramType = passingType param
@@ -243,15 +284,14 @@ checkCallParameter param exprTable registerNum paramMap varMap stackMap = do
         False -> do
           let  varShape = varShapeIndicatorTable var
           case varShape of
-            NoIndicatorTable ->
-              printLine $ "load_address " ++ regNumStr0 ++ ", " ++ slotNumStr
+            NoIndicatorTable ->  printLoadAddress regNumStr0 slotNumStr
             otherwise        -> do
               locateArrayMatrix paramMap varMap var slotNumStr registerNum stackMap
         True -> do
           let parameter = snd $ paramMap Map.! paramId
               passType  = passingIndicator parameter
           case passType of
-            VarType -> printLine $ "load_address " ++ regNumStr0 ++ ", " ++ slotNumStr
+            VarType -> printLoadAddress regNumStr0 slotNumStr
             RefType -> printLine $ "load " ++ regNumStr0 ++ ", " ++ slotNumStr
 
 -------------------------------------------------------------------------------
@@ -736,6 +776,7 @@ printComment string = do
   { putStr "  # "
   ; putStrLn string
   }
+
 -------------------------------------------------------------------------------
 -- Register
 -------------------------------------------------------------------------------
@@ -743,19 +784,11 @@ registers :: Map.Map register inputValue
 registers = Map.empty
 
 
-
-
-
-
--------------------------------------------------------------------------------
--- Stack
--------------------------------------------------------------------------------
-
-
-
-
-
 ------------------------------- Helper functions ------------------------------
+printLoadAddress :: String -> String -> IO()
+printLoadAddress regNumStr0 slotNumStr =
+  printLine $ "load_address " ++ regNumStr0 ++ ", " ++ slotNumStr
+
 -------------------------------------------------------------------------------
 -- Start a new line with proper indentation.
 -------------------------------------------------------------------------------
